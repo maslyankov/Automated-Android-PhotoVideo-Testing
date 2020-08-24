@@ -64,7 +64,7 @@ class Device:
     def get_camera_files_list(self):
         try:
             files_list = self.exec_shell("ls -1 sdcard/DCIM/Camera").splitlines()
-            if files_list[0] == 'ls: sdcard/DCIM/Camera: No such file or directory':
+            if files_list[0] == 'ls: sdcard/DCIM/Camera: No such file or directory': # TODO Fix this shit
                 return
             else:
                 return files_list
