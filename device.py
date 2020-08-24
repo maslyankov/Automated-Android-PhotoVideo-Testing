@@ -7,10 +7,15 @@ from coords import *
 
 SNAP_CAM = "org.codeaurora.snapcam"
 
+def list_devices():
+    devices = []
+    for d in adb.devices():
+        devices.append(d.serial)  # print device serial
+    return devices
 
 class Device:
-    def __init__(self):
-        self.d = adb.device()
+    def __init__(self, device_serial):
+        self.d = adb.device(serial=device_serial)
 
         print("Connecting to device...")
         print("Device Serial: ", self.d.serial)

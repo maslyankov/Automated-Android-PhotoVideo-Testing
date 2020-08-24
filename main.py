@@ -1,5 +1,5 @@
 from actions import *
-from device import Device
+from device import Device, list_devices
 import PySimpleGUI as sg
 import time
 
@@ -8,7 +8,7 @@ def gui():
     # All the stuff inside your window.
     layout = [[sg.Image(r'.\images\automated-video-testing-header.png')],
               [
-                  sg.Listbox(values=['Device 1', 'Device 2', 'Device 3'], size=(50, 3)),
+                  sg.Listbox(values=list_devices(), size=(50, 3)),
                   sg.Radio('Photos', "MODE", default=True), sg.Radio('Videos', "MODE"), sg.Radio('Both', "MODE"),
                   sg.Spin([i for i in range(5, 60)], initial_value=10), sg.Text('Video Duration (secs)')
               ],
@@ -36,20 +36,14 @@ def gui():
     window.close()
 
 def main():
-    device = Device()
+    # device = Device()
 
     # shoot_video(device, 5)
-
-    device.open_snap_cam()
-
-    #device.take_photo()
-
-    #shoot_video(device, 10, True, "Gain:ExpTime", "logfile.txt")
-
-    #device.push_file("tuning/com.qti.tuned.snap_imx476.bin", "vendor/lib/camera")
-
-    #time.sleep(1)
-    #pull_camera_files(device, "tests2", True)
+    # device.open_snap_cam()
+    # device.take_photo()
+    # shoot_video(device, 10, True, "Gain:ExpTime", "logfile.txt")
+    # device.push_file("tuning/com.qti.tuned.snap_imx476.bin", "vendor/lib/camera")
+    # pull_camera_files(device, "tests2", True)
 
     gui()
 
