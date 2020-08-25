@@ -11,7 +11,7 @@ class DeviceLogs:
         self.plogcat1 = subprocess.Popen(["adb", "logcat"],
                              stdout=subprocess.PIPE,
                              env=os.environ
-                             )  # Todo -> route output to a pipe in order to separate grep from this
+                             )
                                                                                                                 # https://pymotw.com/2/subprocess/
         self.pgrep = subprocess.Popen(['grep', gr_filter],
                                 stdin=self.plogcat1.stdout,
