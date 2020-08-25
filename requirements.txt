@@ -1,3 +1,4 @@
 
 adbutils~=0.8.1
 PySimpleGUI~=4.28.0
+pyModbusTCP~=0.1.8
