@@ -1,0 +1,13 @@
+- root, remount
+- add camera mode to filename
+- rotate photos (preserve metadata)
+- push tuning
+
+- Add App settings
+	- Choose Camera App
+	- Calibrate Button presses (/dev/input/event4)
+
+- Make capture case a seperate window with more options
+	- Add list of Color Temps and LUXes for each
+	- CHoose if you want Videos/Photos or both
+	- Queue another batch of cases with another tuning/build

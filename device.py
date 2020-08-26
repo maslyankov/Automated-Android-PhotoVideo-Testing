@@ -56,10 +56,13 @@ class Device:
             print("Snap Cam was already opened! Continuing...")
 
     def push_file(self, src, dst):
-        self.d.sync.push(src, dst)
+        self.d.sync.push(open(src, "rb"), dst) # TODO Fix this
 
     def pull_file(self, src, dst):
         self.d.sync.pull(src, dst)
+
+    def reboot(self):
+        self.exec_shell("reboot")
 
     def get_camera_files_list(self):
         try:

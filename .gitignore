@@ -145,3 +145,5 @@ tests*/
 
 # Log files
 log*.txt
+tmp/*
+camxoverridesettings*.txt
