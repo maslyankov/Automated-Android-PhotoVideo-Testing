@@ -6,14 +6,12 @@ from ppadb.client import Client as AdbClient
 from pathlib import Path
 import io
 
-
-
 from coords import *
 
-SNAP_CAM = "org.codeaurora.snapcam"
+# SNAP_CAM = "org.codeaurora.snapcam"
 
 
-class adbClient():
+class AdbClient:
     def __init__(self):
         print("Starting the ADB Server...")
         try:
@@ -35,6 +33,7 @@ class adbClient():
         for d in self.client.devices():
             devices.append(d.serial)
         return devices  # Return list of devices's serials
+
 
 class Device:
     def __init__(self, device_serial):
