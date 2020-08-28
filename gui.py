@@ -13,7 +13,7 @@ def gui_camxoverride(device_obj):
     # All the stuff inside your window.
     layout = [[sg.Text('camxoverridesettings.txt:')],
               [sg.Multiline(camxoverride_content, size=(70, 30), key='camxoverride_input')],
-              [sg.Cancel(),
+              [sg.CloseButton('Close'),
                sg.Button('Save')  # ,
                # sg.Button('Reboot Device', key='reboot_device_btn')
                ]]
@@ -25,7 +25,7 @@ def gui_camxoverride(device_obj):
     while True:
         event, values = window.read()
 
-        if event == sg.WIN_CLOSED or event == 'Cancel':  # if user closes window or clicks cancel
+        if event == sg.WIN_CLOSED or event == 'Close':  # if user closes window or clicks cancel
             break
 
         if event == 'Save':
@@ -48,6 +48,38 @@ def gui_camxoverride(device_obj):
 
     window.close()
 
+def gui_push_tuning(device_obj):  # not tested
+    layout = [
+              [sg.Text('Tuning File:', size=(11, 1)),
+               sg.InputText(size=(35, 1), key='tuning_source_file', enable_events=True),
+               sg.FileBrowse()],
+            [sg.Button('Push Tuning', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 2), key='push_tuning_file_btn', disabled=True)]
+                ]
+
+    # Create the Window
+    window = sg.Window('Push Tuning file', layout,
+                       icon=r'.\images\automated-video-testing-header-icon.ico')
+
+    while True:
+        event, values = window.read()
+
+        if event == sg.WIN_CLOSED or event == 'Close':  # if user closes window or clicks cancel
+            break
+
+        if event == 'tuning_source_file':
+            window['push_tuning_file_btn'].Update(disabled=False)
+
+        if event == 'Push':
+            print(values)
+
+            print("Pushing Tuning to device")
+
+            device_obj.remount()
+
+            print("Pushing new camxoverridesettings.txt file to device...")
+            device_obj.push_file(values['tuning_source_file'], "vendor/lib/camera")
+
+    window.close()
 
 def gui():
     app_version = '0.01 Beta'
@@ -64,7 +96,8 @@ def gui():
     device_settings_frame_layout = [
         [sg.Button('Edit camxoverridesettings', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(20, 3),
                    key='camxoverride_btn', disabled=True),
-         sg.Button('Reboot Device', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(12, 3), key='reboot_device_btn', disabled=True)],
+         sg.Button('Reboot Device', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(12, 3), key='reboot_device_btn', disabled=True),
+         sg.Button('Push Tuning', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(12, 3), key='push_tuning_btn', disabled=True)],
     ]
 
     logs_frame_layout = [
@@ -91,8 +124,8 @@ def gui():
               [sg.Frame('Device', device_frame_layout, font='Any 12', title_color='white'),
                sg.Frame('Settings', device_settings_frame_layout, font='Any 12', title_color='white')],
               [sg.Frame('Logs', logs_frame_layout, font='Any 12', title_color='white')],
-              [sg.Frame('Test Case', case_frame_layout, font='Any 12', title_color='white'),
-               sg.Frame('After Case', post_case_frame_layout, font='Any 12', title_color='white')],
+              [sg.Frame('Test Case', case_frame_layout, font='Any 12', title_color='white')],
+              [sg.Frame('After Case', post_case_frame_layout, font='Any 12', title_color='white')],
               [sg.Button('Exit', size=(6, 2)), sg.Button('Capture Case', size=(12, 2), key='capture_case_btn', disabled=True), sg.Button('Capture Cases (Advanced)', size=(20, 2), key='capture_multi_cases_btn', disabled=True)],
               [sg.Text('_' * 107)],
               [sg.Text('Application Logs', size=(70, 1))],
@@ -105,8 +138,6 @@ def gui():
                        icon=r'.\images\automated-video-testing-header-icon.ico')
     # Event Loop to process "events" and get the "values" of the inputs
     while True:
-
-
         event, values = window.read()
 
         try:
@@ -126,6 +157,17 @@ def gui():
             window['clear_files'].Update(disabled=not values['pull_files'])
             window['save_location'].Update(disabled=not values['pull_files'])
             window['save_location_browse_btn'].Update(disabled=not values['pull_files'])
+            if values['save_location'] == "":
+                window['capture_case_btn'].Update(disabled=values["pull_files"])
+                window['capture_multi_cases_btn'].Update(disabled=values["pull_files"])
+            else:
+                window['capture_case_btn'].Update(disabled=False)
+                window['capture_multi_cases_btn'].Update(disabled=False)
+
+        if event == 'save_location':
+            if values["pull_files"]:
+                window['capture_case_btn'].Update(disabled=False)
+                window['capture_multi_cases_btn'].Update(disabled=False)
 
         if event == "refresh_btn":
             print("Refreshing..")
@@ -136,19 +178,23 @@ def gui():
             window['capture_case_btn'].Update(disabled=True)
             window['capture_multi_cases_btn'].Update(disabled=True)
             window['reboot_device_btn'].Update(disabled=True)
+            window['push_tuning_btn'].Update(disabled=True)
 
         if event == "device":
             device = Device(adb.client, values['device'][0])  # Assign device to object
 
             window['camxoverride_btn'].Update(disabled=False)
-            window['capture_case_btn'].Update(disabled=False)
-            window['capture_multi_cases_btn'].Update(disabled=False)
             window['reboot_device_btn'].Update(disabled=False)
+            window['push_tuning_btn'].Update(disabled=False)
+            if event == "pull_files":
+                if values['save_location'] != "":
+                    window['capture_case_btn'].Update(disabled=False)
+                    window['capture_multi_cases_btn'].Update(disabled=False)
 
         if event == 'reboot_device_btn':
             device.reboot()
 
-        if event == "capture_case_btn" or event == "camxoverride_btn":
+        if event == "capture_case_btn" or event == "camxoverride_btn" or event == 'push_tuning_btn':
             try:
                 device
             except NameError:
@@ -181,5 +227,8 @@ def gui():
 
                 if event == "camxoverride_btn":
                     gui_camxoverride(device)
+
+                if event == "push_tuning_btn":
+                    gui_push_tuning(device)
 
     window.close()
