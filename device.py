@@ -1,17 +1,40 @@
-from pathlib import Path
+# Uses https://github.com/Swind/pure-python-adb
+import subprocess
 
+from ppadb.client import Client as AdbClient
+
+from pathlib import Path
 import io
-from adbutils import adb
+
+
 
 from coords import *
 
 SNAP_CAM = "org.codeaurora.snapcam"
 
-def list_devices():
-    devices = []
-    for d in adb.devices():
-        devices.append(d.serial)  # print device serial
-    return devices
+
+class adbClient():
+    def __init__(self):
+        print("Starting the ADB Server...")
+        try:
+            adb = subprocess.Popen(['adb.exe', 'root'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            stdout, stderr = adb.communicate()
+            if stdout:
+                print("ADB Start Output: " + stdout.decode())  # Debugging
+            if stderr:
+                print("ADB Start Error: " + stderr.decode())  # Debugging
+            adb.wait()
+        except FileNotFoundError:
+            print("Fatal error: adb not found!")
+            return
+
+        client = AdbClient(host="127.0.0.1", port=5037)
+
+    def list_devices(self):
+        devices = []
+        for d in self.client.devices():
+            devices.append(d.serial)
+        return devices  # Return list of devices's serials
 
 class Device:
     def __init__(self, device_serial):
