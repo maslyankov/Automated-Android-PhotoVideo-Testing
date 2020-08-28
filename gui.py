@@ -1,5 +1,6 @@
 from actions import *
-from device import Device, list_devices
+from device import Device
+from AdbClient import AdbClient
 import PySimpleGUI as sg
 
 
@@ -12,7 +13,10 @@ def gui_camxoverride(device_obj):
     # All the stuff inside your window.
     layout = [[sg.Text('camxoverridesettings.txt:')],
               [sg.Multiline(camxoverride_content, size=(70, 30), key='camxoverride_input')],
-              [sg.Cancel(), sg.Button('Save'), sg.Button('Reboot Device', key='reboot_device_btn')]]
+              [sg.Cancel(),
+               sg.Button('Save')  # ,
+               # sg.Button('Reboot Device', key='reboot_device_btn')
+               ]]
 
     # Create the Window
     window = sg.Window('Edit camxoverridesettings', layout,
@@ -34,9 +38,10 @@ def gui_camxoverride(device_obj):
             camxoverride_new.write(values['camxoverride_input'])
             camxoverride_new.close()
 
+            device_obj.remount()
+
             print("Pushing new camxoverridesettings.txt file to device...")
-            #device_obj.push_file("camxoverridesettings.txt", "vendor/etc/camera/camxoverridesettings2.txt")
-            device_obj.push_file("camxoverridesettings_new.txt", "/vendor/etc/camera/camxoverridesettings2.txt")
+            device_obj.push_file(r'.\tmp\camxoverridesettings_new.txt', "/vendor/etc/camera/camxoverridesettings.txt")
 
         if event == 'reboot_device_btn':
             device_obj.reboot()
@@ -47,9 +52,10 @@ def gui_camxoverride(device_obj):
 def gui():
     app_version = '0.01 Beta'
     sg.theme('DarkGrey5')  # Add a touch of color
+    adb = AdbClient()
 
     device_frame_layout = [
-        [sg.Listbox(values=list_devices(), size=(30, 3), key='device', enable_events=True),
+        [sg.Listbox(values=adb.list_devices(), size=(30, 3), key='device', enable_events=True),
          sg.Button('', size=(10, 3), button_color=('black', sg.theme_background_color()),
                    image_filename=r'.\images\refresh_icon.png', image_size=(50, 50), image_subsample=6, border_width=0,
                    key='refresh_btn')],
@@ -99,6 +105,8 @@ def gui():
                        icon=r'.\images\automated-video-testing-header-icon.ico')
     # Event Loop to process "events" and get the "values" of the inputs
     while True:
+
+
         event, values = window.read()
 
         try:
@@ -121,24 +129,21 @@ def gui():
 
         if event == "refresh_btn":
             print("Refreshing..")
-            window['device'].update(values=list_devices())
+            window['device'].update(values=adb.list_devices())
 
+        if event == "refresh_btn" or event == "reboot_device_btn":
             window['camxoverride_btn'].Update(disabled=True)
             window['capture_case_btn'].Update(disabled=True)
             window['capture_multi_cases_btn'].Update(disabled=True)
             window['reboot_device_btn'].Update(disabled=True)
 
         if event == "device":
-            # Assign device to object
-            if values['device']:
-                device = Device(values['device'][0])
+            device = Device(adb.client, values['device'][0])  # Assign device to object
 
-                window['camxoverride_btn'].Update(disabled=False)
-                window['capture_case_btn'].Update(disabled=False)
-                window['capture_multi_cases_btn'].Update(disabled=False)
-                window['reboot_device_btn'].Update(disabled=False)
-            else:
-                print("First select a device!")
+            window['camxoverride_btn'].Update(disabled=False)
+            window['capture_case_btn'].Update(disabled=False)
+            window['capture_multi_cases_btn'].Update(disabled=False)
+            window['reboot_device_btn'].Update(disabled=False)
 
         if event == 'reboot_device_btn':
             device.reboot()
@@ -168,7 +173,7 @@ def gui():
                         shoot_video(device, values['duration_spinner'], values['logs_bool'], values['logs_filter'],
                                     "{}/logfile.txt".format(values['save_location']))
 
-                    if values['pull_files']: # TODO Add check for save_location if empty
+                    if values['pull_files']:
                         if values['save_location']:
                             pull_camera_files(device, values['save_location'], values['clear_files'])
                         else:
