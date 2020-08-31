@@ -84,20 +84,49 @@ def gui_push_tuning(device_obj):  # not tested
 def gui():
     app_version = '0.01 Beta'
     sg.theme('DarkGrey5')  # Add a touch of color
-    adb = AdbClient()
 
-    device_frame_layout = [
-        [sg.Listbox(values=adb.list_devices(), size=(30, 3), key='device', enable_events=True),
-         sg.Button('', size=(10, 3), button_color=('black', sg.theme_background_color()),
-                   image_filename=r'.\images\refresh_icon.png', image_size=(50, 50), image_subsample=6, border_width=0,
-                   key='refresh_btn')],
-    ]
+    sg.popup_timed('Loading . . .', no_titlebar=True, button_type=5,
+                   auto_close_duration=3,
+                   font='Any 25',
+                   image=r'.\images\automated-video-testing-header.png')
+
+
+    adb = AdbClient()
+    devices_list = adb.list_devices()
+
+    device_frame_layout = [[]]
+
+    if devices_list:
+        for num, device in enumerate(devices_list):
+            device_frame_layout += [sg.Checkbox(f'Device {device}',
+                                                size=(20, 5),
+                                                # default=True if num == 0 else False,
+                                                enable_events=True,
+                                                key=(f'device{num}', device),
+                                                tooltip='Tick to connect to device, Untick to disconnect'),
+                                    sg.InputText(key=f'device{num}_friendly',
+                                                 enable_events=True, size=(20, 1),
+                                                 tooltip='Set friendly name for device')],
+    else:
+        device_frame_layout += [sg.Text('No devices found! :(')],
+
+    # device_frame_layout += [[sg.Button('', size=(10, 3), button_color=('black', sg.theme_background_color()), image_filename=r'.\images\refresh_icon.png', image_size=(50, 50), image_subsample=6, border_width=0, key='refresh_btn')],]
 
     device_settings_frame_layout = [
-        [sg.Button('Edit camxoverridesettings', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(20, 3),
-                   key='camxoverride_btn', disabled=True),
-         sg.Button('Reboot Device', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(12, 3), key='reboot_device_btn', disabled=True),
-         sg.Button('Push Tuning', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(12, 3), key='push_tuning_btn', disabled=True)],
+        [sg.Button('Edit camxoverridesettings', button_color=(sg.theme_text_element_background_color(), 'silver'),
+                   size=(20, 3),
+                   key='camxoverride_btn',
+                   disabled=True,
+                   tooltip='Edit or view camxoverridesettings any connected device'),
+         sg.Button('Reboot Device', button_color=(sg.theme_text_element_background_color(), 'silver'),
+                   size=(12, 3),
+                   key='reboot_device_btn',
+                   disabled=True,
+                   tooltip='Reboot devices immediately'),
+         sg.Button('Push Tuning', button_color=(sg.theme_text_element_background_color(), 'silver'),
+                   size=(12, 3),
+                   key='push_tuning_btn',
+                   disabled=True)],
     ]
 
     logs_frame_layout = [
@@ -116,12 +145,12 @@ def gui():
     post_case_frame_layout = [
         [sg.Checkbox('Pull files from device', default=True, size=(16, 1), key='pull_files', enable_events=True),
          sg.Checkbox('and delete them', default=True, size=(12, 1), key='clear_files')],
-        [sg.Text('Save Location:', size=(11, 1)), sg.InputText(size=(35, 1), key='save_location'), sg.FolderBrowse(key='save_location_browse_btn')],
+        [sg.Text('Save Location:', size=(11, 1)), sg.InputText(size=(35, 1), key='save_location', enable_events=True), sg.FolderBrowse(key='save_location_browse_btn')],
     ]
 
     # All the stuff inside your window.
     layout = [[sg.Image(r'.\images\automated-video-testing-header.png')],
-              [sg.Frame('Device', device_frame_layout, font='Any 12', title_color='white'),
+              [sg.Frame('Devices', device_frame_layout, font='Any 12', title_color='white'),
                sg.Frame('Settings', device_settings_frame_layout, font='Any 12', title_color='white')],
               [sg.Frame('Logs', logs_frame_layout, font='Any 12', title_color='white')],
               [sg.Frame('Test Case', case_frame_layout, font='Any 12', title_color='white')],
@@ -157,19 +186,29 @@ def gui():
             window['clear_files'].Update(disabled=not values['pull_files'])
             window['save_location'].Update(disabled=not values['pull_files'])
             window['save_location_browse_btn'].Update(disabled=not values['pull_files'])
+            if values['save_location'] == '': ## TODO FIX THIS
+                window['capture_case_btn'].Update(disabled=True)
+                window['capture_multi_cases_btn'].Update(disabled=True)
+
+
+
+# TODO FIX THIS
+        if event == "save_location" and values['pull_files']:
             if values['save_location'] == "":
-                window['capture_case_btn'].Update(disabled=values["pull_files"])
-                window['capture_multi_cases_btn'].Update(disabled=values["pull_files"])
-            else:
-                window['capture_case_btn'].Update(disabled=False)
-                window['capture_multi_cases_btn'].Update(disabled=False)
+                window['capture_case_btn'].Update(disabled=True)
+                window['capture_multi_cases_btn'].Update(disabled=True)
+        else:
+            window['capture_case_btn'].Update(disabled=False)
+            window['capture_multi_cases_btn'].Update(disabled=False)
+############
+
 
         if event == 'save_location':
             if values["pull_files"]:
                 window['capture_case_btn'].Update(disabled=False)
                 window['capture_multi_cases_btn'].Update(disabled=False)
 
-        if event == "refresh_btn":
+        if event == "refresh_btn": # TODO MAKE AUTOMATIC
             print("Refreshing..")
             window['device'].update(values=adb.list_devices())
 
@@ -181,6 +220,7 @@ def gui():
             window['push_tuning_btn'].Update(disabled=True)
 
         if event == "device":
+
             device = Device(adb.client, values['device'][0])  # Assign device to object
 
             window['camxoverride_btn'].Update(disabled=False)
