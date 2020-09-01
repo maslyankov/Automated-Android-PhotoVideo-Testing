@@ -1,6 +1,6 @@
 from actions import *
 from device import Device
-from AdbClient import AdbClient
+import AdbClient
 import threading
 import PySimpleGUI as sg
 
@@ -117,7 +117,7 @@ def loading(secs):  # Only gives fanciness
 def gui():
     sg.theme('DarkGrey5')  # Add a touch of color
 
-    adb = AdbClient()
+    adb = AdbClient.AdbClient()
     devices_list = adb.list_devices()
     devices_list = ['asd', 'fs', 'gfd']
 
@@ -191,16 +191,16 @@ def gui():
                       sg.Button('Exit', size=(6, 2)),
                       sg.Button('Capture Case', size=(12, 2), key='capture_case_btn', disabled=True),
                       sg.Button('Capture Cases (Advanced)', size=(20, 2), key='capture_multi_cases_btn', disabled=True)],
-                  [sg.Text('_' * 107)],
-                  [sg.Text('Application Logs', size=(70, 1))],
-                  # [sg.Output(size=(105, 15))]
+                  [sg.Text('_' * 75)],
+                  [sg.Frame('Output', [[sg.Output(size=(70, 8))]], font='Any 12', title_color='white')],
+                  [sg.Text('App Version: {}'.format(APP_VERSION), size=(65, 1), justification="right")]
               ]
 
     # Create the Window
     window = sg.Window('Automated Photo/Video Testing', layout,
                        icon=r'.\images\automated-video-testing-header-icon.ico')
-    device = []  # List to store devices objects
-    connected_devices = []
+    device = {}  # List to store devices objects
+    connected_devices = {}
 
     # Event Loop to process "events" and get the "values" of the inputs
     while True:
@@ -212,6 +212,7 @@ def gui():
         print('Data: ', values)  # Debugging
         print('Event: ', event)  # Debugging
         print('ADB List Devices', devices_list)  # Debugging
+        print('Devices objects: ', device)
 
         if event == "logs_bool":
             window['logs_filter'].Update(disabled=not values['logs_bool'])
@@ -250,16 +251,22 @@ def gui():
             window['reboot_device_btn'].Update(disabled=True)
             window['push_tuning_btn'].Update(disabled=True)
 
-        if event == 'devices':
-            if values['devices']:
-                for d_num, device_serial in enumerate(values['devices']):
-                    device.append(Device(adb.client, device_serial))  # Assign device to object
-                    connected_devices.append(device_serial)
-                else:  # If unticked
-                    # del device[d_num]
-                    connected_devices.remove(device_serial)
-                    print('Unselected!')
-                print(connected_devices)
+        devices_values = set(values['devices'])
+
+
+        if event == 'devices': ## This shit is not quite working
+            if len(values['devices']) > len(connected_devices) and values['devices'] not in connected_devices:  # Connect device
+                device.append(Device(adb.client, values['devices']))  # Assign device to object
+                print('List Before adding: {}, len: {}'.format(connected_devices, len(connected_devices)))
+                connected_devices.append(devices_values - connected_devices)
+                print('Connecting device: {}'.format(connected_devices - devices_values))
+                print('List After adding: {}, len: {}'.format(connected_devices, len(connected_devices)))
+            elif len(values['devices']) < len(connected_devices) and values['devices'] in connected_devices:  # Disconnect
+                print('List before removing: {}, len: {}'.format(connected_devices, len(connected_devices)))
+                connected_devices.remove(connected_devices - devices_values)
+                print('Disconnecting device: {}'.format(connected_devices - devices_values))
+                print('List After removing: {}, len: {}'.format(connected_devices, len(connected_devices)))
+            print('Connected devices list: {}'.format(connected_devices))
 
 
         if connected_devices:
@@ -277,7 +284,7 @@ def gui():
         window['duration_spinner'].Update(disabled=values['mode_photos'])
 
         if event == "capture_case_btn" or event == "camxoverride_btn" or event == 'push_tuning_btn':
-            if is_connected:
+            if connected_devices:
                 print("First select a device and connect to it!")
             else:
                 if event == "capture_case_btn":
