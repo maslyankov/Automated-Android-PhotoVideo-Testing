@@ -7,6 +7,7 @@ import PySimpleGUI as sg
 APP_VERSION = '0.01 Beta'
 THREAD_EVENT = '-WATCHDOG-'
 
+
 def devices_watchdog(window):
     """
     The thread that communicates with the application through the window's events.
@@ -16,7 +17,8 @@ def devices_watchdog(window):
     i = 0
     while True:
         time.sleep(1)
-        window.write_event_value(THREAD_EVENT, (threading.current_thread().name, i))      # Data sent is a tuple of thread name and counter
+        window.write_event_value(THREAD_EVENT, (
+        threading.current_thread().name, i))  # Data sent is a tuple of thread name and counter
         print('This is cheating from the thread')
         i += 1
 
@@ -101,7 +103,7 @@ def gui_push_tuning(device_obj):  # not tested
     window.close()
 
 
-def loading(secs): # Only gives fanciness
+def loading(secs):  # Only gives fanciness
     for i in range(1, 15 * secs):
         sg.popup_animated(image_source=r'.\images\loading3.gif', message='Loading...', no_titlebar=True,
                           font=('Any', 25), text_color='black',
@@ -112,34 +114,28 @@ def loading(secs): # Only gives fanciness
     sg.popup_animated(image_source=None)
 
 
-def get_devices(adb, device_frame_layout):
-    devices_list = adb.list_devices()
-
-
-    if devices_list:
-        for num, device in enumerate(devices_list):
-            device_frame_layout += [sg.Checkbox(f'Device {device}',
-                                                # default=True if num == 0 else False,
-                                                enable_events=True,
-                                                key=f'device{num}',
-                                                tooltip='Tick to connect to device, Untick to disconnect'),
-                                    sg.Input(default_text=device, visible=False, key=f'device{num}.serial'),
-                                    sg.InputText(key=f'device{num}_friendly',
-                                                 enable_events=True, size=(20, 1),
-                                                 tooltip='Set friendly name for device')],
-    else:
-        device_frame_layout += [sg.Text('No devices found! :(')],
-    return device_frame_layout
-
-
 def gui():
     sg.theme('DarkGrey5')  # Add a touch of color
 
     adb = AdbClient()
+    devices_list = adb.list_devices()
+    devices_list = ['asd', 'fs', 'gfd']
 
     loading(1)
 
-    device_frame_layout = get_devices(adb, [])
+    device_frame_layout = [
+        [sg.Listbox(values=devices_list if devices_list else ['No devices found!'], size=(30, 5),
+                    key='devices', enable_events=True,
+                    select_mode=sg.LISTBOX_SELECT_MODE_MULTIPLE,
+                    tooltip='Select to connect to device, Deselect to disconnect')],
+    ]
+
+    friendly_names = []
+    for num, serial in enumerate(devices_list):
+        friendly_names += [sg.InputText(key=f'device{num}_friendly', enable_events=True, size=(20, 1),
+                      tooltip=f'Set friendly name for device{num}')],
+
+    #device_frame_layout[0][1] += [sg.InputText(key=f'device_friendly2', enable_events=True, size=(20, 1), tooltip='Set friendly name for device')],
 
     # device_frame_layout += [[sg.Button('', size=(10, 3), button_color=('black', sg.theme_background_color()), image_filename=r'.\images\refresh_icon.png', image_size=(50, 50), image_subsample=6, border_width=0, key='refresh_btn')],]
 
@@ -181,39 +177,35 @@ def gui():
     ]
 
     # All the stuff inside your window.
-    layout = [[sg.Image(r'.\images\automated-video-testing-header.png')],
-              [sg.Frame('Devices', device_frame_layout, font='Any 12', title_color='white'),
-               sg.Frame('Settings', device_settings_frame_layout, font='Any 12', title_color='white')],
-              [sg.Frame('Logs', logs_frame_layout, font='Any 12', title_color='white')],
-              [sg.Frame('Test Case', case_frame_layout, font='Any 12', title_color='white')],
-              [sg.Frame('After Case', post_case_frame_layout, font='Any 12', title_color='white')],
-              [sg.Button('Exit', size=(6, 2)),
-               sg.Button('Capture Case', size=(12, 2), key='capture_case_btn', disabled=True),
-               sg.Button('Capture Cases (Advanced)', size=(20, 2), key='capture_multi_cases_btn', disabled=True)],
-              [sg.Text('_' * 107)],
-              [sg.Text('Application Logs', size=(70, 1))],
-              # [sg.Output(size=(105, 15))],
-              [sg.Text('App Version: {}'.format(APP_VERSION), size=(25, 1)), sg.Button(button_text='Test This', key='testtt')]
+    layout = [
+                  [sg.Image(r'.\images\automated-video-testing-header.png')],
+                  [
+                      sg.Frame('Devices', device_frame_layout, font='Any 12', title_color='white'),
+                      sg.Frame('Friendly Names', friendly_names, font='Any 12', title_color='white')
+                  ],
+                  [sg.Frame('Settings', device_settings_frame_layout, font='Any 12', title_color='white')],
+                  [sg.Frame('Logs', logs_frame_layout, font='Any 12', title_color='white')],
+                  [sg.Frame('Test Case', case_frame_layout, font='Any 12', title_color='white')],
+                  [sg.Frame('After Case', post_case_frame_layout, font='Any 12', title_color='white')],
+                  [
+                      sg.Button('Exit', size=(6, 2)),
+                      sg.Button('Capture Case', size=(12, 2), key='capture_case_btn', disabled=True),
+                      sg.Button('Capture Cases (Advanced)', size=(20, 2), key='capture_multi_cases_btn', disabled=True)],
+                  [sg.Text('_' * 107)],
+                  [sg.Text('Application Logs', size=(70, 1))],
+                  # [sg.Output(size=(105, 15))]
               ]
 
     # Create the Window
     window = sg.Window('Automated Photo/Video Testing', layout,
                        icon=r'.\images\automated-video-testing-header-icon.ico')
     device = []  # List to store devices objects
-    is_connected = False
+    connected_devices = []
 
     # Event Loop to process "events" and get the "values" of the inputs
     while True:
         event, values = window.read()
         devices_list = adb.list_devices()
-
-
-        if event == 'testtt':
-            device_frame_layout = device_frame_layout[:-1]
-            window.FindElement('device0').update('')
-            device_frame_layout = []
-            event, values = window.read()
-            print(device_frame_layout)
 
         if event == sg.WIN_CLOSED or event == 'Exit':  # if user closes window or clicks cancel
             break
@@ -258,21 +250,19 @@ def gui():
             window['reboot_device_btn'].Update(disabled=True)
             window['push_tuning_btn'].Update(disabled=True)
 
-        if devices_list:
-            for d_num, device_serial in enumerate(devices_list):
-                if event == 'device{}'.format(d_num):
-                    if values['device{}'.format(d_num)]:  # If Ticked
-                        device.append(Device(adb.client, device_serial))  # Assign device to object
-                        is_connected = True
-                    else:  # If unticked
-                        # del device[d_num]
-                        print('Unticked!')
+        if event == 'devices':
+            if values['devices']:
+                for d_num, device_serial in enumerate(values['devices']):
+                    device.append(Device(adb.client, device_serial))  # Assign device to object
+                    connected_devices.append(device_serial)
+                else:  # If unticked
+                    # del device[d_num]
+                    connected_devices.remove(device_serial)
+                    print('Unselected!')
+                print(connected_devices)
 
 
-                print('device{}'.format(d_num))  # TODO FIX THIS
-
-
-        if is_connected:
+        if connected_devices:
             window['camxoverride_btn'].Update(disabled=False)
             window['reboot_device_btn'].Update(disabled=False)
             window['push_tuning_btn'].Update(disabled=False)
@@ -313,7 +303,5 @@ def gui():
 
                 if event == "push_tuning_btn":
                     gui_push_tuning(device)
-
-
 
     window.close()
