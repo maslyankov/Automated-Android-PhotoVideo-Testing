@@ -135,10 +135,6 @@ def gui():
         friendly_names += [sg.InputText(key=f'device{num}_friendly', enable_events=True, size=(20, 1),
                       tooltip=f'Set friendly name for device{num}')],
 
-    #device_frame_layout[0][1] += [sg.InputText(key=f'device_friendly2', enable_events=True, size=(20, 1), tooltip='Set friendly name for device')],
-
-    # device_frame_layout += [[sg.Button('', size=(10, 3), button_color=('black', sg.theme_background_color()), image_filename=r'.\images\refresh_icon.png', image_size=(50, 50), image_subsample=6, border_width=0, key='refresh_btn')],]
-
     device_settings_frame_layout = [
         [sg.Button('Edit camxoverridesettings', button_color=(sg.theme_text_element_background_color(), 'silver'),
                    size=(20, 3),
@@ -192,7 +188,7 @@ def gui():
                       sg.Button('Capture Case', size=(12, 2), key='capture_case_btn', disabled=True),
                       sg.Button('Capture Cases (Advanced)', size=(20, 2), key='capture_multi_cases_btn', disabled=True)],
                   [sg.Text('_' * 75)],
-                  [sg.Frame('Output', [[sg.Output(size=(70, 8))]], font='Any 12', title_color='white')],
+                  # [sg.Frame('Output', [[sg.Output(size=(70, 8))]], font='Any 12', title_color='white')],
                   [sg.Text('App Version: {}'.format(APP_VERSION), size=(65, 1), justification="right")]
               ]
 
@@ -200,7 +196,7 @@ def gui():
     window = sg.Window('Automated Photo/Video Testing', layout,
                        icon=r'.\images\automated-video-testing-header-icon.ico')
     device = {}  # List to store devices objects
-    connected_devices = {}
+    connected_devices = []
 
     # Event Loop to process "events" and get the "values" of the inputs
     while True:
@@ -251,23 +247,34 @@ def gui():
             window['reboot_device_btn'].Update(disabled=True)
             window['push_tuning_btn'].Update(disabled=True)
 
-        devices_values = set(values['devices'])
+        devices_values = values['devices']
+
 
 
         if event == 'devices': ## This shit is not quite working
-            if len(values['devices']) > len(connected_devices) and values['devices'] not in connected_devices:  # Connect device
-                device.append(Device(adb.client, values['devices']))  # Assign device to object
-                print('List Before adding: {}, len: {}'.format(connected_devices, len(connected_devices)))
-                connected_devices.append(devices_values - connected_devices)
-                print('Connecting device: {}'.format(connected_devices - devices_values))
-                print('List After adding: {}, len: {}'.format(connected_devices, len(connected_devices)))
-            elif len(values['devices']) < len(connected_devices) and values['devices'] in connected_devices:  # Disconnect
-                print('List before removing: {}, len: {}'.format(connected_devices, len(connected_devices)))
-                connected_devices.remove(connected_devices - devices_values)
-                print('Disconnecting device: {}'.format(connected_devices - devices_values))
-                print('List After removing: {}, len: {}'.format(connected_devices, len(connected_devices)))
-            print('Connected devices list: {}'.format(connected_devices))
+            diff_device = [str(s) for s in (set(devices_values) ^ set(connected_devices))][0]
 
+            print('Connected devices list before changing: {}, len: {}'.format(connected_devices, len(connected_devices))) # Debugging
+            print('Devices objects list before changes: ', device)
+
+            if len(values['devices']) > len(connected_devices) \
+                    and diff_device not in connected_devices:  # Connect device
+                device[diff_device]=Device(adb.client, diff_device)  # Assign device to object
+                connected_devices.append(diff_device)
+
+                print('Added {} to connected devices!'.format(diff_device))
+
+            elif len(values['devices']) < len(connected_devices) \
+                    and diff_device in connected_devices:  # Disconnect
+                del device[diff_device]
+                print(device)
+
+                connected_devices.remove(diff_device)
+
+                print('was {} disconnected!'.format(diff_device))
+
+            print('Connected devices list after changing: {}, len: {}'.format(connected_devices, len(connected_devices))) # Debugging
+            print('Devices objects list after changes: ', device)
 
         if connected_devices:
             window['camxoverride_btn'].Update(disabled=False)
