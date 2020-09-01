@@ -1,4 +1,5 @@
 import subprocess
+import time
 
 from coords import *
 
@@ -69,3 +70,8 @@ class Device:
     def clear_camera_folder(self):
         self.d.shell("rm -rf sdcard/DCIM/Camera/*")
         print("Deleting files from device!")
+
+    def identify(self):
+        for i in range(0, 4):
+            self.d.shell('input keyevent 26')
+            #time.sleep(0.2)
