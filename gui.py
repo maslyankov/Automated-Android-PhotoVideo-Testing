@@ -2,6 +2,7 @@ from actions import *
 from device import Device
 import AdbClient
 import threading
+import os
 from pathlib import Path
 import PySimpleGUI as sg
 
@@ -9,7 +10,7 @@ APP_VERSION = '0.01 Beta'
 THREAD_EVENT = '-WATCHDOG-'
 
 
-def devices_watchdog(window):
+def devices_watchdog(window): # TODO
     """
     The thread that communicates with the application through the window's events.
 
@@ -32,7 +33,7 @@ def gui_camxoverride(connected_devices, device_obj):
 
     # All the stuff inside your window.
     layout = [
-        [sg.Combo(connected_devices, size=(20, 20), key='tuning_device', default_value=connected_devices[0])],
+        [sg.Combo(connected_devices, size=(20, 20), key='selected_device', default_value=connected_devices[0], enable_events=True)],
         [sg.Text('camxoverridesettings.txt:')],
         [sg.Multiline(camxoverride_content, size=(70, 30), key='camxoverride_input')],
         [sg.CloseButton('Close'),
@@ -48,7 +49,25 @@ def gui_camxoverride(connected_devices, device_obj):
         event, values = window.read()
 
         if event == sg.WIN_CLOSED or event == 'Close':  # if user closes window or clicks cancel
+            try:
+                os.remove(r'.\tmp\camxoverridesettings.txt')
+                os.remove(r'.\tmp\camxoverridesettings_new.txt')
+            except FileNotFoundError:
+                pass
             break
+
+        if event == 'selected_device':
+            try:
+                os.remove(r'.\tmp\camxoverridesettings.txt')
+                os.remove(r'.\tmp\camxoverridesettings_new.txt')
+            except FileNotFoundError:
+                pass
+
+            print("Pulling camxoverridesettings.txt from device...")
+            device_obj[values['selected_device']].pull_file('/vendor/etc/camera/camxoverridesettings.txt',
+                                                       r'.\tmp\camxoverridesettings.txt')
+            camxoverride_content = open(r'.\tmp\camxoverridesettings.txt', 'r').read()
+            window['camxoverride_input'].Update(camxoverride_content)
 
         if event == 'Save':
             print(values)
@@ -69,7 +88,7 @@ def gui_camxoverride(connected_devices, device_obj):
     window.close()
 
 
-def gui_push_tuning(connected_devices, device_obj):
+def gui_push_file(connected_devices, device_obj):
     file_destinations = [
         'sdcard/DCIM/',
         'vendor/lib/camera/'
@@ -77,20 +96,20 @@ def gui_push_tuning(connected_devices, device_obj):
 
     layout = [
         [
-            sg.Combo(connected_devices, size=(20, 20), key='tuning_device', default_value=connected_devices[0]),
+            sg.Combo(connected_devices, size=(20, 20), key='selected_device', default_value=connected_devices[0]),
             sg.Combo(file_destinations, size=(20, 20), key='dest_folder', default_value=file_destinations[0])
         ],
         [
-            sg.Text('Tuning File:', size=(11, 1)),
-            sg.InputText(size=(35, 1), key='tuning_source_file', enable_events=True),
+            sg.Text('File:', size=(11, 1)),
+            sg.InputText(size=(35, 1), key='source_file', enable_events=True),
             sg.FileBrowse()
         ],
-        [sg.Button('Push Tuning', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 2),
-                   key='push_tuning_file_btn', disabled=True)]
+        [sg.Button('Push File', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 2),
+                   key='push_file_btn', disabled=True)]
     ]
 
     # Create the Window
-    window = sg.Window('Push Tuning file', layout,
+    window = sg.Window('Push file file', layout,
                        icon=r'.\images\automated-video-testing-header-icon.ico')
 
     while True:
@@ -101,22 +120,20 @@ def gui_push_tuning(connected_devices, device_obj):
         if event == sg.WIN_CLOSED or event == 'Close':  # if user closes window or clicks cancel
             break
 
-        if event == 'tuning_source_file':
-            window['push_tuning_file_btn'].Update(disabled=False)
+        if event == 'source_file':
+            window['push_file_btn'].Update(disabled=False)
 
-        if event == 'push_tuning_file_btn':
-            curr_device = device_obj[values['tuning_device']]
+        if event == 'push_file_btn':
+            curr_device = device_obj[values['selected_device']]
             file_dest = values['dest_folder']
-            filename = Path(values['tuning_source_file']).name
+            filename = Path(values['source_file']).name
 
             print("Remounting Device...")
             curr_device.remount()
 
-            print("Pushing new tuning file to device...")
-            #curr_device.push_file(values['tuning_source_file'], "vendor/lib/camera/")
+            print("Pushing new file to device...")
 
-
-            curr_device.push_file(values['tuning_source_file'], file_dest + filename)
+            curr_device.push_file(values['source_file'], file_dest + filename)
 
     window.close()
 
@@ -124,13 +141,13 @@ def gui_push_tuning(connected_devices, device_obj):
 def gui_reboot_device(connected_devices, device_obj):
 
     layout = [
-        [sg.Combo(connected_devices, size=(20, 20), key='tuning_device', default_value=connected_devices[0])],
+        [sg.Combo(connected_devices, size=(20, 20), key='selected_device', default_value=connected_devices[0])],
         [sg.Button('Reboot', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 2),
                    key='reboot_device_btn', disabled=False)]
     ]
 
     # Create the Window
-    window = sg.Window('Push Tuning file', layout,
+    window = sg.Window('Reboot Device', layout,
                        icon=r'.\images\automated-video-testing-header-icon.ico')
 
     while True:
@@ -141,9 +158,9 @@ def gui_reboot_device(connected_devices, device_obj):
             break
 
         if event == 'reboot_device_btn':
-            curr_device = device_obj[values['tuning_device']]
+            curr_device = device_obj[values['selected_device']]
 
-            print("Rebooting Device ", values['tuning_device'])
+            print("Rebooting Device ", values['selected_device'])
             curr_device.reboot()
 
     window.close()
@@ -178,8 +195,8 @@ def gui():
 
     friendly_names = []
     for num, serial in enumerate(devices_list):
-        friendly_names += [sg.InputText(key=f'device_friendly.{serial}', enable_events=True, size=(20, 1),
-                                        tooltip=f'Set friendly name for device{num}'),
+        friendly_names += [sg.InputText(key=f'device_friendly.{serial}', enable_events=False, size=(20, 1),
+                                        tooltip=f'Set friendly name for device{num}', disabled=True),
                            sg.Button(f'Identify device {serial}',
                                      button_color=(sg.theme_text_element_background_color(), 'silver'),
                                      key=f'identify_device.{serial}',
@@ -194,9 +211,9 @@ def gui():
                    key='camxoverride_btn',
                    disabled=True,
                    tooltip='Edit or view camxoverridesettings any connected device'),
-         sg.Button('Push Tuning', button_color=(sg.theme_text_element_background_color(), 'silver'),
+         sg.Button('Push file', button_color=(sg.theme_text_element_background_color(), 'silver'),
                    size=(12, 3),
-                   key='push_tuning_btn',
+                   key='push_file_btn',
                    disabled=True),
          sg.Button('Reboot Device', button_color=(sg.theme_text_element_background_color(), 'silver'),
                    size=(12, 3),
@@ -300,7 +317,7 @@ def gui():
             window['capture_case_btn'].Update(disabled=True)
             window['capture_multi_cases_btn'].Update(disabled=True)
             window['reboot_device_btn'].Update(disabled=True)
-            window['push_tuning_btn'].Update(disabled=True)
+            window['push_file_btn'].Update(disabled=True)
 
         devices_values = values['devices']
 
@@ -317,6 +334,7 @@ def gui():
                 device[diff_device] = Device(adb.client, diff_device)  # Assign device to object
                 connected_devices.append(diff_device)
 
+                window['device_friendly.' + diff_device].Update(disabled=False)
                 window['identify_device.' + diff_device].Update(disabled=False)
 
                 print('Added {} to connected devices!'.format(diff_device))
@@ -330,6 +348,7 @@ def gui():
 
                 connected_devices.remove(diff_device)
 
+                window['device_friendly.' + diff_device].Update(disabled=True)
                 window['identify_device.' + diff_device].Update(disabled=True)
 
                 print('{} was disconnected!'.format(diff_device))
@@ -341,7 +360,7 @@ def gui():
             print('A Device is connected!')
             window['camxoverride_btn'].Update(disabled=False)
             window['reboot_device_btn'].Update(disabled=False)
-            window['push_tuning_btn'].Update(disabled=False)
+            window['push_file_btn'].Update(disabled=False)
             if event == "pull_files":
                 if values['save_location'] != "":
                     window['capture_case_btn'].Update(disabled=False)
@@ -353,7 +372,7 @@ def gui():
             print('No connected devices!')
             window['camxoverride_btn'].Update(disabled=True)
             window['reboot_device_btn'].Update(disabled=True)
-            window['push_tuning_btn'].Update(disabled=True)
+            window['push_file_btn'].Update(disabled=True)
             window['capture_case_btn'].Update(disabled=True)
             window['capture_multi_cases_btn'].Update(disabled=True)
 
@@ -362,7 +381,7 @@ def gui():
 
         window['duration_spinner'].Update(disabled=values['mode_photos'])
 
-        if event == "capture_case_btn" or event == "camxoverride_btn" or event == 'push_tuning_btn':
+        if event == "capture_case_btn" or event == "camxoverride_btn" or event == 'push_file_btn':
             if not connected_devices:
                 print("First select a device and connect to it!")
             else:
@@ -387,7 +406,7 @@ def gui():
                 if event == "camxoverride_btn":
                     gui_camxoverride(connected_devices, device)
 
-                if event == "push_tuning_btn":
-                    gui_push_tuning(connected_devices, device)
+                if event == "push_file_btn":
+                    gui_push_file(connected_devices, device)
 
     window.close()
