@@ -7,7 +7,7 @@ class AdbClient:
     def __init__(self):
         print("Starting the ADB Server...")
         try:
-            self.adb = subprocess.Popen(['adb.exe', 'root'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            self.adb = subprocess.Popen(['adb.exe', 'start-server'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             stdout, stderr = self.adb.communicate()
             if stdout:
                 print("ADB Start Output: " + stdout.decode())  # Debugging
