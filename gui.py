@@ -166,6 +166,33 @@ def gui_reboot_device(connected_devices, device_obj):
     window.close()
 
 
+def gui_setup_device(connected_devices, device_obj):
+
+    layout = [
+        [
+            sg.Combo(connected_devices, size=(20, 20), key='selected_device', default_value=connected_devices[0])
+        ],
+        [
+            sg.Text('File:', size=(11, 1)),
+            sg.InputText(size=(35, 1), key='source_file', enable_events=True),
+        ],
+        [sg.Button('Push File', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 2),
+                   key='push_file_btn', disabled=True)]
+    ]
+
+    # Create the Window
+    window = sg.Window('Setup', layout,
+                       icon=r'.\images\automated-video-testing-header-icon.ico')
+
+    while True:
+        event, values = window.read()
+        print(values)  # Debugging
+
+        if event == sg.WIN_CLOSED or event == 'Close':  # if user closes window or clicks cancel
+            break
+
+    window.close()
+
 def loading(secs):  # Only gives fanciness
     for i in range(1, 15 * secs):
         sg.popup_animated(image_source=r'.\images\loading3.gif', message='Loading...', no_titlebar=True,
@@ -329,6 +356,7 @@ def gui():
             window['capture_multi_cases_btn'].Update(disabled=True)
             window['reboot_device_btn'].Update(disabled=True)
             window['push_file_btn'].Update(disabled=True)
+            window['setup_device_btn'].Update(disabled=True)
 
         devices_values = values['devices']
 
@@ -370,6 +398,7 @@ def gui():
             window['camxoverride_btn'].Update(disabled=False)
             window['reboot_device_btn'].Update(disabled=False)
             window['push_file_btn'].Update(disabled=False)
+            window['setup_device_btn'].Update(disabled=False)
             if event == "pull_files":
                 if values['save_location'] != "":
                     window['capture_case_btn'].Update(disabled=False)
@@ -382,6 +411,7 @@ def gui():
             window['camxoverride_btn'].Update(disabled=True)
             window['reboot_device_btn'].Update(disabled=True)
             window['push_file_btn'].Update(disabled=True)
+            window['setup_device_btn'].Update(disabled=True)
             window['capture_case_btn'].Update(disabled=True)
             window['capture_multi_cases_btn'].Update(disabled=True)
 
@@ -390,32 +420,34 @@ def gui():
 
         window['duration_spinner'].Update(disabled=values['mode_photos'])
 
-        if event == "capture_case_btn" or event == "camxoverride_btn" or event == 'push_file_btn':
-            if not connected_devices:
-                print("First select a device and connect to it!")
-            else:
-                if event == "capture_case_btn":
-                    device.open_snap_cam()
-                    # Photos Mode
-                    if values['mode_photos'] or values['mode_both']:
-                        shoot_photo(device, values['logs_bool'], values['logs_filter'],
-                                    "{}/logfile.txt".format(values['save_location']))
+        if not connected_devices:
+            print("First select a device and connect to it!")
+        else:
+            if event == "capture_case_btn":
+                device.open_snap_cam()
+                # Photos Mode
+                if values['mode_photos'] or values['mode_both']:
+                    shoot_photo(device, values['logs_bool'], values['logs_filter'],
+                                "{}/logfile.txt".format(values['save_location']))
 
-                    # Videos Mode
-                    if values['mode_videos'] or values['mode_both']:
-                        shoot_video(device, values['duration_spinner'], values['logs_bool'], values['logs_filter'],
-                                    "{}/logfile.txt".format(values['save_location']))
+                # Videos Mode
+                if values['mode_videos'] or values['mode_both']:
+                    shoot_video(device, values['duration_spinner'], values['logs_bool'], values['logs_filter'],
+                                "{}/logfile.txt".format(values['save_location']))
 
-                    if values['pull_files']:
-                        if values['save_location']:
-                            pull_camera_files(device, values['save_location'], values['clear_files'])
-                        else:
-                            print("Save Location must be set!")
+                if values['pull_files']:
+                    if values['save_location']:
+                        pull_camera_files(device, values['save_location'], values['clear_files'])
+                    else:
+                        print("Save Location must be set!")
 
-                if event == "camxoverride_btn":
-                    gui_camxoverride(connected_devices, device)
+            if event == "camxoverride_btn":
+                gui_camxoverride(connected_devices, device)
 
-                if event == "push_file_btn":
-                    gui_push_file(connected_devices, device)
+            if event == "push_file_btn":
+                gui_push_file(connected_devices, device)
+
+            if event == "setup_device_btn":
+                gui_setup_device(connected_devices, device)
 
     window.close()
