@@ -79,10 +79,10 @@ def gui_camxoverride(connected_devices, device_obj):
             camxoverride_new.write(values['camxoverride_input'])
             camxoverride_new.close()
 
-            device_obj.remount()
+            device_obj[values['selected_device']].remount()
 
             print("Pushing new camxoverridesettings.txt file to device...")
-            device_obj.push_file(r'.\tmp\camxoverridesettings_new.txt', "/vendor/etc/camera/camxoverridesettings.txt")
+            device_obj[values['selected_device']].push_file(r'.\tmp\camxoverridesettings_new.txt', "/vendor/etc/camera/camxoverridesettings.txt")
 
 
     window.close()

@@ -12,41 +12,19 @@ class Device:
     def __init__(self, adb_client, device_serial):
         print("Connecting to device...")
 
+        self.root()
         self.d = adb_client.device(device_serial)
         self.device_serial = device_serial
 
         print("Device Serial: ", device_serial)
 
-    def exec_shell(self, cmd):
-        return self.d.shell(cmd)
-
-    def input_tap(self, *coords): # Send tap events
-        self.d.shell("input tap {} {}".format(coords[0][0], coords[0][1]))
-
-    def start_video(self):
-        self.input_tap(shoot_video())
-
-    def stop_video(self):
-        self.input_tap(stop_video())
-
-    def take_photo(self):
-        self.input_tap(shoot_photo())
-
-    def get_current_app(self):
-        return self.d.shell("dumpsys window windows | grep -E 'mFocusedApp'| cut -d / -f 1 | cut -d ' ' -f 7").rstrip()
-
-    def open_snap_cam(self): # Todo Make this with an argument for app package
-        if self.get_current_app() != SNAP_CAM:
-            print("Opening Snap Cam...")
-            self.d.shell("monkey -p '{}' -v 1".format(SNAP_CAM))
-        else:
-            print("Snap Cam was already opened! Continuing...")
-
-    def push_file(self, src, dst):
-        self.d.push(src, dst)
-
-    def pull_file(self, src, dst):
-        self.d.pull(src, dst)
+    def root(self):
+        print("Rooting device " + self.device_serial)
+        remount = subprocess.Popen(['adb.exe', '-s', self.device_serial, 'remount'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = remount.communicate()
+        print("Rooting Errors: ".format(stderr.decode()))
+        print("Rooting Output: ".format(stdout.decode()))
+        remount.terminate()
 
     def remount(self):
         print("Remount device serial: " + self.device_serial)
@@ -56,8 +34,30 @@ class Device:
         print("Remonut Output: ".format(stdout.decode()))
         remount.terminate()
 
+    def exec_shell(self, cmd):
+        return self.d.shell(cmd)
+
+    def input_tap(self, *coords): # Send tap events
+        self.d.shell("input tap {} {}".format(coords[0][0], coords[0][1]))
+
     def reboot(self):
         self.d.shell("reboot")
+
+    def get_current_app(self):
+        return self.d.shell("dumpsys window windows | grep -E 'mFocusedApp'| cut -d / -f 1 | cut -d ' ' -f 7").rstrip()
+
+    def open_app(self, package):
+        if self.get_current_app() != package:
+            print("Opening {}...".format(package))
+            self.d.shell("monkey -p '{}' -v 1".format(package))
+        else:
+            print("{} was already opened! Continuing...".format(package))
+
+    def push_file(self, src, dst):
+        self.d.push(src, dst)
+
+    def pull_file(self, src, dst):
+        self.d.pull(src, dst)
 
     def get_camera_files_list(self):
         try:
@@ -101,3 +101,20 @@ class Device:
             if (elem_res_id or elem_desc) and int(elem_bounds[0]) > 0:
                 print("Elem {} ({}) - {}".format(elem_desc, elem_res_id, elem_bounds))
 
+    # Will be changed [START]
+    def open_snap_cam(self): # Todo Make this with an argument for app package
+        if self.get_current_app() != SNAP_CAM:
+            print("Opening Snap Cam...")
+            self.d.shell("monkey -p '{}' -v 1".format(SNAP_CAM))
+        else:
+            print("Snap Cam was already opened! Continuing...")
+
+    def start_video(self):
+        self.input_tap(shoot_video())
+
+    def stop_video(self):
+        self.input_tap(stop_video())
+
+    def take_photo(self):
+        self.input_tap(shoot_photo())
+    # Will be changed [END]
