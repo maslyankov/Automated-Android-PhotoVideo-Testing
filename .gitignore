@@ -147,3 +147,4 @@ tests*/
 log*.txt
 tmp/*
 camxoverridesettings*.txt
+*.xml

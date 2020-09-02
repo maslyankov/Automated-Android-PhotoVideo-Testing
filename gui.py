@@ -167,7 +167,7 @@ def gui():
     devices_list = adb.list_devices()
     # devices_list = ['asd', 'fs', 'gfd']
 
-    loading(1)
+    loading(3)
 
     device_frame_layout = [
         [sg.Listbox(values=devices_list if devices_list else ['No devices found!'], size=(30, 5),
@@ -314,12 +314,14 @@ def gui():
 
             if len(values['devices']) > len(connected_devices) \
                     and diff_device not in connected_devices:  # Connect device
-                device[diff_device]=Device(adb.client, diff_device)  # Assign device to object
+                device[diff_device] = Device(adb.client, diff_device)  # Assign device to object
                 connected_devices.append(diff_device)
 
                 window['identify_device.' + diff_device].Update(disabled=False)
 
                 print('Added {} to connected devices!'.format(diff_device))
+
+                print('Currently opened app: {}'.format(device[diff_device].get_current_app()))
 
             elif len(values['devices']) < len(connected_devices) \
                     and diff_device in connected_devices:  # Disconnect

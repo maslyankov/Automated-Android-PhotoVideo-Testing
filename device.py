@@ -1,5 +1,7 @@
 import subprocess
 import time
+import xml.etree.ElementTree as ET
+import re
 
 from coords import *
 
@@ -31,9 +33,9 @@ class Device:
         self.input_tap(shoot_photo())
 
     def get_current_app(self):
-        return self.d.shell("dumpsys window windows | grep -E 'mFocusedApp'| cut -d / -f 1 | cut -d ' ' -f 7")
+        return self.d.shell("dumpsys window windows | grep -E 'mFocusedApp'| cut -d / -f 1 | cut -d ' ' -f 7").rstrip()
 
-    def open_snap_cam(self):
+    def open_snap_cam(self): # Todo Make this with an argument for app package
         if self.get_current_app() != SNAP_CAM:
             print("Opening Snap Cam...")
             self.d.shell("monkey -p '{}' -v 1".format(SNAP_CAM))
@@ -75,3 +77,27 @@ class Device:
         for i in range(0, 4):
             self.d.shell('input keyevent 26')
             #time.sleep(0.2)
+
+    def dump_window_elements(self):
+        # "adb -s {} shell uiautomator dump && adb -s {} pull /sdcard/window_dump.xml {}
+        self.d.shell('uiautomator dump')
+        self.d.pull('/sdcard/window_dump.xml', './XML/{}_{}.xml'.format(self.device_serial, self.get_current_app()))
+        print('Dumped window elements for current app')
+
+    def get_clickable_window_elements(self):
+        self.dump_window_elements()
+
+        print('Parsing xml...')
+
+        xml_tree = ET.parse("./XML/{}_{}.xml".format(self.device_serial, self.get_current_app()))
+        xml_root = xml_tree.getroot()
+
+        for element in xml_root.iter("node"):
+            # this will print a list of the contents of the tag
+            elem_res_id = element.attrib['resource-id']
+            elem_desc = element.attrib['content-desc']
+            elem_bounds = re.findall(r'\[([^]]*)\]', element.attrib['bounds'])[0].split(',')
+
+            if (elem_res_id or elem_desc) and int(elem_bounds[0]) > 0:
+                print("Elem {} ({}) - {}".format(elem_desc, elem_res_id, elem_bounds))
+
