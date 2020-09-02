@@ -86,7 +86,6 @@ class Device:
             #time.sleep(0.2)
 
     def dump_window_elements(self):
-        # "adb -s {} shell uiautomator dump && adb -s {} pull /sdcard/window_dump.xml {}
         self.d.shell('uiautomator dump')
         self.d.pull('/sdcard/window_dump.xml', './XML/{}_{}.xml'.format(self.device_serial, self.get_current_app()))
         print('Dumped window elements for current app')
@@ -100,7 +99,6 @@ class Device:
         xml_root = xml_tree.getroot()
 
         for element in xml_root.iter("node"):
-            # this will print a list of the contents of the tag
             elem_res_id = element.attrib['resource-id']
             elem_desc = element.attrib['content-desc']
             elem_bounds = re.findall(r'\[([^]]*)\]', element.attrib['bounds'])[0].split(',')
@@ -109,7 +107,7 @@ class Device:
                 print("Elem {} ({}) - {}".format(elem_desc, elem_res_id, elem_bounds))
 
     # Will be changed [START]
-    def open_snap_cam(self): # Todo Make this with an argument for app package
+    def open_snap_cam(self):  # Todo Make this with an argument for app package
         if self.get_current_app() != SNAP_CAM:
             print("Opening Snap Cam...")
             self.d.shell("monkey -p '{}' -v 1".format(SNAP_CAM))

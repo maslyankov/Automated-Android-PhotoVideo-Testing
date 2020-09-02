@@ -205,8 +205,8 @@ def gui():
                                      enable_events=True)
                            ],
 
-    device_settings_frame_layout = [
-        [sg.Button('Edit camxoverridesettings', button_color=(sg.theme_text_element_background_color(), 'silver'),
+    device_settings_frame_layout = [[
+         sg.Button('Edit camxoverridesettings', button_color=(sg.theme_text_element_background_color(), 'silver'),
                    size=(20, 3),
                    key='camxoverride_btn',
                    disabled=True,
@@ -219,7 +219,12 @@ def gui():
                    size=(12, 3),
                    key='reboot_device_btn',
                    disabled=True,
-                   tooltip='Reboot devices immediately')
+                   tooltip='Reboot devices immediately'),
+         sg.Button('Setup', button_color=(sg.theme_text_element_background_color(), 'silver'),
+                   size=(12, 3),
+                   key='setup_device_btn',
+                   disabled=True,
+                   tooltip='Setup device settings, calibrate touch events etc.'),
          ],
     ]
 
@@ -228,19 +233,25 @@ def gui():
         [sg.Text('Logs Filter:'), sg.InputText(size=(42, 1), key='logs_filter', disabled=True)],
     ]
 
-    case_frame_layout = [
-        [sg.Radio('Photos', "MODE", default=True, key='mode_photos', enable_events=True),
+    case_frame_layout = [[
+         sg.Radio('Photos', "MODE", default=True, key='mode_photos', enable_events=True),
          sg.Radio('Videos', "MODE", key='mode_videos', enable_events=True),
          sg.Radio('Both', "MODE", key='mode_both', enable_events=True),
          sg.Spin([i for i in range(5, 60)], initial_value=10, key='duration_spinner', disabled=True),
-         sg.Text('Video Duration (secs)')],
+         sg.Text('Video Duration (secs)')
+        ],
     ]
 
     post_case_frame_layout = [
-        [sg.Checkbox('Pull files from device', default=True, size=(16, 1), key='pull_files', enable_events=True),
-         sg.Checkbox('and delete them', default=True, size=(12, 1), key='clear_files')],
-        [sg.Text('Save Location:', size=(11, 1)), sg.InputText(size=(35, 1), key='save_location', enable_events=True),
-         sg.FolderBrowse(key='save_location_browse_btn')],
+        [
+            sg.Checkbox('Pull files from device', default=True, size=(16, 1), key='pull_files', enable_events=True),
+            sg.Checkbox('and delete them', default=True, size=(12, 1), key='clear_files')
+        ],
+        [
+            sg.Text('Save Location:', size=(11, 1)),
+            sg.InputText(size=(35, 1), key='save_location', enable_events=True),
+            sg.FolderBrowse(key='save_location_browse_btn')
+        ],
     ]
 
     # All the stuff inside your window.
@@ -289,7 +300,7 @@ def gui():
             window['clear_files'].Update(disabled=not values['pull_files'])
             window['save_location'].Update(disabled=not values['pull_files'])
             window['save_location_browse_btn'].Update(disabled=not values['pull_files'])
-            if values['save_location'] == '':  ## TODO FIX THIS
+            if values['save_location'] == '':  # TODO FIX THIS
                 window['capture_case_btn'].Update(disabled=True)
                 window['capture_multi_cases_btn'].Update(disabled=True)
 
@@ -321,9 +332,7 @@ def gui():
 
         devices_values = values['devices']
 
-
-
-        if event == 'devices': ## This shit is not quite working
+        if event == 'devices':
             diff_device = [str(s) for s in (set(devices_values) ^ set(connected_devices))][0]
 
             print('Connected devices list before changing: {}, len: {}'.format(connected_devices, len(connected_devices))) # Debugging
