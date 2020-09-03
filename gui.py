@@ -10,7 +10,7 @@ APP_VERSION = '0.01 Beta'
 THREAD_EVENT = '-WATCHDOG-'
 
 
-def devices_watchdog(window): # TODO
+def devices_watchdog(window):  # TODO
     """
     The thread that communicates with the application through the window's events.
 
@@ -20,25 +20,27 @@ def devices_watchdog(window): # TODO
     while True:
         time.sleep(1)
         window.write_event_value(THREAD_EVENT, (
-        threading.current_thread().name, i))  # Data sent is a tuple of thread name and counter
+            threading.current_thread().name, i))  # Data sent is a tuple of thread name and counter
         print('This is cheating from the thread')
         i += 1
 
 
 def gui_camxoverride(connected_devices, device_obj):
     print("Pulling camxoverridesettings.txt from device...")
-    device_obj[connected_devices[0]].pull_file('/vendor/etc/camera/camxoverridesettings.txt', r'.\tmp\camxoverridesettings.txt')
+    device_obj[connected_devices[0]].pull_file('/vendor/etc/camera/camxoverridesettings.txt',
+                                               r'.\tmp\camxoverridesettings.txt')
 
     camxoverride_content = open(r'.\tmp\camxoverridesettings.txt', 'r').read()
 
     # All the stuff inside your window.
     layout = [
-        [sg.Combo(connected_devices, size=(20, 20), key='selected_device', default_value=connected_devices[0], enable_events=True)],
+        [sg.Combo(connected_devices, size=(20, 20), key='selected_device', default_value=connected_devices[0],
+                  enable_events=True)],
         [sg.Text('camxoverridesettings.txt:')],
         [sg.Multiline(camxoverride_content, size=(70, 30), key='camxoverride_input')],
         [sg.CloseButton('Close'),
-        sg.Button('Save')
-        ]
+         sg.Button('Save')
+         ]
     ]
 
     # Create the Window
@@ -65,7 +67,7 @@ def gui_camxoverride(connected_devices, device_obj):
 
             print("Pulling camxoverridesettings.txt from device...")
             device_obj[values['selected_device']].pull_file('/vendor/etc/camera/camxoverridesettings.txt',
-                                                       r'.\tmp\camxoverridesettings.txt')
+                                                            r'.\tmp\camxoverridesettings.txt')
             camxoverride_content = open(r'.\tmp\camxoverridesettings.txt', 'r').read()
             window['camxoverride_input'].Update(camxoverride_content)
 
@@ -82,8 +84,8 @@ def gui_camxoverride(connected_devices, device_obj):
             device_obj[values['selected_device']].remount()
 
             print("Pushing new camxoverridesettings.txt file to device...")
-            device_obj[values['selected_device']].push_file(r'.\tmp\camxoverridesettings_new.txt', "/vendor/etc/camera/camxoverridesettings.txt")
-
+            device_obj[values['selected_device']].push_file(r'.\tmp\camxoverridesettings_new.txt',
+                                                            "/vendor/etc/camera/camxoverridesettings.txt")
 
     window.close()
 
@@ -116,7 +118,6 @@ def gui_push_file(connected_devices, device_obj):
         event, values = window.read()
         print(values)  # Debugging
 
-
         if event == sg.WIN_CLOSED or event == 'Close':  # if user closes window or clicks cancel
             break
 
@@ -139,7 +140,6 @@ def gui_push_file(connected_devices, device_obj):
 
 
 def gui_reboot_device(connected_devices, device_obj):
-
     layout = [
         [sg.Combo(connected_devices, size=(20, 20), key='selected_device', default_value=connected_devices[0])],
         [sg.Button('Reboot', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 2),
@@ -167,23 +167,34 @@ def gui_reboot_device(connected_devices, device_obj):
 
 
 def gui_setup_device(connected_devices, device_obj):
+    select_device_frame = [[
+        sg.Combo(connected_devices, size=(20, 20), key='selected_device', default_value=connected_devices[0])
+    ],]
+
+    select_app_frame = [[
+        sg.Combo(device_obj[connected_devices[0]].get_installed_packages(), size=(40, 1), key='selected_app_package'),
+        sg.Button('Test it!', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 1),
+                  key='test_app_btn', disabled=False)
+    ],]
+
+    photo_sequence_frame = [[
+        #sg.Combo(device_obj[connected_devices[0]].get_clickable_window_elements()[0], size=(40, 1), key='photo_selected_action_0'),
+        sg.Button('Test it!', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 1),
+                  key='testphoto_selected_action_0', disabled=False)
+    ],]
 
     layout = [
-        [
-            sg.Combo(connected_devices, size=(20, 20), key='selected_device', default_value=connected_devices[0])
-        ],
-        [
-            sg.Combo(device_obj[connected_devices[0]].get_installed_packages(), size=(40, 1), key='selected_app_package'),
-            sg.Button('Test it!', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 1),
-                      key='test_app_btn', disabled=False),
-        ],
-        [sg.Button('Push File', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 2),
-                   key='push_file_btn', disabled=True)]
+        [sg.Frame('Select device', select_device_frame, font='Any 12', title_color='white')],
+        [sg.Frame('Select Camera App', select_app_frame, font='Any 12', title_color='white')],
+        [sg.Frame('Take Photo Action Sequence', photo_sequence_frame, font='Any 12', title_color='white')],
+        [sg.Button('Save Settings', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 2),
+                   key='save_btn', disabled=False)]
     ]
 
     # Create the Window
     window = sg.Window('Setup', layout,
                        icon=r'.\images\automated-video-testing-header-icon.ico')
+
 
     while True:
         event, values = window.read()
@@ -195,7 +206,11 @@ def gui_setup_device(connected_devices, device_obj):
         if event == 'test_app_btn':
             device_obj[values['selected_device']].open_app(values['selected_app_package'])
 
+        if event == 'save_btn':
+            print(device_obj[connected_devices[0]].get_clickable_window_elements())
+
     window.close()
+
 
 def loading(secs):  # Only gives fanciness
     for i in range(1, 15 * secs):
@@ -237,26 +252,26 @@ def gui():
                            ],
 
     device_settings_frame_layout = [[
-         sg.Button('Edit camxoverridesettings', button_color=(sg.theme_text_element_background_color(), 'silver'),
-                   size=(20, 3),
-                   key='camxoverride_btn',
-                   disabled=True,
-                   tooltip='Edit or view camxoverridesettings any connected device'),
-         sg.Button('Push file', button_color=(sg.theme_text_element_background_color(), 'silver'),
-                   size=(12, 3),
-                   key='push_file_btn',
-                   disabled=True),
-         sg.Button('Reboot Device', button_color=(sg.theme_text_element_background_color(), 'silver'),
-                   size=(12, 3),
-                   key='reboot_device_btn',
-                   disabled=True,
-                   tooltip='Reboot devices immediately'),
-         sg.Button('Setup', button_color=(sg.theme_text_element_background_color(), 'silver'),
-                   size=(12, 3),
-                   key='setup_device_btn',
-                   disabled=True,
-                   tooltip='Setup device settings, calibrate touch events etc.'),
-         ],
+        sg.Button('Edit camxoverridesettings', button_color=(sg.theme_text_element_background_color(), 'silver'),
+                  size=(20, 3),
+                  key='camxoverride_btn',
+                  disabled=True,
+                  tooltip='Edit or view camxoverridesettings any connected device'),
+        sg.Button('Push file', button_color=(sg.theme_text_element_background_color(), 'silver'),
+                  size=(12, 3),
+                  key='push_file_btn',
+                  disabled=True),
+        sg.Button('Reboot Device', button_color=(sg.theme_text_element_background_color(), 'silver'),
+                  size=(12, 3),
+                  key='reboot_device_btn',
+                  disabled=True,
+                  tooltip='Reboot devices immediately'),
+        sg.Button('Setup', button_color=(sg.theme_text_element_background_color(), 'silver'),
+                  size=(12, 3),
+                  key='setup_device_btn',
+                  disabled=True,
+                  tooltip='Setup device settings, calibrate touch events etc.'),
+    ],
     ]
 
     logs_frame_layout = [
@@ -265,12 +280,12 @@ def gui():
     ]
 
     case_frame_layout = [[
-         sg.Radio('Photos', "MODE", default=True, key='mode_photos', enable_events=True),
-         sg.Radio('Videos', "MODE", key='mode_videos', enable_events=True),
-         sg.Radio('Both', "MODE", key='mode_both', enable_events=True),
-         sg.Spin([i for i in range(5, 60)], initial_value=10, key='duration_spinner', disabled=True),
-         sg.Text('Video Duration (secs)')
-        ],
+        sg.Radio('Photos', "MODE", default=True, key='mode_photos', enable_events=True),
+        sg.Radio('Videos', "MODE", key='mode_videos', enable_events=True),
+        sg.Radio('Both', "MODE", key='mode_both', enable_events=True),
+        sg.Spin([i for i in range(5, 60)], initial_value=10, key='duration_spinner', disabled=True),
+        sg.Text('Video Duration (secs)')
+    ],
     ]
 
     post_case_frame_layout = [
@@ -287,23 +302,23 @@ def gui():
 
     # All the stuff inside your window.
     layout = [
-                  [sg.Image(r'.\images\automated-video-testing-header.png')],
-                  [
-                      sg.Frame('Devices', device_frame_layout, font='Any 12', title_color='white'),
-                      sg.Frame('Friendly Names', friendly_names, font='Any 12', title_color='white')
-                  ],
-                  [sg.Frame('Settings', device_settings_frame_layout, font='Any 12', title_color='white')],
-                  [sg.Frame('Logs', logs_frame_layout, font='Any 12', title_color='white')],
-                  [sg.Frame('Test Case', case_frame_layout, font='Any 12', title_color='white')],
-                  [sg.Frame('After Case', post_case_frame_layout, font='Any 12', title_color='white')],
-                  [
-                      sg.Button('Exit', size=(6, 2)),
-                      sg.Button('Capture Case', size=(12, 2), key='capture_case_btn', disabled=True),
-                      sg.Button('Capture Cases (Advanced)', size=(20, 2), key='capture_multi_cases_btn', disabled=True)],
-                  [sg.Text('_' * 75)],
-                  # [sg.Frame('Output', [[sg.Output(size=(70, 8))]], font='Any 12', title_color='white')],
-                  [sg.Text('App Version: {}'.format(APP_VERSION), size=(65, 1), justification="right")]
-              ]
+        [sg.Image(r'.\images\automated-video-testing-header.png')],
+        [
+            sg.Frame('Devices', device_frame_layout, font='Any 12', title_color='white'),
+            sg.Frame('Friendly Names', friendly_names, font='Any 12', title_color='white')
+        ],
+        [sg.Frame('Settings', device_settings_frame_layout, font='Any 12', title_color='white')],
+        [sg.Frame('Logs', logs_frame_layout, font='Any 12', title_color='white')],
+        [sg.Frame('Test Case', case_frame_layout, font='Any 12', title_color='white')],
+        [sg.Frame('After Case', post_case_frame_layout, font='Any 12', title_color='white')],
+        [
+            sg.Button('Exit', size=(6, 2)),
+            sg.Button('Capture Case', size=(12, 2), key='capture_case_btn', disabled=True),
+            sg.Button('Capture Cases (Advanced)', size=(20, 2), key='capture_multi_cases_btn', disabled=True)],
+        [sg.Text('_' * 75)],
+        # [sg.Frame('Output', [[sg.Output(size=(70, 8))]], font='Any 12', title_color='white')],
+        [sg.Text('App Version: {}'.format(APP_VERSION), size=(65, 1), justification="right")]
+    ]
 
     # Create the Window
     window = sg.Window('Automated Photo/Video Testing', layout,
@@ -367,7 +382,8 @@ def gui():
         if event == 'devices':
             diff_device = [str(s) for s in (set(devices_values) ^ set(connected_devices))][0]
 
-            print('Connected devices list before changing: {}, len: {}'.format(connected_devices, len(connected_devices))) # Debugging
+            print('Connected devices list before changing: {}, len: {}'.format(connected_devices,
+                                                                               len(connected_devices)))  # Debugging
             print('Devices objects list before changes: ', device)
 
             if len(values['devices']) > len(connected_devices) \
@@ -375,7 +391,9 @@ def gui():
                 device[diff_device] = Device(adb.client, diff_device)  # Assign device to object
                 connected_devices.append(diff_device)
 
-                window['device_friendly.' + diff_device].Update(values['device_friendly.' + diff_device] if values['device_friendly.' + diff_device] else device[diff_device].get_device_model(), disabled=False)
+                window['device_friendly.' + diff_device].Update(
+                    values['device_friendly.' + diff_device] if values['device_friendly.' + diff_device] else device[
+                        diff_device].get_device_model(), disabled=False)
                 window['identify_device.' + diff_device].Update(disabled=False)
 
                 print('Added {} to connected devices!'.format(diff_device))
@@ -394,7 +412,8 @@ def gui():
 
                 print('{} was disconnected!'.format(diff_device))
 
-            print('Connected devices list after changing: {}, len: {}'.format(connected_devices, len(connected_devices))) # Debugging
+            print('Connected devices list after changing: {}, len: {}'.format(connected_devices,
+                                                                              len(connected_devices)))  # Debugging
             print('Devices objects list after changes: ', device)
 
         if connected_devices:
@@ -407,7 +426,7 @@ def gui():
                 if values['save_location'] != "":
                     window['capture_case_btn'].Update(disabled=False)
                     window['capture_multi_cases_btn'].Update(disabled=False)
-            if event.split('.')[0] == 'identify_device': # Identify Buttons
+            if event.split('.')[0] == 'identify_device':  # Identify Buttons
                 print('Identifying ' + event.split('.')[1])
                 device[event.split('.')[1]].identify()
         else:

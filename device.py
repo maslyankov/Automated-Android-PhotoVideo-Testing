@@ -106,14 +106,19 @@ class Device:
 
         xml_tree = ET.parse("./XML/{}_{}.xml".format(self.device_serial, self.get_current_app()))
         xml_root = xml_tree.getroot()
+        elements = {}
 
         for element in xml_root.iter("node"):
-            elem_res_id = element.attrib['resource-id']
+            elem_res_id = element.attrib['resource-id'].split('/')
             elem_desc = element.attrib['content-desc']
             elem_bounds = re.findall(r'\[([^]]*)\]', element.attrib['bounds'])[0].split(',')
 
             if (elem_res_id or elem_desc) and int(elem_bounds[0]) > 0:
-                print("Elem {} ({}) - {}".format(elem_desc, elem_res_id, elem_bounds))
+                elem_bounds[0] = int(elem_bounds[0]) + 1
+                elem_bounds[1] = int(elem_bounds[1]) + 1
+                elements[elem_res_id[1]] = elem_desc, elem_bounds
+
+        return elements
 
     # Will be changed [START]
     def open_snap_cam(self):  # Todo Make this with an argument for app package
