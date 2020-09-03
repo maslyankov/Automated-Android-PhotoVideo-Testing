@@ -53,8 +53,14 @@ class Device:
     def get_current_app(self):
         return self.d.shell("dumpsys window windows | grep -E 'mFocusedApp'| cut -d / -f 1 | cut -d ' ' -f 7").rstrip()
 
-    def get_device_name(self):
+    def get_device_model(self):
         return self.d.shell("getprop ro.product.model").rstrip()
+
+    def get_device_name(self):
+        return self.d.shell("getprop ro.product.name").rstrip()
+
+    def get_installed_packages(self):
+        return self.d.shell("cmd package list packages -e | cut -f 2 -d ':' | sort").splitlines()
 
     def open_app(self, package):
         if self.get_current_app() != package:

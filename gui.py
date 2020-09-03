@@ -173,8 +173,9 @@ def gui_setup_device(connected_devices, device_obj):
             sg.Combo(connected_devices, size=(20, 20), key='selected_device', default_value=connected_devices[0])
         ],
         [
-            sg.Text('File:', size=(11, 1)),
-            sg.InputText(size=(35, 1), key='source_file', enable_events=True),
+            sg.Combo(device_obj[connected_devices[0]].get_installed_packages(), size=(40, 1), key='selected_app_package'),
+            sg.Button('Test it!', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 1),
+                      key='test_app_btn', disabled=False),
         ],
         [sg.Button('Push File', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 2),
                    key='push_file_btn', disabled=True)]
@@ -190,6 +191,9 @@ def gui_setup_device(connected_devices, device_obj):
 
         if event == sg.WIN_CLOSED or event == 'Close':  # if user closes window or clicks cancel
             break
+
+        if event == 'test_app_btn':
+            device_obj[values['selected_device']].open_app(values['selected_app_package'])
 
     window.close()
 
@@ -371,7 +375,7 @@ def gui():
                 device[diff_device] = Device(adb.client, diff_device)  # Assign device to object
                 connected_devices.append(diff_device)
 
-                window['device_friendly.' + diff_device].Update(values['device_friendly.' + diff_device] if values['device_friendly.' + diff_device] else device[diff_device].get_device_name(), disabled=False)
+                window['device_friendly.' + diff_device].Update(values['device_friendly.' + diff_device] if values['device_friendly.' + diff_device] else device[diff_device].get_device_model(), disabled=False)
                 window['identify_device.' + diff_device].Update(disabled=False)
 
                 print('Added {} to connected devices!'.format(diff_device))
