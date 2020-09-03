@@ -371,7 +371,7 @@ def gui():
                 device[diff_device] = Device(adb.client, diff_device)  # Assign device to object
                 connected_devices.append(diff_device)
 
-                window['device_friendly.' + diff_device].Update(disabled=False)
+                window['device_friendly.' + diff_device].Update(values['device_friendly.' + diff_device] if values['device_friendly.' + diff_device] else device[diff_device].get_device_name(), disabled=False)
                 window['identify_device.' + diff_device].Update(disabled=False)
 
                 print('Added {} to connected devices!'.format(diff_device))
