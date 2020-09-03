@@ -100,11 +100,14 @@ class Device:
         print('Dumped window elements for current app')
 
     def get_clickable_window_elements(self):
-        self.dump_window_elements()
-
         print('Parsing xml...')
 
-        xml_tree = ET.parse("./XML/{}_{}.xml".format(self.device_serial, self.get_current_app()))
+        try:
+            xml_tree = ET.parse("./XML/{}_{}.xml".format(self.device_serial, self.get_current_app()))
+        except FileNotFoundError:
+            self.dump_window_elements()
+            xml_tree = ET.parse("./XML/{}_{}.xml".format(self.device_serial, self.get_current_app()))
+
         xml_root = xml_tree.getroot()
         elements = {}
 

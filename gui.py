@@ -178,9 +178,9 @@ def gui_setup_device(connected_devices, device_obj):
     ],]
 
     photo_sequence_frame = [[
-        #sg.Combo(device_obj[connected_devices[0]].get_clickable_window_elements()[0], size=(40, 1), key='photo_selected_action_0'),
+        sg.Combo(list(device_obj[connected_devices[0]].get_clickable_window_elements().keys()), size=(40, 1), key='photo_selected_action.0'),
         sg.Button('Test it!', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 1),
-                  key='testphoto_selected_action_0', disabled=False)
+                  key='test_btn_photo_selected_action.0', disabled=False)
     ],]
 
     layout = [
@@ -207,7 +207,14 @@ def gui_setup_device(connected_devices, device_obj):
             device_obj[values['selected_device']].open_app(values['selected_app_package'])
 
         if event == 'save_btn':
-            print(device_obj[connected_devices[0]].get_clickable_window_elements())
+            # print(device_obj[connected_devices[0]].get_clickable_window_elements().keys())
+            pass
+
+        if event.split('.')[0] == 'test_btn_photo_selected_action':
+            data = device_obj[values['selected_device']].get_clickable_window_elements()[values['photo_selected_action.' + event.split('.')[1]]]
+            device_obj[values['selected_device']].input_tap(data[1])
+
+            # Update combobox elements afterwards
 
     window.close()
 
