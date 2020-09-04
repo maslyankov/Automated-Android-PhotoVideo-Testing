@@ -50,7 +50,7 @@ class Device:
     def reboot(self):
         self.d.shell("reboot")
 
-    def get_current_app(self):
+    def get_current_app(self):  # Turns out some androids dont have 'cut'
         return self.d.shell("dumpsys window windows | grep -E 'mFocusedApp'| cut -d / -f 1 | cut -d ' ' -f 7").rstrip()
 
     def get_device_model(self):
@@ -59,7 +59,7 @@ class Device:
     def get_device_name(self):
         return self.d.shell("getprop ro.product.name").rstrip()
 
-    def get_installed_packages(self):
+    def get_installed_packages(self):  # Turns out some androids dont have 'cut'
         return self.d.shell("cmd package list packages -e | cut -f 2 -d ':' | sort").splitlines()
 
     def open_app(self, package):
@@ -95,13 +95,15 @@ class Device:
             #time.sleep(0.2)
 
     def dump_window_elements(self):
-        self.d.shell('uiautomator dump')
-        self.d.pull('/sdcard/window_dump.xml', './XML/{}_{}.xml'.format(self.device_serial, self.get_current_app()))
+        self.d.pull(
+            self.d.shell('uiautomator dump').split(': ')[1],
+            './XML/{}_{}.xml'.format(self.device_serial, self.get_current_app())
+        )
         print('Dumped window elements for current app')
 
     def get_clickable_window_elements(self):
         print('Parsing xml...')
-
+        self.dump_window_elements()
         try:
             xml_tree = ET.parse("./XML/{}_{}.xml".format(self.device_serial, self.get_current_app()))
         except FileNotFoundError:
@@ -119,7 +121,8 @@ class Device:
             if (elem_res_id or elem_desc) and int(elem_bounds[0]) > 0:
                 elem_bounds[0] = int(elem_bounds[0]) + 1
                 elem_bounds[1] = int(elem_bounds[1]) + 1
-                elements[elem_res_id[1]] = elem_desc, elem_bounds
+                print(elements)
+                elements[elem_res_id[1]] = elem_desc, elem_bounds  # Fix a crash in some cases here
 
         return elements
 
