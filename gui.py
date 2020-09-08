@@ -413,7 +413,7 @@ def gui():
                 del device[diff_device]
                 print(device)
 
-                adb.connected_devices.remove(diff_device)  # TODO Make this callable - maybe move to AdbClient class
+                adb.disconnect_device(diff_device)
 
                 window['device_friendly.' + diff_device].Update(disabled=True)
                 window['identify_device.' + diff_device].Update(disabled=True)

@@ -122,6 +122,8 @@ class Device:
         except FileNotFoundError:
             self.dump_window_elements()
             xml_tree = ET.parse("./XML/{}_{}.xml".format(self.device_serial, self.get_current_app()))
+        except ET.ParseError as error:
+            print("XML Parse Error: ", error)
 
         xml_root = xml_tree.getroot()
         elements = {}
