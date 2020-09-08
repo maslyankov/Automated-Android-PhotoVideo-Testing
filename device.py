@@ -50,8 +50,8 @@ class Device:
     def reboot(self):
         self.d.shell("reboot")  # TODO Remove device from connected_devices list after reboot
 
-    def get_current_app(self):  # TODO Turns out some androids don't have 'cut'
-        return self.d.shell("dumpsys window windows | grep -E 'mFocusedApp'| cut -d / -f 1 | cut -d ' ' -f 7").rstrip()
+    def get_current_app(self):
+        return self.d.shell("dumpsys window windows | grep -E 'mFocusedApp'").split('/')[0].split(' ')[6]
 
     def get_device_model(self):
         return self.d.shell("getprop ro.product.model").rstrip()
@@ -59,8 +59,8 @@ class Device:
     def get_device_name(self):
         return self.d.shell("getprop ro.product.name").rstrip()
 
-    def get_installed_packages(self):  # TODO Turns out some androids don't have 'cut'
-        return self.d.shell("cmd package list packages -e | cut -f 2 -d ':' | sort").splitlines()
+    def get_installed_packages(self):
+        return self.d.shell("cmd package list packages -e | sort").replace('package:', '').splitlines()
 
     def open_app(self, package):
         if self.get_current_app() != package:
