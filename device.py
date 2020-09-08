@@ -48,9 +48,9 @@ class Device:
         self.d.shell("input tap {} {}".format(coords[0][0], coords[0][1]))
 
     def reboot(self):
-        self.d.shell("reboot")
+        self.d.shell("reboot")  # TODO Remove device from connected_devices list after reboot
 
-    def get_current_app(self):  # Turns out some androids dont have 'cut'
+    def get_current_app(self):  # TODO Turns out some androids don't have 'cut'
         return self.d.shell("dumpsys window windows | grep -E 'mFocusedApp'| cut -d / -f 1 | cut -d ' ' -f 7").rstrip()
 
     def get_device_model(self):
@@ -59,7 +59,7 @@ class Device:
     def get_device_name(self):
         return self.d.shell("getprop ro.product.name").rstrip()
 
-    def get_installed_packages(self):  # Turns out some androids dont have 'cut'
+    def get_installed_packages(self):  # TODO Turns out some androids don't have 'cut'
         return self.d.shell("cmd package list packages -e | cut -f 2 -d ':' | sort").splitlines()
 
     def open_app(self, package):
@@ -95,8 +95,10 @@ class Device:
             #time.sleep(0.2)
 
     def dump_window_elements(self):
+        source = self.d.shell('uiautomator dump').split(': ')[1].rstrip()
+        print("Dumped UI File:> ", source, type(source))
         self.d.pull(
-            self.d.shell('uiautomator dump').split(': ')[1],
+            source,
             './XML/{}_{}.xml'.format(self.device_serial, self.get_current_app())
         )
         print('Dumped window elements for current app')
@@ -105,6 +107,7 @@ class Device:
         print('Parsing xml...')
         self.dump_window_elements()
         try:
+            print("Serial {} , app: {}".format(self.device_serial, self.get_current_app()))
             xml_tree = ET.parse("./XML/{}_{}.xml".format(self.device_serial, self.get_current_app()))
         except FileNotFoundError:
             self.dump_window_elements()
@@ -113,7 +116,7 @@ class Device:
         xml_root = xml_tree.getroot()
         elements = {}
 
-        for element in xml_root.iter("node"):
+        for num, element in enumerate(xml_root.iter("node")):
             elem_res_id = element.attrib['resource-id'].split('/')
             elem_desc = element.attrib['content-desc']
             elem_bounds = re.findall(r'\[([^]]*)\]', element.attrib['bounds'])[0].split(',')
@@ -121,8 +124,13 @@ class Device:
             if (elem_res_id or elem_desc) and int(elem_bounds[0]) > 0:
                 elem_bounds[0] = int(elem_bounds[0]) + 1
                 elem_bounds[1] = int(elem_bounds[1]) + 1
-                print(elements)
-                elements[elem_res_id[1]] = elem_desc, elem_bounds  # Fix a crash in some cases here
+                print(element, elem_res_id[0])
+                if elem_res_id[0] != '':
+                    print(elem_res_id)
+                    elements[elem_res_id[1]] = elem_desc, elem_bounds
+                else:
+                    print("else")
+                    elements[num] = elem_desc, elem_bounds
 
         return elements
 

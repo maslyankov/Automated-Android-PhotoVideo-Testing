@@ -331,7 +331,7 @@ def gui():
     window = sg.Window('Automated Photo/Video Testing', layout,
                        icon=r'.\images\automated-video-testing-header-icon.ico')
     device = {}  # List to store devices objects
-    connected_devices = []
+    connected_devices = []  # TODO Move this to ADBClient Class
 
     # Event Loop to process "events" and get the "values" of the inputs
     while True:
@@ -412,7 +412,7 @@ def gui():
                 del device[diff_device]
                 print(device)
 
-                connected_devices.remove(diff_device)
+                connected_devices.remove(diff_device)  # TODO Make this callable - maybe move to AdbClient class
 
                 window['device_friendly.' + diff_device].Update(disabled=True)
                 window['identify_device.' + diff_device].Update(disabled=True)
