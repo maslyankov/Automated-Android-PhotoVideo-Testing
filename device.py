@@ -1,6 +1,6 @@
 import subprocess
 import time
-import xml.etree.ElementTree as ET
+import xml.etree.cElementTree as ET
 import re
 
 from coords import *
@@ -100,6 +100,8 @@ class Device:
         for i in range(0, 4):
             self.d.shell('input keyevent 26')
             #time.sleep(0.2)
+            #for j in range(0, len self.d shell)
+            print(self.d.shell("ls /sys/class/leds/"))
 
     def dump_window_elements(self):
         source = self.d.shell('uiautomator dump').split(': ')[1].rstrip()
