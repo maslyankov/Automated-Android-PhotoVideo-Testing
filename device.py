@@ -21,6 +21,7 @@ class Device:
         adb.connected_devices.append(device_serial)
         print("Conn devs: ", adb.connected_devices)
         print("Device Serial: ", device_serial)
+        self.has_screen()
 
     def connect_device(self):
         self.adb_client.connect_device(self.device_serial)
@@ -57,8 +58,8 @@ class Device:
     def reboot(self):
         self.d.shell("reboot")  # TODO Remove device from connected_devices list after reboot
 
-    def get_current_app(self):
-        return self.d.shell("dumpsys window windows | grep -E 'mFocusedApp'").split('/')[0].split(' ')[6]
+    def get_current_app(self):  # Returns currently opened app package and its current activity
+        return self.d.shell("dumpsys window windows | grep -E 'mFocusedApp'").split(' ')[6].split('/')
 
     def get_device_model(self):
         return self.d.shell("getprop ro.product.model").rstrip()
@@ -95,6 +96,17 @@ class Device:
     def clear_camera_folder(self):
         self.d.shell("rm -rf sdcard/DCIM/Camera/*")
         print("Deleting files from device!")
+
+    def has_screen(self): # TODO Make this return a valid boolean (now it sometimes works, sometimes doesn't)
+        before = self.d.shell("dumpsys deviceidle | grep mScreenOn").split('=')[1].strip()
+        self.d.shell('input keyevent 26')
+        time.sleep(0.5)
+        after = self.d.shell("dumpsys deviceidle | grep mScreenOn").split('=')[1].strip()
+
+        if before == after:
+            print("Device has no integrated screen!")
+
+        self.d.shell('input keyevent 26')
 
     def identify(self):
         for i in range(0, 4):
