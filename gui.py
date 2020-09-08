@@ -334,7 +334,6 @@ def gui():
     window = sg.Window('Automated Photo/Video Testing', layout,
                        icon=r'.\images\automated-video-testing-header-icon.ico')
     device = {}  # List to store devices objects
-    connected_devices = []  # TODO Move this to ADBClient Class
 
     # Event Loop to process "events" and get the "values" of the inputs
     while True:
@@ -390,16 +389,15 @@ def gui():
         devices_values = values['devices']
 
         if event == 'devices':
-            diff_device = [str(s) for s in (set(devices_values) ^ set(connected_devices))][0]
+            diff_device = [str(s) for s in (set(devices_values) ^ set(adb.get_connected_devices()))][0]
 
-            print('Connected devices list before changing: {}, len: {}'.format(connected_devices,
-                                                                               len(connected_devices)))  # Debugging
+            print('Connected devices list before changing: {}, len: {}'.format(adb.get_connected_devices(),
+                                                                               len(adb.get_connected_devices())))  # Debugging
             print('Devices objects list before changes: ', device)
 
-            if len(values['devices']) > len(connected_devices) \
-                    and diff_device not in connected_devices:  # Connect device
-                device[diff_device] = Device(adb.client, diff_device)  # Assign device to object
-                connected_devices.append(diff_device)
+            if len(values['devices']) > len(adb.get_connected_devices()) \
+                    and diff_device not in adb.get_connected_devices():  # Connect device
+                device[diff_device] = Device(adb, diff_device)  # Assign device to object
 
                 window['device_friendly.' + diff_device].Update(
                     values['device_friendly.' + diff_device] if values['device_friendly.' + diff_device] else device[
@@ -410,23 +408,23 @@ def gui():
 
                 print('Currently opened app: {}'.format(device[diff_device].get_current_app()))
 
-            elif len(values['devices']) < len(connected_devices) \
-                    and diff_device in connected_devices:  # Disconnect
+            elif len(values['devices']) < len(adb.get_connected_devices()) \
+                    and diff_device in adb.get_connected_devices():  # Disconnect
                 del device[diff_device]
                 print(device)
 
-                connected_devices.remove(diff_device)  # TODO Make this callable - maybe move to AdbClient class
+                adb.connected_devices.remove(diff_device)  # TODO Make this callable - maybe move to AdbClient class
 
                 window['device_friendly.' + diff_device].Update(disabled=True)
                 window['identify_device.' + diff_device].Update(disabled=True)
 
                 print('{} was disconnected!'.format(diff_device))
 
-            print('Connected devices list after changing: {}, len: {}'.format(connected_devices,
-                                                                              len(connected_devices)))  # Debugging
+            print('Connected devices list after changing: {}, len: {}'.format(adb.get_connected_devices(),
+                                                                              len(adb.get_connected_devices())))  # Debugging
             print('Devices objects list after changes: ', device)
 
-        if connected_devices:
+        if adb.get_connected_devices():
             print('A Device is connected!')
             window['camxoverride_btn'].Update(disabled=False)
             window['reboot_device_btn'].Update(disabled=False)
@@ -449,11 +447,11 @@ def gui():
             window['capture_multi_cases_btn'].Update(disabled=True)
 
         if event == 'reboot_device_btn':
-            gui_reboot_device(connected_devices, device)
+            gui_reboot_device(adb.get_connected_devices(), device)
 
         window['duration_spinner'].Update(disabled=values['mode_photos'])
 
-        if not connected_devices:
+        if not adb.get_connected_devices():
             print("First select a device and connect to it!")
         else:
             if event == "capture_case_btn":
@@ -475,12 +473,12 @@ def gui():
                         print("Save Location must be set!")
 
             if event == "camxoverride_btn":
-                gui_camxoverride(connected_devices, device)
+                gui_camxoverride(adb.get_connected_devices(), device)
 
             if event == "push_file_btn":
-                gui_push_file(connected_devices, device)
+                gui_push_file(adb.get_connected_devices(), device)
 
             if event == "setup_device_btn":
-                gui_setup_device(connected_devices, device)
+                gui_setup_device(adb.get_connected_devices(), device)
 
     window.close()

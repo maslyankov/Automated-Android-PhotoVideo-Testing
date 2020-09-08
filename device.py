@@ -9,14 +9,21 @@ SNAP_CAM = "org.codeaurora.snapcam"  # TODO Make this an option in app settings
 
 
 class Device:
-    def __init__(self, adb_client, device_serial):
+    def __init__(self, adb, device_serial):
         print("Connecting to device...")
 
-        self.d = adb_client.device(device_serial)  # Create device client object
+        self.adb_client = adb.client
+        self.d = self.adb_client.device(device_serial)  # Create device client object
         self.device_serial = device_serial  # Assign device serial as received in arguments
         self.root()  # Make sure we are using root for device
 
+        # Add device to connected devices list
+        adb.connected_devices.append(device_serial)
+        print("Conn devs: ", adb.connected_devices)
         print("Device Serial: ", device_serial)
+
+    def connect_device(self):
+        self.adb_client.connect_device(self.device_serial)
 
     def root(self):
         print("Rooting device " + self.device_serial)
