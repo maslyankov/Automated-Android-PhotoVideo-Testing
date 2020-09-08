@@ -96,7 +96,10 @@ class Device:
 
     def dump_window_elements(self):
         source = self.d.shell('uiautomator dump').split(': ')[1].rstrip()
-        print("Dumped UI File:> ", source, type(source))
+        if source == "null root node returned by UiTestAutomationBridge.":
+            print("UIAutomator error! :( Try dumping UI elements again. (It looks like a known error)")
+            return
+        print("Dumped UI File:> '{}' of source '{}'".format(source, type(source)))
         self.d.pull(
             source,
             './XML/{}_{}.xml'.format(self.device_serial, self.get_current_app())
@@ -124,12 +127,9 @@ class Device:
             if (elem_res_id or elem_desc) and int(elem_bounds[0]) > 0:
                 elem_bounds[0] = int(elem_bounds[0]) + 1
                 elem_bounds[1] = int(elem_bounds[1]) + 1
-                print(element, elem_res_id[0])
                 if elem_res_id[0] != '':
-                    print(elem_res_id)
                     elements[elem_res_id[1]] = elem_desc, elem_bounds
                 else:
-                    print("else")
                     elements[num] = elem_desc, elem_bounds
 
         return elements
