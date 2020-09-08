@@ -117,25 +117,27 @@ class Device:
 
     def dump_window_elements(self):
         source = self.d.shell('uiautomator dump').split(': ')[1].rstrip()
+        current_app = self.get_current_app()
         if source == "null root node returned by UiTestAutomationBridge.":
             print("UIAutomator error! :( Try dumping UI elements again. (It looks like a known error)")
             return
         print("Dumped UI File:> '{}' of source '{}'".format(source, type(source)))
         self.d.pull(
             source,
-            './XML/{}_{}.xml'.format(self.device_serial, self.get_current_app())
+            './XML/{}_{}_{}.xml'.format(self.device_serial, current_app[0], current_app[1])
         )
         print('Dumped window elements for current app')
 
     def get_clickable_window_elements(self):
         print('Parsing xml...')
         self.dump_window_elements()
+        current_app = self.get_current_app()
         try:
-            print("Serial {} , app: {}".format(self.device_serial, self.get_current_app()))
-            xml_tree = ET.parse("./XML/{}_{}.xml".format(self.device_serial, self.get_current_app()))
+            print("Serial {} , app: {}".format(self.device_serial, current_app))
+            xml_tree = ET.parse('./XML/{}_{}_{}.xml'.format(self.device_serial, current_app[0], current_app[1]))
         except FileNotFoundError:
             self.dump_window_elements()
-            xml_tree = ET.parse("./XML/{}_{}.xml".format(self.device_serial, self.get_current_app()))
+            xml_tree = ET.parse('./XML/{}_{}_{}.xml'.format(self.device_serial, current_app[0], current_app[1]))
         except ET.ParseError as error:
             print("XML Parse Error: ", error)
 
@@ -159,7 +161,7 @@ class Device:
 
     # Will be changed [START]
     def open_snap_cam(self):  # Todo Make this with an argument for app package
-        if self.get_current_app() != SNAP_CAM:
+        if self.get_current_app()[0] != SNAP_CAM:
             print("Opening Snap Cam...")
             self.d.shell("monkey -p '{}' -v 1".format(SNAP_CAM))
         else:
