@@ -7,7 +7,8 @@ from natsort import natsorted
 from coords import *
 
 SNAP_CAM = "org.codeaurora.snapcam"  # TODO Make this an option in app settings
-
+SCRCPY = "./scrcpy-win64-v1.16/scrcpy.exe"
+ADB = "./scrcpy-win64-v1.16/adb.exe"
 
 class Device:
     def __init__(self, adb, device_serial):
@@ -29,7 +30,7 @@ class Device:
 
     def root(self):
         print("Rooting device " + self.device_serial)
-        root = subprocess.Popen(['adb.exe', '-s', self.device_serial, 'root'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        root = subprocess.Popen([ADB, '-s', self.device_serial, 'root'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = root.communicate()
         if stderr:
             print("Rooting Errors: {}".format(stderr.decode()))
@@ -42,7 +43,7 @@ class Device:
 
     def remount(self):
         print("Remount device serial: " + self.device_serial)
-        remount = subprocess.Popen(['adb.exe', '-s', self.device_serial, 'remount'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        remount = subprocess.Popen([ADB, '-s', self.device_serial, 'remount'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = remount.communicate()
         if stderr:
             print("Remonut Errors: ".format(stderr.decode()))
@@ -123,7 +124,7 @@ class Device:
 
     def open_device_ctrl(self):
         print("Opening scrcpy for device ", self.device_serial)
-        scrcpy = subprocess.Popen(['./scrcpy/scrcpy.exe', '--serial', self.device_serial], stdout=subprocess.PIPE,
+        scrcpy = subprocess.Popen([SCRCPY, '--serial', self.device_serial], stdout=subprocess.PIPE,
                                   stderr=subprocess.PIPE)
         stdout, stderr = scrcpy.communicate()
         if stderr:

@@ -2,12 +2,13 @@
 import subprocess
 from ppadb.client import Client as AdbPy
 
+ADB = "./scrcpy-win64-v1.16/adb.exe"
 
 class AdbClient:
     def __init__(self):
         print("Starting the ADB Server...")
         try:
-            self.adb = subprocess.Popen(['adb.exe', 'start-server'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            self.adb = subprocess.Popen([ADB, 'start-server'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             stdout, stderr = self.adb.communicate()
             if stdout:
                 print("ADB Start Output: " + stdout.decode())  # Debugging
