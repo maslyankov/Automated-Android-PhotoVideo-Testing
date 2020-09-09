@@ -25,16 +25,16 @@ def devices_watchdog(window):  # TODO
         i += 1
 
 
-def gui_camxoverride(connected_devices, device_obj):
+def gui_camxoverride(attached_devices, device_obj):
     print("Pulling camxoverridesettings.txt from device...")
-    device_obj[connected_devices[0]].pull_file('/vendor/etc/camera/camxoverridesettings.txt',
+    device_obj[attached_devices[0]].pull_file('/vendor/etc/camera/camxoverridesettings.txt',
                                                r'.\tmp\camxoverridesettings.txt')
 
     camxoverride_content = open(r'.\tmp\camxoverridesettings.txt', 'r').read()
 
     # All the stuff inside your window.
     layout = [
-        [sg.Combo(connected_devices, size=(20, 20), key='selected_device', default_value=connected_devices[0],
+        [sg.Combo(attached_devices, size=(20, 20), key='selected_device', default_value=attached_devices[0],
                   enable_events=True)],
         [sg.Text('camxoverridesettings.txt:')],
         [sg.Multiline(camxoverride_content, size=(70, 30), key='camxoverride_input')],
@@ -90,7 +90,7 @@ def gui_camxoverride(connected_devices, device_obj):
     window.close()
 
 
-def gui_push_file(connected_devices, device_obj):
+def gui_push_file(attached_devices, device_obj):
     file_destinations = [
         'sdcard/DCIM/',
         'vendor/lib/camera/'
@@ -98,7 +98,7 @@ def gui_push_file(connected_devices, device_obj):
 
     layout = [
         [
-            sg.Combo(connected_devices, size=(20, 20), key='selected_device', default_value=connected_devices[0]),
+            sg.Combo(attached_devices, size=(20, 20), key='selected_device', default_value=attached_devices[0]),
             sg.Combo(file_destinations, size=(20, 20), key='dest_folder', default_value=file_destinations[0])
         ],
         [
@@ -139,9 +139,9 @@ def gui_push_file(connected_devices, device_obj):
     window.close()
 
 
-def gui_reboot_device(connected_devices, device_obj):
+def gui_reboot_device(attached_devices, device_obj):
     layout = [
-        [sg.Combo(connected_devices, size=(20, 20), key='selected_device', default_value=connected_devices[0])],
+        [sg.Combo(attached_devices, size=(20, 20), key='selected_device', default_value=attached_devices[0])],
         [sg.Button('Reboot', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 2),
                    key='reboot_device_btn', disabled=False)]
     ]
@@ -166,19 +166,19 @@ def gui_reboot_device(connected_devices, device_obj):
     window.close()
 
 
-def gui_setup_device(connected_devices, device_obj):
+def gui_setup_device(attached_devices, device_obj):
     select_device_frame = [[
-        sg.Combo(connected_devices, size=(20, 20), key='selected_device', default_value=connected_devices[0])
+        sg.Combo(attached_devices, size=(20, 20), key='selected_device', default_value=attached_devices[0])
     ],]
 
     select_app_frame = [[
-        sg.Combo(device_obj[connected_devices[0]].get_installed_packages(), size=(40, 1), key='selected_app_package', default_value=device_obj[connected_devices[0]].get_current_app()[0]),
+        sg.Combo(device_obj[attached_devices[0]].get_installed_packages(), size=(40, 1), key='selected_app_package', default_value=device_obj[attached_devices[0]].get_current_app()[0]),
         sg.Button('Test it!', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 1),
                   key='test_app_btn', disabled=False)
     ],]
 
     photo_sequence_frame = [[
-        sg.Combo(list(device_obj[connected_devices[0]].get_clickable_window_elements().keys()), size=(40, 1), key='photo_selected_action.0'),
+        sg.Combo(list(device_obj[attached_devices[0]].get_clickable_window_elements().keys()), size=(40, 1), key='photo_selected_action.0'),
         sg.Button('Test it!', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 1),
                   key='test_btn_photo_selected_action.0', disabled=False)
     ],]
@@ -207,7 +207,7 @@ def gui_setup_device(connected_devices, device_obj):
             device_obj[values['selected_device']].open_app(values['selected_app_package'])
 
         if event == 'save_btn':
-            # print(device_obj[connected_devices[0]].get_clickable_window_elements().keys())
+            # print(device_obj[attached_devices[0]].get_clickable_window_elements().keys())
             pass
 
         if event.split('.')[0] == 'test_btn_photo_selected_action':
@@ -318,24 +318,22 @@ def gui():
         [sg.Listbox(values=devices_list if devices_list else ['No devices found!'], size=(30, 5),
                     key='devices', enable_events=True,
                     select_mode=sg.LISTBOX_SELECT_MODE_MULTIPLE,
-                    tooltip='Select to connect to device, Deselect to disconnect')],
+                    tooltip='Select to attach to device, Deselect to detach')],
     ]
 
     friendly_names = []
-    for num, serial in enumerate(devices_list):
-        friendly_names += [sg.InputText(key=f'device_friendly.{serial}', enable_events=False, size=(20, 1),
-                                        tooltip=f'Set friendly name for device{num}', disabled=True),
-                           sg.Button(f'Identify device {serial}',
+    for num in range(1, 6):
+        friendly_names += [sg.InputText(key=f'device_friendly.{num}', enable_events=False, size=(20, 1),
+                                        disabled=True),
+                           sg.Button('',
                                      button_color=(sg.theme_text_element_background_color(), 'silver'),
-                                     key=f'identify_device.{serial}',
+                                     key=f'identify_device_btn.{num}',
                                      disabled=True,
-                                     tooltip='Identify connected device',
                                      enable_events=True),
-                           sg.Button(f'Control',
+                           sg.Button('',
                                      button_color=(sg.theme_text_element_background_color(), 'silver'),
-                                     key=f'ctrl_device_btn.{serial}',
+                                     key=f'ctrl_device_btn.{num}',
                                      disabled=True,
-                                     tooltip='Open device control',
                                      enable_events=True)
                            ],
 
@@ -344,7 +342,7 @@ def gui():
                   size=(20, 3),
                   key='camxoverride_btn',
                   disabled=True,
-                  tooltip='Edit or view camxoverridesettings any connected device'),
+                  tooltip='Edit or view camxoverridesettings of any attached device'),
         sg.Button('Push file', button_color=(sg.theme_text_element_background_color(), 'silver'),
                   size=(12, 3),
                   key='push_file_btn',
@@ -378,8 +376,8 @@ def gui():
         [sg.Frame('Logs', logs_frame_layout, font='Any 12', title_color='white')],
         [
             sg.Button('Exit', size=(6, 2)),
-            sg.Button('Capture Case', size=(12, 2), key='capture_case_btn', disabled=True),
-            sg.Button('Capture Cases (Advanced)', size=(20, 2), key='capture_multi_cases_btn', disabled=True)],
+            sg.Button('Capture Cases (Manual)', size=(25, 2), key='capture_auto_btn', disabled=True),
+            sg.Button('Capture Cases (Automated)', size=(25, 2), key='capture_manual_btn', disabled=True)],
         [sg.Text('_' * 75)],
         # [sg.Frame('Output', [[sg.Output(size=(70, 8))]], font='Any 12', title_color='white')],
         [sg.Text('App Version: {}'.format(APP_VERSION), size=(65, 1), justification="right")]
@@ -405,17 +403,29 @@ def gui():
 
         try:
             if len(devices_list) > len(devices_list_old):  # If New device found
-                new_device = [str(s) for s in (set(devices_list_old) ^ set(devices_list))][0]
-                print("Found new device!!! -> ", new_device)
+                diff_device = [str(s) for s in (set(devices_list_old) ^ set(devices_list))][0]
+                print("Found new device!!! -> ", diff_device)
+                window['devices'].update(values=devices_list)
 
+                window['device_friendly.{}'.format(1)].Update(diff_device)
 
-            elif len(devices_list) < len(devices_list_old):
-                new_device = [str(s) for s in (set(devices_list_old) ^ set(devices_list))][0]
-                print("Device disconnected :( -> ", new_device)
-                
+            elif len(devices_list) < len(devices_list_old):  # If device is detached
+                diff_device = [str(s) for s in (set(devices_list_old) ^ set(devices_list))][0]
+                print("Device detached :( -> ", diff_device)
+
+                #window['device_friendly.' + diff_device].Update(disabled=True)
+                #window['identify_device_btn.' + diff_device].Update(disabled=True)
+                #window['ctrl_device_btn.' + diff_device].Update(disabled=True)
+                window['devices'].update(values=devices_list)
+
+                try:
+                    adb.detach_device(diff_device, device[diff_device])
+                    del device[diff_device]
+                except KeyError:
+                    print("Wasn't attached anyway..")
 
         except UnboundLocalError:
-            print("devices_list_old not set yet. No worries, will be set on next run of loop.")
+            pass  # devices_list_old not set yet. No worries, will be set on next run of loop.
 
         devices_list_old = devices_list
 
@@ -438,85 +448,77 @@ def gui():
         devices_values = values['devices']
 
         if event == 'devices':
-            diff_device = [str(s) for s in (set(devices_values) ^ set(adb.get_connected_devices()))][0]
+            diff_device = [str(s) for s in (set(devices_values) ^ set(adb.get_attached_devices()))][0]
 
-            print('Connected devices list before changing: {}, len: {}'.format(adb.get_connected_devices(),
-                                                                               len(adb.get_connected_devices())))  # Debugging
+            print('Attached devices list before changing: {}, len: {}'.format(adb.get_attached_devices(),
+                                                                               len(adb.get_attached_devices())))  # Debugging
             print('Devices objects list before changes: ', device)
 
-            if len(values['devices']) > len(adb.get_connected_devices()) \
-                    and diff_device not in adb.get_connected_devices():  # Connect device
+            if len(values['devices']) > len(adb.get_attached_devices()) \
+                    and diff_device not in adb.get_attached_devices():  # Connect device
                 device[diff_device] = Device(adb, diff_device)  # Assign device to object
 
-                print('asdL: ', device[diff_device].device_serial)
+                #window['device_friendly.' + diff_device].Update(
+                #    values['device_friendly.' + diff_device] if values['device_friendly.' + diff_device] else device[
+                #        diff_device].get_device_model(), disabled=False)
+                #window['identify_device_btn.' + diff_device].Update(disabled=False)
+                #window['ctrl_device_btn.' + diff_device].Update(disabled=False)
 
-                window['device_friendly.' + diff_device].Update(
-                    values['device_friendly.' + diff_device] if values['device_friendly.' + diff_device] else device[
-                        diff_device].get_device_model(), disabled=False)
-                window['identify_device.' + diff_device].Update(disabled=False)
-                window['ctrl_device_btn.' + diff_device].Update(disabled=False)
-
-                print('Added {} to connected devices!'.format(diff_device))
+                print('Added {} to attached devices!'.format(diff_device))
 
                 print('Currently opened app: {}'.format(device[diff_device].get_current_app()))
 
-            elif len(values['devices']) < len(adb.get_connected_devices()) \
-                    and diff_device in adb.get_connected_devices():  # Disconnect
-
-                print(device)
-
-                adb.disconnect_device(diff_device, device[diff_device])
+            elif len(values['devices']) < len(adb.get_attached_devices()) \
+                    and diff_device in adb.get_attached_devices():  # Detach
+                adb.detach_device(diff_device, device[diff_device])
                 del device[diff_device]
 
-                window['device_friendly.' + diff_device].Update(disabled=True)
-                window['identify_device.' + diff_device].Update(disabled=True)
-                window['ctrl_device_btn.' + diff_device].Update(disabled=True)
+                #window['device_friendly.' + diff_device].Update(disabled=True)
+                #window['identify_device_btn.' + diff_device].Update(disabled=True)
+                #window['ctrl_device_btn.' + diff_device].Update(disabled=True)
 
-                print('{} was disconnected!'.format(diff_device))
+                print('{} was detached!'.format(diff_device))
 
-            print('Connected devices list after changing: {}, len: {}'.format(adb.get_connected_devices(),
-                                                                              len(adb.get_connected_devices())))  # Debugging
+            print('Attached devices list after changing: {}, len: {}'.format(adb.get_attached_devices(),
+                                                                              len(adb.get_attached_devices())))  # Debugging
             print('Devices objects list after changes: ', device)
 
-        if adb.get_connected_devices():
-            # print('At least one device is connected!') # Debugging
+        if adb.get_attached_devices():
+            # print('At least one device is attached!') # Debugging
 
             # Disable/Enable buttons
             window['camxoverride_btn'].Update(disabled=False)
             window['reboot_device_btn'].Update(disabled=False)
             window['push_file_btn'].Update(disabled=False)
             window['setup_device_btn'].Update(disabled=False)
-            if event == "pull_files":
-                if values['save_location'] != "":
-                    window['capture_case_btn'].Update(disabled=False)
-                    window['capture_multi_cases_btn'].Update(disabled=False)
-            if event.split('.')[0] == 'identify_device':  # Identify Buttons
+            window['capture_manual_btn'].Update(disabled=False)
+            window['capture_auto_btn'].Update(disabled=False)
+            if event.split('.')[0] == 'identify_device_btn':  # Identify Buttons
                 print('Identifying ' + event.split('.')[1])
                 device[event.split('.')[1]].identify()
-            if event.split('.')[0] == 'ctrl_device_btn':  # Identify Buttons
-                print('Identifying ' + event.split('.')[1])
+            if event.split('.')[0] == 'ctrl_device_btn':  # Device Control
+                print('Opening device control for ' + event.split('.')[1])
                 device[event.split('.')[1]].open_device_ctrl()
 
             # Buttons callbacks
             if event == "camxoverride_btn":
-                gui_camxoverride(adb.get_connected_devices(), device)
+                gui_camxoverride(adb.get_attached_devices(), device)
 
             if event == "push_file_btn":
-                gui_push_file(adb.get_connected_devices(), device)
+                gui_push_file(adb.get_attached_devices(), device)
 
             if event == "setup_device_btn":
-                gui_setup_device(adb.get_connected_devices(), device)
-
+                gui_setup_device(adb.get_attached_devices(), device)
         else:
-            # print('No connected devices!')
+            # print('No attached devices!')
             window['camxoverride_btn'].Update(disabled=True)
             window['reboot_device_btn'].Update(disabled=True)
             window['push_file_btn'].Update(disabled=True)
             window['setup_device_btn'].Update(disabled=True)
-            window['capture_case_btn'].Update(disabled=True)
-            window['capture_multi_cases_btn'].Update(disabled=True)
+            window['capture_manual_btn'].Update(disabled=True)
+            window['capture_auto_btn'].Update(disabled=True)
 
         if event == 'reboot_device_btn':
-            gui_reboot_device(adb.get_connected_devices(), device)
+            gui_reboot_device(adb.get_attached_devices(), device)
 
     window.close()

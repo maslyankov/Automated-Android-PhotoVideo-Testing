@@ -12,21 +12,18 @@ ADB = "./scrcpy-win64-v1.16/adb.exe"
 
 class Device:
     def __init__(self, adb, device_serial):
-        print("Connecting to device...")
+        print("Attaching to device...")
 
         self.adb_client = adb.client
         self.d = self.adb_client.device(device_serial)  # Create device client object
         self.device_serial = device_serial  # Assign device serial as received in arguments
         self.root()  # Make sure we are using root for device
 
-        # Add device to connected devices list
-        adb.connected_devices.append(device_serial)
-        print("Conn devs: ", adb.connected_devices)
+        # Add device to attached devices list
+        adb.attach_device(device_serial)
+        print("Conn devs: ", adb.attached_devices)
         print("Device Serial: ", device_serial)
         print("Resolution: ", self.get_screen_resolution())
-
-    def connect_device(self):
-        self.adb_client.connect_device(self.device_serial)
 
     def root(self):
         print("Rooting device " + self.device_serial)
@@ -59,6 +56,7 @@ class Device:
 
     def reboot(self):
         self.d.shell("reboot")  # TODO Remove device from connected_devices list after reboot
+
 
     def get_current_app(self):  # Returns currently opened app package and its current activity
         return self.d.shell("dumpsys window windows | grep -E 'mFocusedApp'").split(' ')[6].split('/')
@@ -126,11 +124,11 @@ class Device:
         print("Opening scrcpy for device ", self.device_serial)
         scrcpy = subprocess.Popen([SCRCPY, '--serial', self.device_serial], stdout=subprocess.PIPE,
                                   stderr=subprocess.PIPE)
-        stdout, stderr = scrcpy.communicate()
-        if stderr:
-            print("Scrspy Errors: \n{}\n".format(stderr.decode()))
-        if stdout:
-            print("Scrspy Output: \n{}\n".format(stdout.decode()))
+        #stdout, stderr = scrcpy.communicate()
+        #if stderr:
+        #    print("Scrspy Errors: \n{}\n".format(stderr.decode()))
+        #if stdout:
+        #    print("Scrspy Output: \n{}\n".format(stdout.decode()))
 
     def identify(self):
         leds = self.get_device_leds()

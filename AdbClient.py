@@ -20,7 +20,7 @@ class AdbClient:
             return
 
         self.client = AdbPy(host="127.0.0.1", port=5037)
-        self.connected_devices = []  # Store connected devices
+        self.attached_devices = []  # Store attached devices - devices that are connected and we are attached to
 
     def kill_adb(self):
         self.adb.terminate()
@@ -31,12 +31,11 @@ class AdbClient:
             devices.append(d.serial)
         return devices  # Return list of devices's serials
 
-    def get_connected_devices(self):
-        return self.connected_devices
+    def get_attached_devices(self):
+        return self.attached_devices
 
-    def connect_device(self, device_serial):
-        self.connected_devices.append(device_serial)
+    def attach_device(self, device_serial):
+        self.attached_devices.append(device_serial)
 
-    def disconnect_device(self, device_serial, object):
-        # object.set_led_color('asd')
-        self.connected_devices.remove(device_serial)
+    def detach_device(self, device_serial, object):
+        self.attached_devices.remove(device_serial)
