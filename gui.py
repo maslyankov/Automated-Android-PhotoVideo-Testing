@@ -258,6 +258,12 @@ def gui():
                                      key=f'identify_device.{serial}',
                                      disabled=True,
                                      tooltip='Identify connected device',
+                                     enable_events=True),
+                           sg.Button(f'Control',
+                                     button_color=(sg.theme_text_element_background_color(), 'silver'),
+                                     key=f'ctrl_device_btn.{serial}',
+                                     disabled=True,
+                                     tooltip='Open device control',
                                      enable_events=True)
                            ],
 
@@ -403,6 +409,7 @@ def gui():
                     values['device_friendly.' + diff_device] if values['device_friendly.' + diff_device] else device[
                         diff_device].get_device_model(), disabled=False)
                 window['identify_device.' + diff_device].Update(disabled=False)
+                window['ctrl_device_btn.' + diff_device].Update(disabled=False)
 
                 print('Added {} to connected devices!'.format(diff_device))
 
@@ -418,6 +425,7 @@ def gui():
 
                 window['device_friendly.' + diff_device].Update(disabled=True)
                 window['identify_device.' + diff_device].Update(disabled=True)
+                window['ctrl_device_btn.' + diff_device].Update(disabled=True)
 
                 print('{} was disconnected!'.format(diff_device))
 
@@ -438,6 +446,9 @@ def gui():
             if event.split('.')[0] == 'identify_device':  # Identify Buttons
                 print('Identifying ' + event.split('.')[1])
                 device[event.split('.')[1]].identify()
+            if event.split('.')[0] == 'ctrl_device_btn':  # Identify Buttons
+                print('Identifying ' + event.split('.')[1])
+                device[event.split('.')[1]].open_device_ctrl()
         else:
             print('No connected devices!')
             window['camxoverride_btn'].Update(disabled=True)

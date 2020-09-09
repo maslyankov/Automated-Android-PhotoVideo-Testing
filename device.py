@@ -122,6 +122,7 @@ class Device:
             time.sleep(0.3)
 
     def open_device_ctrl(self):
+        print("Opening scrcpy for device ", self.device_serial)
         scrcpy = subprocess.Popen(['./scrcpy/scrcpy.exe', '--serial', self.device_serial], stdout=subprocess.PIPE,
                                   stderr=subprocess.PIPE)
         stdout, stderr = scrcpy.communicate()

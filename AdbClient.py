@@ -37,5 +37,5 @@ class AdbClient:
         self.connected_devices.append(device_serial)
 
     def disconnect_device(self, device_serial, object):
-        object.set_led_color('asd')
+        # object.set_led_color('asd')
         self.connected_devices.remove(device_serial)
