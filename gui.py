@@ -410,10 +410,11 @@ def gui():
 
             elif len(values['devices']) < len(adb.get_connected_devices()) \
                     and diff_device in adb.get_connected_devices():  # Disconnect
-                del device[diff_device]
+
                 print(device)
 
-                adb.disconnect_device(diff_device)
+                adb.disconnect_device(diff_device, device[diff_device])
+                del device[diff_device]
 
                 window['device_friendly.' + diff_device].Update(disabled=True)
                 window['identify_device.' + diff_device].Update(disabled=True)

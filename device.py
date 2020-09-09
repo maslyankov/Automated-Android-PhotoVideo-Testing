@@ -115,6 +115,21 @@ class Device:
     def get_device_leds(self):
         return natsorted(self.d.shell("ls /sys/class/leds/").strip().replace('\n', '').replace('  ', ' ').split(' '))
 
+    def set_led_color(self, color):
+        for n in range(1, 800, 10):
+            self.d.shell('echo {} > /sys/class/leds/{}/global_rgb'.format(n, 'RGB1'))
+            print(n)
+            time.sleep(0.3)
+
+    def open_device_ctrl(self):
+        scrcpy = subprocess.Popen(['./scrcpy/scrcpy.exe', '--serial', self.device_serial], stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE)
+        stdout, stderr = scrcpy.communicate()
+        if stderr:
+            print("Scrspy Errors: \n{}\n".format(stderr.decode()))
+        if stdout:
+            print("Scrspy Output: \n{}\n".format(stdout.decode()))
+
     def identify(self):
         leds = self.get_device_leds()
         print(leds)  # Debugging
