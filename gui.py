@@ -172,7 +172,7 @@ def gui_setup_device(connected_devices, device_obj):
     ],]
 
     select_app_frame = [[
-        sg.Combo(device_obj[connected_devices[0]].get_installed_packages(), size=(40, 1), key='selected_app_package', default_value=device_obj[connected_devices[0]].get_current_app()),
+        sg.Combo(device_obj[connected_devices[0]].get_installed_packages(), size=(40, 1), key='selected_app_package', default_value=device_obj[connected_devices[0]].get_current_app()[0]),
         sg.Button('Test it!', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 1),
                   key='test_app_btn', disabled=False)
     ],]

@@ -8,19 +8,6 @@ import time
 ELEVATED = False
 
 
-def runCommand(command, forcesudo=False):
-    if 'sudo' in command.lower():
-        command = command.replace('sudo ', '')
-    if ELEVATED == True or forcesudo == True:
-        os.system('sudo {}'.format(command))
-    else:
-        os.system('{}'.format(command))
-
-
-def getResponse(command):
-    os.system('{} > tmp'.format(command))
-    return open('tmp', 'r').read()
-
 
 def grabScreenResolution(udid):
     adb = subprocess.Popen(('adb', '-s', udid, 'shell', 'dumpsys', 'window'), stdout=subprocess.PIPE) #  | grep "mUnrestricted"'

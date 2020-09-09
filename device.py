@@ -2,6 +2,7 @@ import subprocess
 import time
 import xml.etree.cElementTree as ET
 import re
+from natsort import natsorted
 
 from coords import *
 
@@ -21,7 +22,7 @@ class Device:
         adb.connected_devices.append(device_serial)
         print("Conn devs: ", adb.connected_devices)
         print("Device Serial: ", device_serial)
-        self.has_screen()
+        print("Resolution: ", self.get_screen_resolution())
 
     def connect_device(self):
         self.adb_client.connect_device(self.device_serial)
@@ -108,12 +109,29 @@ class Device:
 
         self.d.shell('input keyevent 26')
 
+    def get_screen_resolution(self):
+        return self.d.shell('dumpsys window | grep "mUnrestricted"').rstrip().split(' ')[1].split('x')
+
+    def get_device_leds(self):
+        return natsorted(self.d.shell("ls /sys/class/leds/").strip().replace('\n', '').replace('  ', ' ').split(' '))
+
     def identify(self):
-        for i in range(0, 4):
-            self.d.shell('input keyevent 26')
-            #time.sleep(0.2)
-            #for j in range(0, len self.d shell)
-            print(self.d.shell("ls /sys/class/leds/"))
+        leds = self.get_device_leds()
+        print(leds)  # Debugging
+
+        for k in range(1, 5): # Blink Leds and screen
+            if k != 1:
+                time.sleep(0.5)
+            self.d.shell('echo 0 > /sys/class/leds/{}/global_onoff'.format(leds[0]))
+            time.sleep(0.3)
+            self.d.shell('echo 1 > /sys/class/leds/{}/global_onoff'.format(leds[0]))
+
+            self.d.shell('input keyevent 26')  # Event Power Button
+
+        for led in leds:
+            self.d.shell('echo 0 > /sys/class/leds/{}/color_setting'.format(led))
+
+        print('Finished identifying!')
 
     def dump_window_elements(self):
         source = self.d.shell('uiautomator dump').split(': ')[1].rstrip()
@@ -130,10 +148,9 @@ class Device:
 
     def get_clickable_window_elements(self):
         print('Parsing xml...')
-        self.dump_window_elements()
         current_app = self.get_current_app()
+        print("Serial {} , app: {}".format(self.device_serial, current_app))
         try:
-            print("Serial {} , app: {}".format(self.device_serial, current_app))
             xml_tree = ET.parse('./XML/{}_{}_{}.xml'.format(self.device_serial, current_app[0], current_app[1]))
         except FileNotFoundError:
             self.dump_window_elements()
