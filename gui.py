@@ -222,6 +222,78 @@ def gui_setup_device(connected_devices, device_obj):
     window.close()
 
 
+def gui_manual_case(device_obj):
+    case_frame_layout = [[
+        sg.Radio('Photos', "MODE", default=True, key='mode_photos', enable_events=True),
+        sg.Radio('Videos', "MODE", key='mode_videos', enable_events=True),
+        sg.Radio('Both', "MODE", key='mode_both', enable_events=True),
+        sg.Spin([i for i in range(5, 60)], initial_value=10, key='duration_spinner', disabled=True),
+        sg.Text('Video Duration (secs)')
+    ],
+    ]
+
+    post_case_frame_layout = [
+        [
+            sg.Checkbox('Pull files from device', default=True, size=(16, 1), key='pull_files', enable_events=True),
+            sg.Checkbox('and delete them', default=True, size=(12, 1), key='clear_files')
+        ],
+        [
+            sg.Text('Save Location:', size=(11, 1)),
+            sg.InputText(size=(35, 1), key='save_location', enable_events=True),
+            sg.FolderBrowse(key='save_location_browse_btn')
+        ],
+    ]
+
+    layout = [
+        [sg.Frame('Test Case', case_frame_layout, font='Any 12', title_color='white')],
+        [sg.Frame('After Case', post_case_frame_layout, font='Any 12', title_color='white')]
+    ]
+
+    window = sg.Window('Automated Photo/Video Testing', layout,
+                       icon=r'.\images\automated-video-testing-header-icon.ico')
+
+    # Event Loop to process "events" and get the "values" of the inputs
+    while True:
+        event, values = window.read(timeout=100)
+
+        window['duration_spinner'].Update(disabled=values['mode_photos'])
+
+        if event == 'save_location':
+            if values["pull_files"]:
+                window['capture_case_btn'].Update(disabled=False)
+                window['capture_multi_cases_btn'].Update(disabled=False)
+
+        if event == "pull_files":
+            window['clear_files'].Update(disabled=not values['pull_files'])
+            window['save_location'].Update(disabled=not values['pull_files'])
+            window['save_location_browse_btn'].Update(disabled=not values['pull_files'])
+            if values['save_location'] == '':  # TODO FIX THIS
+                window['capture_case_btn'].Update(disabled=True)
+                window['capture_multi_cases_btn'].Update(disabled=True)
+
+        if event == "capture_case_btn":
+            device_obj.open_snap_cam()
+            # Photos Mode
+            if values['mode_photos'] or values['mode_both']:
+                shoot_photo(device_obj, values['logs_bool'], values['logs_filter'],
+                            "{}/logfile.txt".format(values['save_location']))
+
+            # Videos Mode
+            if values['mode_videos'] or values['mode_both']:
+                shoot_video(device_obj, values['duration_spinner'], values['logs_bool'], values['logs_filter'],
+                            "{}/logfile.txt".format(values['save_location']))
+
+            if values['pull_files']:
+                if values['save_location']:
+                    pull_camera_files(device_obj, values['save_location'], values['clear_files'])
+                else:
+                    print("Save Location must be set!")
+
+
+def disconnect_from_gui(device_obj):
+    pass
+
+
 def loading(secs):  # Only gives fanciness
     for i in range(1, 15 * secs):
         sg.popup_animated(image_source=r'.\images\loading3.gif', message='Loading...', no_titlebar=True,
@@ -295,27 +367,6 @@ def gui():
         [sg.Text('Logs Filter:'), sg.InputText(size=(42, 1), key='logs_filter', disabled=True)],
     ]
 
-    case_frame_layout = [[
-        sg.Radio('Photos', "MODE", default=True, key='mode_photos', enable_events=True),
-        sg.Radio('Videos', "MODE", key='mode_videos', enable_events=True),
-        sg.Radio('Both', "MODE", key='mode_both', enable_events=True),
-        sg.Spin([i for i in range(5, 60)], initial_value=10, key='duration_spinner', disabled=True),
-        sg.Text('Video Duration (secs)')
-    ],
-    ]
-
-    post_case_frame_layout = [
-        [
-            sg.Checkbox('Pull files from device', default=True, size=(16, 1), key='pull_files', enable_events=True),
-            sg.Checkbox('and delete them', default=True, size=(12, 1), key='clear_files')
-        ],
-        [
-            sg.Text('Save Location:', size=(11, 1)),
-            sg.InputText(size=(35, 1), key='save_location', enable_events=True),
-            sg.FolderBrowse(key='save_location_browse_btn')
-        ],
-    ]
-
     # All the stuff inside your window.
     layout = [
         [sg.Image(r'.\images\automated-video-testing-header.png')],
@@ -325,8 +376,6 @@ def gui():
         ],
         [sg.Frame('Settings', device_settings_frame_layout, font='Any 12', title_color='white')],
         [sg.Frame('Logs', logs_frame_layout, font='Any 12', title_color='white')],
-        [sg.Frame('Test Case', case_frame_layout, font='Any 12', title_color='white')],
-        [sg.Frame('After Case', post_case_frame_layout, font='Any 12', title_color='white')],
         [
             sg.Button('Exit', size=(6, 2)),
             sg.Button('Capture Case', size=(12, 2), key='capture_case_btn', disabled=True),
@@ -343,43 +392,37 @@ def gui():
 
     # Event Loop to process "events" and get the "values" of the inputs
     while True:
-        event, values = window.read()
+        event, values = window.read(timeout=100) #
         devices_list = adb.list_devices()
 
         if event == sg.WIN_CLOSED or event == 'Exit':  # if user closes window or clicks cancel
             break
 
-        print('Data: ', values)  # Debugging
-        print('Event: ', event)  # Debugging
-        print('ADB List Devices', devices_list)  # Debugging
-        print('Devices objects: ', device)
+        # print('Data: ', values)  # Debugging
+        # print('Event: ', event)  # Debugging
+        # print('ADB List Devices', devices_list)  # Debugging
+        # print('Devices objects: ', device)
+
+        try:
+            if len(devices_list) > len(devices_list_old):  # If New device found
+                new_device = [str(s) for s in (set(devices_list_old) ^ set(devices_list))][0]
+                print("Found new device!!! -> ", new_device)
+
+
+            elif len(devices_list) < len(devices_list_old):
+                new_device = [str(s) for s in (set(devices_list_old) ^ set(devices_list))][0]
+                print("Device disconnected :( -> ", new_device)
+                
+
+        except UnboundLocalError:
+            print("devices_list_old not set yet. No worries, will be set on next run of loop.")
+
+        devices_list_old = devices_list
 
         if event == "logs_bool":
             window['logs_filter'].Update(disabled=not values['logs_bool'])
 
-        if event == "pull_files":
-            window['clear_files'].Update(disabled=not values['pull_files'])
-            window['save_location'].Update(disabled=not values['pull_files'])
-            window['save_location_browse_btn'].Update(disabled=not values['pull_files'])
-            if values['save_location'] == '':  # TODO FIX THIS
-                window['capture_case_btn'].Update(disabled=True)
-                window['capture_multi_cases_btn'].Update(disabled=True)
-
-        # TODO FIX THIS
-        if event == "save_location" and values['pull_files']:
-            if values['save_location'] == "":
-                window['capture_case_btn'].Update(disabled=True)
-                window['capture_multi_cases_btn'].Update(disabled=True)
-        else:
-            window['capture_case_btn'].Update(disabled=False)
-            window['capture_multi_cases_btn'].Update(disabled=False)
-        ############
-
-        if event == 'save_location':
-            if values["pull_files"]:
-                window['capture_case_btn'].Update(disabled=False)
-                window['capture_multi_cases_btn'].Update(disabled=False)
-
+        # Add to timeout
         if event == "refresh_btn":  # TODO MAKE AUTOMATIC
             print("Refreshing..")
             window['device'].update(values=adb.list_devices())
@@ -404,6 +447,8 @@ def gui():
             if len(values['devices']) > len(adb.get_connected_devices()) \
                     and diff_device not in adb.get_connected_devices():  # Connect device
                 device[diff_device] = Device(adb, diff_device)  # Assign device to object
+
+                print('asdL: ', device[diff_device].device_serial)
 
                 window['device_friendly.' + diff_device].Update(
                     values['device_friendly.' + diff_device] if values['device_friendly.' + diff_device] else device[
@@ -434,7 +479,9 @@ def gui():
             print('Devices objects list after changes: ', device)
 
         if adb.get_connected_devices():
-            print('A Device is connected!')
+            # print('At least one device is connected!') # Debugging
+
+            # Disable/Enable buttons
             window['camxoverride_btn'].Update(disabled=False)
             window['reboot_device_btn'].Update(disabled=False)
             window['push_file_btn'].Update(disabled=False)
@@ -449,8 +496,19 @@ def gui():
             if event.split('.')[0] == 'ctrl_device_btn':  # Identify Buttons
                 print('Identifying ' + event.split('.')[1])
                 device[event.split('.')[1]].open_device_ctrl()
+
+            # Buttons callbacks
+            if event == "camxoverride_btn":
+                gui_camxoverride(adb.get_connected_devices(), device)
+
+            if event == "push_file_btn":
+                gui_push_file(adb.get_connected_devices(), device)
+
+            if event == "setup_device_btn":
+                gui_setup_device(adb.get_connected_devices(), device)
+
         else:
-            print('No connected devices!')
+            # print('No connected devices!')
             window['camxoverride_btn'].Update(disabled=True)
             window['reboot_device_btn'].Update(disabled=True)
             window['push_file_btn'].Update(disabled=True)
@@ -460,37 +518,5 @@ def gui():
 
         if event == 'reboot_device_btn':
             gui_reboot_device(adb.get_connected_devices(), device)
-
-        window['duration_spinner'].Update(disabled=values['mode_photos'])
-
-        if not adb.get_connected_devices():
-            print("First select a device and connect to it!")
-        else:
-            if event == "capture_case_btn":
-                device.open_snap_cam()
-                # Photos Mode
-                if values['mode_photos'] or values['mode_both']:
-                    shoot_photo(device, values['logs_bool'], values['logs_filter'],
-                                "{}/logfile.txt".format(values['save_location']))
-
-                # Videos Mode
-                if values['mode_videos'] or values['mode_both']:
-                    shoot_video(device, values['duration_spinner'], values['logs_bool'], values['logs_filter'],
-                                "{}/logfile.txt".format(values['save_location']))
-
-                if values['pull_files']:
-                    if values['save_location']:
-                        pull_camera_files(device, values['save_location'], values['clear_files'])
-                    else:
-                        print("Save Location must be set!")
-
-            if event == "camxoverride_btn":
-                gui_camxoverride(adb.get_connected_devices(), device)
-
-            if event == "push_file_btn":
-                gui_push_file(adb.get_connected_devices(), device)
-
-            if event == "setup_device_btn":
-                gui_setup_device(adb.get_connected_devices(), device)
 
     window.close()

@@ -1,37 +1,25 @@
-## Original file - https://github.com/tzutalin/adb-event-record/blob/master/adbrecord.py
-import os
-import subprocess
-from subprocess import PIPE
-import re
-import time
+import asyncio
+import aiofiles
+from ppadb.client_async import ClientAsync as AdbClient
 
-ELEVATED = False
+async def _save_screenshot(device):
+    result = await device.screencap()
+    file_name = f"{device.serial}.png"
+    async with aiofiles.open(f"{file_name}", mode='wb') as f:
+        await f.write(result)
 
+    return file_name
 
+async def main():
+    client = AdbClient(host="127.0.0.1", port=5037)
+    devices = await client.devices()
+    for device in devices:
+        print(device.serial)
 
-def grabScreenResolution(udid):
-    adb = subprocess.Popen(('adb', '-s', udid, 'shell', 'dumpsys', 'window'), stdout=subprocess.PIPE) #  | grep "mUnrestricted"'
-    output = subprocess.Popen(['grep', 'mUnrestricted'],
-                                     stdin=adb.stdout,
-                                     stdout=subprocess.PIPE)
-    out = re.findall("\d+", str(output.stdout.read()))
-    return [out[2],out[3]]
+    result = await asyncio.gather(*[_save_screenshot(device) for device in devices])
+    print(result)
 
-
-def GrabUiAutomator(udid):
-    saved_file = '.\\XML\\' + str(udid) + '.xml'
-    command = "adb -s {} shell uiautomator dump && adb -s {} pull /sdcard/window_dump.xml {}".format(
-        udid, udid, saved_file)
-    print(command)
-    runCommand(command)
-    return saved_file
-
-
-def main():
-    # print(str(GrabUiAutomator("cf108b7")))
-    #print(grabScreenResolution("cf108b7"))
-    print("Hi")
-
+    
 
 if __name__ == "__main__":
     main()
