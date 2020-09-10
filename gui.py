@@ -8,34 +8,21 @@ import PySimpleGUI as sg
 
 APP_VERSION = '0.01 Beta'
 THREAD_EVENT = '-WATCHDOG-'
-
-
-def devices_watchdog(window):  # TODO
-    """
-    The thread that communicates with the application through the window's events.
-
-    Once a second wakes and sends a new event and associated value to the window
-    """
-    i = 0
-    while True:
-        time.sleep(1)
-        window.write_event_value(THREAD_EVENT, (
-            threading.current_thread().name, i))  # Data sent is a tuple of thread name and counter
-        print('This is cheating from the thread')
-        i += 1
+MAX_DEVICES_AT_ONE_RUN = 6
 
 
 def gui_camxoverride(attached_devices, device_obj):
     print("Pulling camxoverridesettings.txt from device...")
     device_obj[attached_devices[0]].pull_file('/vendor/etc/camera/camxoverridesettings.txt',
-                                               r'.\tmp\camxoverridesettings.txt')
+                                              r'.\tmp\camxoverridesettings.txt')
 
     camxoverride_content = open(r'.\tmp\camxoverridesettings.txt', 'r').read().rstrip()
 
     # All the stuff inside your window.
     layout = [
         [sg.Combo(attached_devices, size=(20, 20), key='selected_device', default_value=attached_devices[0],
-                  enable_events=True)],
+                  enable_events=True),
+         sg.Text(text=device_obj[attached_devices[0]].friendly_name, key='device-friendly')],
         [sg.Text('camxoverridesettings.txt:')],
         [sg.Multiline(camxoverride_content, size=(70, 30), key='camxoverride_input')],
         [sg.CloseButton('Close'),
@@ -65,6 +52,7 @@ def gui_camxoverride(attached_devices, device_obj):
             except FileNotFoundError:
                 pass
 
+            window['device-friendly'].Update(device_obj[values['selected_device']].friendly_name)
             print("Pulling camxoverridesettings.txt from device...")
             device_obj[values['selected_device']].pull_file('/vendor/etc/camera/camxoverridesettings.txt',
                                                             r'.\tmp\camxoverridesettings.txt')
@@ -98,11 +86,16 @@ def gui_push_file(attached_devices, device_obj):
 
     layout = [
         [
-            sg.Combo(attached_devices, size=(20, 20), key='selected_device', default_value=attached_devices[0]),
+            sg.Text('Device: ', size=(9, 1)),
+            sg.Combo(attached_devices, size=(20, 20), enable_events=True, key='selected_device', default_value=attached_devices[0]),
+            sg.Text(text=device_obj[attached_devices[0]].friendly_name, key='device-friendly')
+        ],
+        [
+            sg.Text('Destination: ', size=(9, 1)),
             sg.Combo(file_destinations, size=(20, 20), key='dest_folder', default_value=file_destinations[0])
         ],
         [
-            sg.Text('File:', size=(11, 1)),
+            sg.Text('File:', size=(9, 1)),
             sg.InputText(size=(35, 1), key='source_file', enable_events=True),
             sg.FileBrowse()
         ],
@@ -120,6 +113,9 @@ def gui_push_file(attached_devices, device_obj):
 
         if event == sg.WIN_CLOSED or event == 'Close':  # if user closes window or clicks cancel
             break
+
+        if event == 'selected_device':
+            window['device-friendly'].Update(device_obj[values['selected_device']].friendly_name)
 
         if event == 'source_file':
             window['push_file_btn'].Update(disabled=False)
@@ -141,7 +137,13 @@ def gui_push_file(attached_devices, device_obj):
 
 def gui_reboot_device(attached_devices, device_obj):
     layout = [
-        [sg.Combo(attached_devices, size=(20, 20), key='selected_device', default_value=attached_devices[0])],
+        [
+            sg.Combo(attached_devices, size=(20, 20),
+                     key='selected_device',
+                     default_value=attached_devices[0],
+                     enable_events=True),
+            sg.Text(text=device_obj[attached_devices[0]].friendly_name, key='device-friendly')
+        ],
         [sg.Button('Reboot', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 2),
                    key='reboot_device_btn', disabled=False)]
     ]
@@ -156,6 +158,9 @@ def gui_reboot_device(attached_devices, device_obj):
 
         if event == sg.WIN_CLOSED or event == 'Close':  # if user closes window or clicks cancel
             break
+
+        if event == 'selected_device':
+            window['device-friendly'].Update(device_obj[values['selected_device']].friendly_name)
 
         if event == 'reboot_device_btn':
             curr_device = device_obj[values['selected_device']]
@@ -173,8 +178,9 @@ def gui_setup_device(attached_devices, device_obj):
             key='selected_device',
             default_value=attached_devices[0],
             enable_events=True
-        )
-    ],]
+        ),
+        sg.Text(text=device_obj[attached_devices[0]].friendly_name, key='device-friendly')
+    ], ]
 
     select_app_frame = [[
         sg.Combo(
@@ -185,13 +191,14 @@ def gui_setup_device(attached_devices, device_obj):
         ),
         sg.Button('Test it!', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 1),
                   key='test_app_btn', disabled=False)
-    ],]
+    ], ]
 
     photo_sequence_frame = [[
-        sg.Combo(values=list(device_obj[attached_devices[0]].get_clickable_window_elements().keys()), size=(40, 1), key='photo_selected_action.0'),
+        sg.Combo(values=list(device_obj[attached_devices[0]].get_clickable_window_elements().keys()), size=(40, 1),
+                 key='photo_selected_action.0'),
         sg.Button('Test it!', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 1),
                   key='test_btn_photo_selected_action.0', disabled=False)
-    ],]
+    ], ]
 
     layout = [
         [sg.Frame('Select device', select_device_frame, font='Any 12', title_color='white')],
@@ -216,6 +223,7 @@ def gui_setup_device(attached_devices, device_obj):
             device_obj[values['selected_device']].open_app(values['selected_app_package'])
 
         if event == 'selected_device':
+            window['device-friendly'].Update(device_obj[values['selected_device']].friendly_name)
             window['selected_app_package'].Update(
                 values=list(device_obj[values['selected_device']].get_installed_packages()),
                 value=device_obj[values['selected_device']].get_current_app()[0]
@@ -230,7 +238,8 @@ def gui_setup_device(attached_devices, device_obj):
 
         if event.split('.')[0] == 'test_btn_photo_selected_action':
             try:
-                data = device_obj[values['selected_device']].get_clickable_window_elements()[values['photo_selected_action.' + event.split('.')[1]]]
+                data = device_obj[values['selected_device']].get_clickable_window_elements()[
+                    values['photo_selected_action.' + event.split('.')[1]]]
             except KeyError:
                 print("Element not found! :(")
             device_obj[values['selected_device']].input_tap(data[1])
@@ -323,6 +332,15 @@ def loading(secs):  # Only gives fanciness
     sg.popup_animated(image_source=None)
 
 
+def place(elem):
+    '''
+    Places element provided into a Column element so that its placement in the layout is retained.
+    :param elem: the element to put into the layout
+    :return: A column element containing the provided element
+    '''
+    return sg.Column([[elem]], pad=(0, 0))
+
+
 def gui():
     sg.theme('DarkGrey5')  # Add a touch of color
 
@@ -333,23 +351,37 @@ def gui():
     loading(3)
 
     devices_frame = []
-    for num in range(1, 6):
-        devices_frame += [sg.Checkbox('', key=f'device_attached.{num}', text_color="black", disabled=True, enable_events=True),
-                           sg.InputText(key=f'device_serial.{num}', background_color="red", enable_events=True, size=(15, 1),
-                                        readonly=True, default_text='', visible=False),
-                           sg.InputText(key=f'device_friendly.{num}', enable_events=False, size=(20, 1),
-                                        disabled=True),
-                           sg.Button('Identify',
-                                     button_color=(sg.theme_text_element_background_color(), 'silver'),
-                                     key=f'identify_device_btn.{num}',
-                                     disabled=True,
-                                     enable_events=True),
-                           sg.Button('Control',
-                                     button_color=(sg.theme_text_element_background_color(), 'silver'),
-                                     key=f'ctrl_device_btn.{num}',
-                                     disabled=True,
-                                     enable_events=True)
-                           ],
+    for num in range(MAX_DEVICES_AT_ONE_RUN):
+        print(f"Building row {num}")
+        devices_frame += [place(sg.Checkbox('', key=f'device_attached.{num}',
+                                            text_color="black",
+                                            disabled=True,
+                                            enable_events=True,
+                                            visible=False)),
+                          place(sg.InputText(key=f'device_serial.{num}',
+                                             background_color="red",
+                                             enable_events=True,
+                                             size=(15, 1),
+                                             readonly=True,
+                                             default_text='',
+                                             visible=False)),
+                          place(sg.InputText(key=f'device_friendly.{num}', enable_events=True, size=(20, 1),
+                                             disabled=True,
+                                             visible=False)),
+                          place(sg.Button('Identify',
+                                          button_color=(sg.theme_text_element_background_color(), 'silver'),
+                                          key=f'identify_device_btn.{num}',
+                                          disabled=True,
+                                          enable_events=True,
+                                          visible=False)),
+                          place(sg.Button('Control',
+                                          button_color=(sg.theme_text_element_background_color(), 'silver'),
+                                          key=f'ctrl_device_btn.{num}',
+                                          disabled=True,
+                                          enable_events=True,
+                                          visible=False
+                                          ))
+                          ],
 
     device_settings_frame_layout = [[
         sg.Button('Edit camxoverridesettings', button_color=(sg.theme_text_element_background_color(), 'silver'),
@@ -407,7 +439,7 @@ def gui():
         if event == sg.WIN_CLOSED or event == 'Exit':  # if user closes window or clicks cancel
             break
 
-        print('Data: ', values)  # Debugging
+        # print('Data: ', values)  # Debugging
         # print('Event: ', event)  # Debugging
         # print('ADB List Devices', devices_list)  # Debugging
         # print('Devices objects: ', device)
@@ -422,29 +454,39 @@ def gui():
                 for count, diff_device in enumerate([str(s) for s in (set(devices_list_old) ^ set(devices_list))]):
                     print("Found new device!!! -> ", diff_device)
 
-                    # window['devices'].update(values=devices_list)
-                    for num in range(1+count, 6):
-                        print("count: ", count)
-                        if values[f'device_serial.{num}'] == diff_device or values[f'device_serial.{num}'] == '':
-                            print("setting {} to row {}".format(diff_device, num))
-                            print("input serial was: {} ".format(values[f'device_serial.{num}']))
-                            window[f'device_attached.{num}'].Update(text=diff_device,
-                                                                    background_color='yellow',
-                                                                    disabled=False)
-                            window[f'device_serial.{num}'].Update(diff_device)
-                            print("input serial is: {} ".format(values[f'device_serial.{num}']))
-                            break
+                    for numm in range(MAX_DEVICES_AT_ONE_RUN):
+                        num = numm + count
+                        try:
+                            if values[f'device_serial.{num}'] == '' or values[f'device_serial.{num}'] == diff_device:
+                                print("setting {} to row {}".format(diff_device, num))
+
+                                window[f'device_attached.{num}'].Update(text=diff_device,
+                                                                        background_color='yellow',
+                                                                        disabled=False,
+                                                                        visible=True)
+                                window[f'device_serial.{num}'].Update(diff_device)
+
+                                window[f'device_friendly.{num}'].Update(visible=True)
+                                window[f'identify_device_btn.{num}'].Update(visible=True)
+                                window[f'ctrl_device_btn.{num}'].Update(visible=True)
+                                break
+                        except KeyError:
+                            print('Devices limit exceeded!')
+                            print(f'numm: {numm}, num: {num}, count: {count}, max: {MAX_DEVICES_AT_ONE_RUN}')
             elif len(devices_list) < len(devices_list_old):  # If device is disconnected
                 for diff_device in [str(s) for s in (set(devices_list_old) ^ set(devices_list))]:
-                    # diff_device = [str(s) for s in (set(devices_list_old) ^ set(devices_list))][0]
                     print("Device detached :( -> ", diff_device)
 
                     # window['devices'].update(values=devices_list)
-                    for num in range(1, 6):
+                    for numm in range(MAX_DEVICES_AT_ONE_RUN):
+                        num += count
                         if values[f'device_serial.{num}'] == diff_device:
-                            window[f'device_attached.{num}'].Update(value=False, background_color='red', disabled=True)
-                            window[f'device_friendly.{num}'].Update(disabled=True)
-
+                            window[f'device_attached.{num}'].Update(value=False, background_color='red', disabled=True,
+                                                                    visible=False)
+                            window[f'device_friendly.{num}'].Update(disabled=True, visible=False)
+                            window[f'identify_device_btn.{num}'].Update(visible=False)
+                            window[f'ctrl_device_btn.{num}'].Update(visible=False)
+                            break
                     try:
                         adb.detach_device(diff_device, device[diff_device])
                         del device[diff_device]
@@ -464,16 +506,19 @@ def gui():
             diff_device = values[f"device_serial.{event.split('.')[1]}"]
 
             print('Attached devices list before changing: {}, len: {}'.format(adb.get_attached_devices(),
-                                                                               len(adb.get_attached_devices())))  # Debugging
+                                                                              len(
+                                                                                  adb.get_attached_devices())))  # Debugging
             print('Devices objects list before changes: ', device)
 
             if values[f"device_attached.{event.split('.')[1]}"]:  # Attach device
                 device[diff_device] = Device(adb, diff_device)  # Assign device to object
 
-                for num in range(1, 6):
+                for num in range(MAX_DEVICES_AT_ONE_RUN):
                     if values[f'device_serial.{num}'] == diff_device or values[f'device_serial.{num}'] == '':
                         window[f'device_attached.{num}'].Update(background_color='green')
-                        window[f'device_friendly.{num}'].Update(background_color='green', value=values[f'device_friendly.{num}'] if values[f'device_friendly.{num}'] else device[diff_device].get_device_model(), disabled=False)
+                        window[f'device_friendly.{num}'].Update(background_color='green',
+                                                                value=device[diff_device].friendly_name,
+                                                                disabled=False)
                         window[f'identify_device_btn.{num}'].Update(disabled=False)
                         window[f'ctrl_device_btn.{num}'].Update(disabled=False)
                         break
@@ -485,7 +530,7 @@ def gui():
                 adb.detach_device(diff_device, device[diff_device])
                 del device[diff_device]
 
-                for num in range(1, 6):
+                for num in range(MAX_DEVICES_AT_ONE_RUN):
                     if values[f'device_serial.{num}'] == diff_device or values[f'device_serial.{num}'] == '':
                         window[f'device_attached.{num}'].Update(background_color='yellow')
                         window[f'device_friendly.{num}'].Update(background_color='yellow')
@@ -523,6 +568,11 @@ def gui():
 
             if event == "setup_device_btn":
                 gui_setup_device(adb.get_attached_devices(), device)
+
+            if event.split('.')[0] == 'device_friendly':
+                device000 = values[f"device_serial.{event.split('.')[1]}"]
+                device[device000].friendly_name = values[f"device_friendly.{event.split('.')[1]}"]
+                print(device[device000].friendly_name)
         else:
             # print('No attached devices!')
             window['camxoverride_btn'].Update(disabled=True)

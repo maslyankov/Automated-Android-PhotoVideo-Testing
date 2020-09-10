@@ -17,7 +17,10 @@ class Device:
         self.adb = adb
         self.adb_client = adb.client
         self.d = self.adb_client.device(device_serial)  # Create device client object
+
         self.device_serial = device_serial  # Assign device serial as received in arguments
+        self.friendly_name = self.get_device_model()
+
         self.root()  # Make sure we are using root for device
 
         # Add device to attached devices list
