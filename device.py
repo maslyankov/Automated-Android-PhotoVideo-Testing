@@ -136,7 +136,7 @@ class Device:
         leds = self.get_device_leds()
         print(leds)  # Debugging
 
-        for k in range(1, 5): # Blink Leds and screen
+        for k in range(1, 5):  # Blink Leds and screen
             if k != 1:
                 time.sleep(0.5)
             self.d.shell('echo 0 > /sys/class/leds/{}/global_onoff'.format(leds[0]))

@@ -168,17 +168,27 @@ def gui_reboot_device(attached_devices, device_obj):
 
 def gui_setup_device(attached_devices, device_obj):
     select_device_frame = [[
-        sg.Combo(attached_devices, size=(20, 20), key='selected_device', default_value=attached_devices[0])
+        sg.Combo(
+            attached_devices, size=(20, 20),
+            key='selected_device',
+            default_value=attached_devices[0],
+            enable_events=True
+        )
     ],]
 
     select_app_frame = [[
-        sg.Combo(device_obj[attached_devices[0]].get_installed_packages(), size=(40, 1), key='selected_app_package', default_value=device_obj[attached_devices[0]].get_current_app()[0]),
+        sg.Combo(
+            values=device_obj[attached_devices[0]].get_installed_packages(),
+            size=(40, 1),
+            key='selected_app_package',
+            default_value=device_obj[attached_devices[0]].get_current_app()[0]
+        ),
         sg.Button('Test it!', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 1),
                   key='test_app_btn', disabled=False)
     ],]
 
     photo_sequence_frame = [[
-        sg.Combo(list(device_obj[attached_devices[0]].get_clickable_window_elements().keys()), size=(40, 1), key='photo_selected_action.0'),
+        sg.Combo(values=list(device_obj[attached_devices[0]].get_clickable_window_elements().keys()), size=(40, 1), key='photo_selected_action.0'),
         sg.Button('Test it!', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 1),
                   key='test_btn_photo_selected_action.0', disabled=False)
     ],]
@@ -204,6 +214,15 @@ def gui_setup_device(attached_devices, device_obj):
 
         if event == 'test_app_btn':
             device_obj[values['selected_device']].open_app(values['selected_app_package'])
+
+        if event == 'selected_device':
+            window['selected_app_package'].Update(
+                values=list(device_obj[values['selected_device']].get_installed_packages()),
+                value=device_obj[values['selected_device']].get_current_app()[0]
+            )
+            window['photo_selected_action.0'].Update(  # TODO
+                values=list(device_obj[values['selected_device']].get_clickable_window_elements().keys())
+            )
 
         if event == 'save_btn':
             # print(device_obj[attached_devices[0]].get_clickable_window_elements().keys())
@@ -476,7 +495,6 @@ def gui():
 
                 print('{} was detached!'.format(diff_device))
 
-
         if adb.get_attached_devices():
             # print('At least one device is attached!') # Debugging
 
@@ -518,7 +536,10 @@ def gui():
             gui_reboot_device(adb.get_attached_devices(), device)
 
     # Detach attached devices
-    for dev in adb.get_attached_devices():
+    print("Detaching attached devices...")
+    attached = adb.get_attached_devices().copy()
+    for dev in attached:
+        print(f"Detaching {dev}")
         adb.detach_device(dev, device[dev])
 
     window.close()
