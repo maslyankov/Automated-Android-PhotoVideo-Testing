@@ -87,7 +87,9 @@ def gui_push_file(attached_devices, device_obj):
     layout = [
         [
             sg.Text('Device: ', size=(9, 1)),
-            sg.Combo(attached_devices, size=(20, 20), enable_events=True, key='selected_device', default_value=attached_devices[0]),
+            sg.Combo(attached_devices, size=(20, 20),
+                     enable_events=True, key='selected_device',
+                     default_value=attached_devices[0]),
             sg.Text(text=device_obj[attached_devices[0]].friendly_name, key='device-friendly')
         ],
         [
@@ -109,10 +111,12 @@ def gui_push_file(attached_devices, device_obj):
 
     while True:
         event, values = window.read()
-        print(values)  # Debugging
 
         if event == sg.WIN_CLOSED or event == 'Close':  # if user closes window or clicks cancel
             break
+
+        print('vals',values)  # Debugging
+        print('event',event)  # Debugging
 
         if event == 'selected_device':
             window['device-friendly'].Update(device_obj[values['selected_device']].friendly_name)
@@ -154,10 +158,12 @@ def gui_reboot_device(attached_devices, device_obj):
 
     while True:
         event, values = window.read()
-        print(values)  # Debugging
 
         if event == sg.WIN_CLOSED or event == 'Close':  # if user closes window or clicks cancel
             break
+
+        print('vals',values)  # Debugging
+        print('event',event)  # Debugging
 
         if event == 'selected_device':
             window['device-friendly'].Update(device_obj[values['selected_device']].friendly_name)
@@ -214,10 +220,12 @@ def gui_setup_device(attached_devices, device_obj):
 
     while True:
         event, values = window.read()
-        print(values)  # Debugging
 
         if event == sg.WIN_CLOSED or event == 'Close':  # if user closes window or clicks cancel
             break
+            
+        print('vals',values)  # Debugging
+        print('event',event)  # Debugging
 
         if event == 'test_app_btn':
             device_obj[values['selected_device']].open_app(values['selected_app_package'])
