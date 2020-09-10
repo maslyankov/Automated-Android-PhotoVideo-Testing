@@ -317,7 +317,7 @@ def gui():
     devices_frame = []
     for num in range(1, 6):
         devices_frame += [sg.Checkbox('', key=f'device_attached.{num}', disabled=True, enable_events=True),
-                           sg.InputText(key=f'device_serial.{num}', enable_events=False, size=(15, 1),
+                           sg.InputText(key=f'device_serial.{num}', enable_events=True, size=(15, 1),
                                         disabled=True, default_text=''),
                            sg.InputText(key=f'device_friendly.{num}', enable_events=False, size=(20, 1),
                                         disabled=True),
@@ -383,7 +383,7 @@ def gui():
 
     # Event Loop to process "events" and get the "values" of the inputs
     while True:
-        event, values = window.read(timeout=100) #
+        event, values = window.read(timeout=100)
         devices_list = adb.list_devices()
 
         if event == sg.WIN_CLOSED or event == 'Exit':  # if user closes window or clicks cancel
@@ -400,33 +400,36 @@ def gui():
             devices_list_old = []
 
         try:
-            if len(devices_list) > len(devices_list_old):  # If New device found
-                diff_device = [str(s) for s in (set(devices_list_old) ^ set(devices_list))][0]
-                print("Found new device!!! -> ", diff_device)
+            if len(devices_list) > len(devices_list_old):  # If New devices found
+                for count, diff_device in enumerate([str(s) for s in (set(devices_list_old) ^ set(devices_list))]):
+                    print("Found new device!!! -> ", diff_device)
 
-                # window['devices'].update(values=devices_list)
-                for num in range(1, 6):
-                    if values[f'device_serial.{num}'] == diff_device or values[f'device_serial.{num}'] == '':
-                        window[f'device_attached.{num}'].Update(disabled=False)
-                        window[f'device_serial.{num}'].Update(diff_device)
-                        break
-
-
+                    # window['devices'].update(values=devices_list)
+                    for num in range(1+count, 6):
+                        print("count: ", count)
+                        if values[f'device_serial.{num}'] == diff_device or values[f'device_serial.{num}'] == '':
+                            print("setting {} to row {}".format(diff_device, num))
+                            print("input serial was: {} ".format(values[f'device_serial.{num}']))
+                            window[f'device_attached.{num}'].Update(disabled=False)
+                            window[f'device_serial.{num}'].Update(diff_device)
+                            print("input serial is: {} ".format(values[f'device_serial.{num}']))
+                            break
             elif len(devices_list) < len(devices_list_old):  # If device is detached
-                diff_device = [str(s) for s in (set(devices_list_old) ^ set(devices_list))][0]
-                print("Device detached :( -> ", diff_device)
+                for diff_device in [str(s) for s in (set(devices_list_old) ^ set(devices_list))]:
+                    # diff_device = [str(s) for s in (set(devices_list_old) ^ set(devices_list))][0]
+                    print("Device detached :( -> ", diff_device)
 
-                # window['devices'].update(values=devices_list)
-                for num in range(1, 6):
-                    if values[f'device_serial.{num}'] == diff_device:
-                        window[f'device_attached.{num}'].Update(value=False, disabled=True)
-                        window[f'device_friendly.{num}'].Update(disabled=True)
+                    # window['devices'].update(values=devices_list)
+                    for num in range(1, 6):
+                        if values[f'device_serial.{num}'] == diff_device:
+                            window[f'device_attached.{num}'].Update(value=False, disabled=True)
+                            window[f'device_friendly.{num}'].Update(disabled=True)
 
-                try:
-                    adb.detach_device(diff_device, device[diff_device])
-                    del device[diff_device]
-                except KeyError:
-                    print("Wasn't attached anyway..")
+                    try:
+                        adb.detach_device(diff_device, device[diff_device])
+                        del device[diff_device]
+                    except KeyError:
+                        print("Wasn't attached anyway..")
 
         except UnboundLocalError:
             pass  # devices_list_old not set yet. No worries, will be set on next run of loop.
