@@ -29,7 +29,6 @@ class Device:
         print("Device Serial: ", device_serial)  # Debugging
         print("Resolution: ", self.get_screen_resolution())  # Debugging
 
-
     def root(self):
         print("Rooting device " + self.device_serial)
         root = subprocess.Popen([ADB, '-s', self.device_serial, 'root'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)

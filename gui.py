@@ -223,7 +223,7 @@ def gui_setup_device(attached_devices, device_obj):
 
         if event == sg.WIN_CLOSED or event == 'Close':  # if user closes window or clicks cancel
             break
-            
+
         print('vals',values)  # Debugging
         print('event',event)  # Debugging
 
@@ -323,11 +323,7 @@ def gui_manual_case(device_obj):
                     pull_camera_files(device_obj, values['save_location'], values['clear_files'])
                 else:
                     print("Save Location must be set!")
-
-
-def disconnect_from_gui(device_obj):
-    pass
-
+                    
 
 def loading(secs):  # Only gives fanciness
     for i in range(1, 15 * secs):
@@ -341,11 +337,11 @@ def loading(secs):  # Only gives fanciness
 
 
 def place(elem):
-    '''
+    """
     Places element provided into a Column element so that its placement in the layout is retained.
     :param elem: the element to put into the layout
     :return: A column element containing the provided element
-    '''
+    """
     return sg.Column([[elem]], pad=(0, 0))
 
 
@@ -482,12 +478,12 @@ def gui():
                             print('Devices limit exceeded!')
                             print(f'numm: {numm}, num: {num}, count: {count}, max: {MAX_DEVICES_AT_ONE_RUN}')
             elif len(devices_list) < len(devices_list_old):  # If device is disconnected
-                for diff_device in [str(s) for s in (set(devices_list_old) ^ set(devices_list))]:
+                for count, diff_device in enumerate([str(s) for s in (set(devices_list_old) ^ set(devices_list))]):
                     print("Device detached :( -> ", diff_device)
 
                     # window['devices'].update(values=devices_list)
                     for numm in range(MAX_DEVICES_AT_ONE_RUN):
-                        num += count
+                        num = numm + count
                         if values[f'device_serial.{num}'] == diff_device:
                             window[f'device_attached.{num}'].Update(value=False, background_color='red', disabled=True,
                                                                     visible=False)
