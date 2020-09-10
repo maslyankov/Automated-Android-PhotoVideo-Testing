@@ -532,4 +532,8 @@ def gui():
         if event == 'reboot_device_btn':
             gui_reboot_device(adb.get_attached_devices(), device)
 
+    # Detach attached devices
+    for dev in adb.get_attached_devices():
+        adb.detach_device(dev, device[dev])
+
     window.close()
