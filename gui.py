@@ -314,18 +314,11 @@ def gui():
 
     loading(3)
 
-    device_frame_layout = [
-        [sg.Listbox(values=devices_list if devices_list else ['No devices found!'], size=(30, 5),
-                    key='devices', enable_events=True,
-                    select_mode=sg.LISTBOX_SELECT_MODE_MULTIPLE,
-                    tooltip='Select to attach to device, Deselect to detach')],
-    ]
-
-    friendly_names = []
+    devices_frame = []
     for num in range(1, 6):
-        friendly_names += [sg.Checkbox('', key=f'device_attached.{num}'),
-                           sg.InputText(key=f'device_serial.{num}', enable_events=False, size=(10, 1),
-                                        disabled=True, default_text='...'),
+        devices_frame += [sg.Checkbox('', key=f'device_attached.{num}', disabled=True, enable_events=True),
+                           sg.InputText(key=f'device_serial.{num}', enable_events=False, size=(15, 1),
+                                        disabled=True, default_text=''),
                            sg.InputText(key=f'device_friendly.{num}', enable_events=False, size=(20, 1),
                                         disabled=True),
                            sg.Button('Identify',
@@ -371,10 +364,7 @@ def gui():
     # All the stuff inside your window.
     layout = [
         [sg.Image(r'.\images\automated-video-testing-header.png')],
-        [
-            sg.Frame('Devices', device_frame_layout, font='Any 12', title_color='white'),
-            sg.Frame('Devices', friendly_names, font='Any 12', title_color='white')
-        ],
+        [sg.Frame('Devices', devices_frame, font='Any 12', title_color='white')],
         [sg.Frame('Settings', device_settings_frame_layout, font='Any 12', title_color='white')],
         [sg.Frame('Logs', logs_frame_layout, font='Any 12', title_color='white')],
         [
@@ -405,21 +395,32 @@ def gui():
         # print('Devices objects: ', device)
 
         try:
+            devices_list_old
+        except NameError:
+            devices_list_old = []
+
+        try:
             if len(devices_list) > len(devices_list_old):  # If New device found
                 diff_device = [str(s) for s in (set(devices_list_old) ^ set(devices_list))][0]
                 print("Found new device!!! -> ", diff_device)
-                window['devices'].update(values=devices_list)
 
-                window['device_friendly.{}'.format(1)].Update(diff_device)
+                # window['devices'].update(values=devices_list)
+                for num in range(1, 6):
+                    if values[f'device_serial.{num}'] == diff_device or values[f'device_serial.{num}'] == '':
+                        window[f'device_attached.{num}'].Update(disabled=False)
+                        window[f'device_serial.{num}'].Update(diff_device)
+                        break
+
 
             elif len(devices_list) < len(devices_list_old):  # If device is detached
                 diff_device = [str(s) for s in (set(devices_list_old) ^ set(devices_list))][0]
                 print("Device detached :( -> ", diff_device)
 
-                #window['device_friendly.' + diff_device].Update(disabled=True)
-                #window['identify_device_btn.' + diff_device].Update(disabled=True)
-                #window['ctrl_device_btn.' + diff_device].Update(disabled=True)
-                window['devices'].update(values=devices_list)
+                # window['devices'].update(values=devices_list)
+                for num in range(1, 6):
+                    if values[f'device_serial.{num}'] == diff_device:
+                        window[f'device_attached.{num}'].Update(value=False, disabled=True)
+                        window[f'device_friendly.{num}'].Update(disabled=True)
 
                 try:
                     adb.detach_device(diff_device, device[diff_device])
@@ -435,56 +436,39 @@ def gui():
         if event == "logs_bool":
             window['logs_filter'].Update(disabled=not values['logs_bool'])
 
-        # Add to timeout
-        if event == "refresh_btn":  # TODO MAKE AUTOMATIC
-            print("Refreshing..")
-            window['device'].update(values=adb.list_devices())
-
-        if event == "refresh_btn" or event == "reboot_device_btn":
-            window['camxoverride_btn'].Update(disabled=True)
-            window['capture_case_btn'].Update(disabled=True)
-            window['capture_multi_cases_btn'].Update(disabled=True)
-            window['reboot_device_btn'].Update(disabled=True)
-            window['push_file_btn'].Update(disabled=True)
-            window['setup_device_btn'].Update(disabled=True)
-
-        devices_values = values['devices']
-
-        if event == 'devices':
-            diff_device = [str(s) for s in (set(devices_values) ^ set(adb.get_attached_devices()))][0]
+        if event.split('.')[0] == 'device_attached':
+            # diff_device = [str(s) for s in (set(devices_values) ^ set(adb.get_attached_devices()))][0]
+            diff_device = values[f"device_serial.{event.split('.')[1]}"]
 
             print('Attached devices list before changing: {}, len: {}'.format(adb.get_attached_devices(),
                                                                                len(adb.get_attached_devices())))  # Debugging
             print('Devices objects list before changes: ', device)
 
-            if len(values['devices']) > len(adb.get_attached_devices()) \
-                    and diff_device not in adb.get_attached_devices():  # Connect device
+            if values[f"device_attached.{event.split('.')[1]}"]:  # Connect device
                 device[diff_device] = Device(adb, diff_device)  # Assign device to object
 
-                window[f'device_attached.{1}'].Update(disabled=False)
-                window[f'device_serial.{1}'].Update(diff_device)
-                window[f'device_friendly.{1}'].Update(disabled=False)
-                window[f'identify_device_btn.{1}'].Update(disabled=False)
-                window[f'ctrl_device_btn.{1}'].Update(disabled=False)
-
-                #window['device_friendly.' + diff_device].Update(
-                #    values['device_friendly.' + diff_device] if values['device_friendly.' + diff_device] else device[
-                #        diff_device].get_device_model(), disabled=False)
-                #window['identify_device_btn.' + diff_device].Update(disabled=False)
-                #window['ctrl_device_btn.' + diff_device].Update(disabled=False)
+                for num in range(1, 6):
+                    if values[f'device_serial.{num}'] == diff_device or values[f'device_serial.{num}'] == '':
+                        # window[f'device_attached.{num}'].Update(disabled=False)
+                        # window[f'device_serial.{num}'].Update(diff_device)
+                        window[f'device_friendly.{num}'].Update(values[f'device_friendly.{num}'] if values[f'device_friendly.{num}'] else device[diff_device].get_device_model(), disabled=False)
+                        window[f'identify_device_btn.{num}'].Update(disabled=False)
+                        window[f'ctrl_device_btn.{num}'].Update(disabled=False)
+                        break
 
                 print('Added {} to attached devices!'.format(diff_device))
 
                 print('Currently opened app: {}'.format(device[diff_device].get_current_app()))
-
-            elif len(values['devices']) < len(adb.get_attached_devices()) \
-                    and diff_device in adb.get_attached_devices():  # Detach
+            else:  # Detach
                 adb.detach_device(diff_device, device[diff_device])
                 del device[diff_device]
 
-                #window['device_friendly.' + diff_device].Update(disabled=True)
-                #window['identify_device_btn.' + diff_device].Update(disabled=True)
-                #window['ctrl_device_btn.' + diff_device].Update(disabled=True)
+                for num in range(1, 6):
+                    if values[f'device_serial.{num}'] == diff_device or values[f'device_serial.{num}'] == '':
+                        window[f'device_friendly.{num}'].Update(disabled=True)
+                        window[f'identify_device_btn.{num}'].Update(disabled=True)
+                        window[f'ctrl_device_btn.{num}'].Update(disabled=True)
+                        break
 
                 print('{} was detached!'.format(diff_device))
 

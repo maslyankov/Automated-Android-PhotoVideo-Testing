@@ -116,7 +116,10 @@ class Device:
         return natsorted(self.d.shell("ls /sys/class/leds/").strip().replace('\n', '').replace('  ', ' ').split(' '))
 
     def set_led_color(self, value, led, target):
-        self.d.shell('echo {} > /sys/class/leds/{}/{}'.format(value, led, target))
+        try:
+            self.d.shell('echo {} > /sys/class/leds/{}/{}'.format(value, led, target))
+        except RuntimeError:
+            print("Device was disconnected before we could detach it properly.. :(")
 
     def open_device_ctrl(self):
         print("Opening scrcpy for device ", self.device_serial)
