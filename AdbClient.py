@@ -40,4 +40,8 @@ class AdbClient:
 
     def detach_device(self, device_serial, device_obj):
         device_obj.set_led_color(10, 'RGB1', 'global_rgb')  # Poly
-        self.attached_devices.remove(device_serial)
+        try:
+            self.attached_devices.remove(device_serial)
+        except ValueError:
+            print("Not found in attached devices list")
+            print(self.attached_devices)

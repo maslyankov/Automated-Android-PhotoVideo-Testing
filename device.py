@@ -14,6 +14,7 @@ class Device:
     def __init__(self, adb, device_serial):
         print("Attaching to device...")
 
+        self.adb = adb
         self.adb_client = adb.client
         self.d = self.adb_client.device(device_serial)  # Create device client object
         self.device_serial = device_serial  # Assign device serial as received in arguments
@@ -57,7 +58,7 @@ class Device:
 
     def reboot(self):
         self.d.shell("reboot")  # TODO Remove device from connected_devices list after reboot
-
+        # self.adb.detach_device(self.device_serial, self)
 
     def get_current_app(self):  # Returns currently opened app package and its current activity
         return self.d.shell("dumpsys window windows | grep -E 'mFocusedApp'").split(' ')[6].split('/')
