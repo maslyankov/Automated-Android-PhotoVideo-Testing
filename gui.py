@@ -323,14 +323,17 @@ def gui():
 
     friendly_names = []
     for num in range(1, 6):
-        friendly_names += [sg.InputText(key=f'device_friendly.{num}', enable_events=False, size=(20, 1),
+        friendly_names += [sg.Checkbox('', key=f'device_attached.{num}'),
+                           sg.InputText(key=f'device_serial.{num}', enable_events=False, size=(10, 1),
+                                        disabled=True, default_text='...'),
+                           sg.InputText(key=f'device_friendly.{num}', enable_events=False, size=(20, 1),
                                         disabled=True),
-                           sg.Button('',
+                           sg.Button('Identify',
                                      button_color=(sg.theme_text_element_background_color(), 'silver'),
                                      key=f'identify_device_btn.{num}',
                                      disabled=True,
                                      enable_events=True),
-                           sg.Button('',
+                           sg.Button('Control',
                                      button_color=(sg.theme_text_element_background_color(), 'silver'),
                                      key=f'ctrl_device_btn.{num}',
                                      disabled=True,
@@ -370,7 +373,7 @@ def gui():
         [sg.Image(r'.\images\automated-video-testing-header.png')],
         [
             sg.Frame('Devices', device_frame_layout, font='Any 12', title_color='white'),
-            sg.Frame('Friendly Names', friendly_names, font='Any 12', title_color='white')
+            sg.Frame('Devices', friendly_names, font='Any 12', title_color='white')
         ],
         [sg.Frame('Settings', device_settings_frame_layout, font='Any 12', title_color='white')],
         [sg.Frame('Logs', logs_frame_layout, font='Any 12', title_color='white')],
@@ -458,6 +461,12 @@ def gui():
                     and diff_device not in adb.get_attached_devices():  # Connect device
                 device[diff_device] = Device(adb, diff_device)  # Assign device to object
 
+                window[f'device_attached.{1}'].Update(disabled=False)
+                window[f'device_serial.{1}'].Update(diff_device)
+                window[f'device_friendly.{1}'].Update(disabled=False)
+                window[f'identify_device_btn.{1}'].Update(disabled=False)
+                window[f'ctrl_device_btn.{1}'].Update(disabled=False)
+
                 #window['device_friendly.' + diff_device].Update(
                 #    values['device_friendly.' + diff_device] if values['device_friendly.' + diff_device] else device[
                 #        diff_device].get_device_model(), disabled=False)
@@ -495,10 +504,12 @@ def gui():
             window['capture_auto_btn'].Update(disabled=False)
             if event.split('.')[0] == 'identify_device_btn':  # Identify Buttons
                 print('Identifying ' + event.split('.')[1])
-                device[event.split('.')[1]].identify()
+                device000 = values[f"device_serial.{event.split('.')[1]}"]
+                device[device000].identify()
             if event.split('.')[0] == 'ctrl_device_btn':  # Device Control
                 print('Opening device control for ' + event.split('.')[1])
-                device[event.split('.')[1]].open_device_ctrl()
+                device000 = values[f"device_serial.{event.split('.')[1]}"]
+                device[device000].open_device_ctrl()
 
             # Buttons callbacks
             if event == "camxoverride_btn":

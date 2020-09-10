@@ -34,8 +34,10 @@ class AdbClient:
     def get_attached_devices(self):
         return self.attached_devices
 
-    def attach_device(self, device_serial):
+    def attach_device(self, device_serial, device_obj):
+        device_obj.set_led_color(100, 'RGB1', 'global_rgb')  # Poly
         self.attached_devices.append(device_serial)
 
-    def detach_device(self, device_serial, object):
+    def detach_device(self, device_serial, device_obj):
+        device_obj.set_led_color(10, 'RGB1', 'global_rgb')  # Poly
         self.attached_devices.remove(device_serial)

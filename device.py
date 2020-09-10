@@ -20,10 +20,11 @@ class Device:
         self.root()  # Make sure we are using root for device
 
         # Add device to attached devices list
-        adb.attach_device(device_serial)
-        print("Conn devs: ", adb.attached_devices)
-        print("Device Serial: ", device_serial)
-        print("Resolution: ", self.get_screen_resolution())
+        adb.attach_device(device_serial, self)
+        print("Conn devs: ", adb.attached_devices)  # Debugging
+        print("Device Serial: ", device_serial)  # Debugging
+        print("Resolution: ", self.get_screen_resolution())  # Debugging
+
 
     def root(self):
         print("Rooting device " + self.device_serial)
@@ -114,11 +115,8 @@ class Device:
     def get_device_leds(self):
         return natsorted(self.d.shell("ls /sys/class/leds/").strip().replace('\n', '').replace('  ', ' ').split(' '))
 
-    def set_led_color(self, color):
-        for n in range(1, 800, 10):
-            self.d.shell('echo {} > /sys/class/leds/{}/global_rgb'.format(n, 'RGB1'))
-            print(n)
-            time.sleep(0.3)
+    def set_led_color(self, value, led, target):
+        self.d.shell('echo {} > /sys/class/leds/{}/{}'.format(value, led, target))
 
     def open_device_ctrl(self):
         print("Opening scrcpy for device ", self.device_serial)
