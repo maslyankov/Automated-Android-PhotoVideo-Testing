@@ -1,10 +1,11 @@
 # Uses https://github.com/Swind/pure-python-adb
 import subprocess
+import os
 from ppadb.client import Client as AdbPy
 
-ADB = "./vendor/scrcpy-win64-v1.16/adb.exe"
+ROOT_DIR = os.path.abspath(os.curdir + "/../")  # This is Project Root
+ADB = os.path.join(ROOT_DIR, 'vendor', 'scrcpy-win64-v1.16', 'adb.exe')
 
-print(ADB)
 
 class AdbClient:
     def __init__(self):

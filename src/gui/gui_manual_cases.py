@@ -1,4 +1,7 @@
+import os
 import PySimpleGUI as sg
+
+ROOT_DIR = os.path.abspath(os.curdir + "/../")  # This is Project Root
 
 
 def gui_manual_cases(attached_devices, device_obj):  # TODO
@@ -29,7 +32,7 @@ def gui_manual_cases(attached_devices, device_obj):  # TODO
     ]
 
     window = sg.Window('Automated Photo/Video Testing', layout,
-                       icon=r'.\images\automated-video-testing-header-icon.ico')
+                       icon=os.path.join(ROOT_DIR, 'images', 'automated-video-testing-header-icon.ico'))
 
     # Event Loop to process "events" and get the "values" of the inputs
     while True:

@@ -1,16 +1,21 @@
 import subprocess
 import time
 import re
+import os
 import xml.etree.cElementTree as ET
 from natsort import natsorted
 
 from src.temp.coords import *
 
 SNAP_CAM = "org.codeaurora.snapcam"  # TODO Make this an option in app settings
-SCRCPY = "./vendor/scrcpy-win64-v1.16/scrcpy.exe"
-ADB = "./vendor/scrcpy-win64-v1.16/adb.exe"
+
+# DIRECTORIES
+ROOT_DIR = os.path.abspath(os.curdir + "/../")  # This is Project Root
+ADB = os.path.join(ROOT_DIR, 'vendor', 'scrcpy-win64-v1.16', 'adb.exe')
+SCRCPY = os.path.join(ROOT_DIR, 'vendor', 'scrcpy-win64-v1.16', 'scrcpy.exe')
 
 
+# CLASS Device
 class Device:
     def __init__(self, adb, device_serial):
         print("Attaching to device...")
@@ -45,7 +50,8 @@ class Device:
 
     def remount(self):
         print("Remount device serial: " + self.device_serial)
-        remount = subprocess.Popen([ADB, '-s', self.device_serial, 'remount'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        remount = subprocess.Popen([ADB, '-s', self.device_serial, 'remount'], stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE)
         stdout, stderr = remount.communicate()
         if stderr:
             print("Remonut Errors: ".format(stderr.decode()))
@@ -56,7 +62,7 @@ class Device:
     def exec_shell(self, cmd):
         return self.d.shell(cmd)
 
-    def input_tap(self, *coords): # Send tap events
+    def input_tap(self, *coords):  # Send tap events
         self.d.shell("input tap {} {}".format(coords[0][0], coords[0][1]))
 
     def reboot(self):
@@ -102,7 +108,7 @@ class Device:
         self.d.shell("rm -rf sdcard/DCIM/Camera/*")
         print("Deleting files from device!")
 
-    def has_screen(self): # TODO Make this return a valid boolean (now it sometimes works, sometimes doesn't)
+    def has_screen(self):  # TODO Make this return a valid boolean (now it sometimes works, sometimes doesn't)
         before = self.d.shell("dumpsys deviceidle | grep mScreenOn").split('=')[1].strip()
         self.d.shell('input keyevent 26')
         time.sleep(0.5)
@@ -129,10 +135,10 @@ class Device:
         print("Opening scrcpy for device ", self.device_serial)
         scrcpy = subprocess.Popen([SCRCPY, '--serial', self.device_serial], stdout=subprocess.PIPE,
                                   stderr=subprocess.PIPE)
-        #stdout, stderr = scrcpy.communicate()
-        #if stderr:
+        # stdout, stderr = scrcpy.communicate()
+        # if stderr:
         #    print("Scrspy Errors: \n{}\n".format(stderr.decode()))
-        #if stdout:
+        # if stdout:
         #    print("Scrspy Output: \n{}\n".format(stdout.decode()))
 
     def identify(self):
@@ -159,22 +165,23 @@ class Device:
         if source == "null root node returned by UiTestAutomationBridge.":
             print("UIAutomator error! :( Try dumping UI elements again. (It looks like a known error)")
             return
-        print("Dumped UI File:> '{}' of source '{}'".format(source, type(source)))
+
         self.d.pull(
             source,
-            './XML/{}_{}_{}.xml'.format(self.device_serial, current_app[0], current_app[1])
+            os.path.join(ROOT_DIR, 'XML', '{}_{}_{}.xml'.format(self.device_serial, current_app[0], current_app[1]))
         )
-        print('Dumped window elements for current app')
+        print('Dumped window elements for current app.')
 
     def get_clickable_window_elements(self):
         print('Parsing xml...')
         current_app = self.get_current_app()
         print("Serial {} , app: {}".format(self.device_serial, current_app))
+        file = os.path.join(ROOT_DIR, 'XML', '{}_{}_{}.xml'.format(self.device_serial, current_app[0], current_app[1]))
         try:
-            xml_tree = ET.parse('./XML/{}_{}_{}.xml'.format(self.device_serial, current_app[0], current_app[1]))
+            xml_tree = ET.parse(file)
         except FileNotFoundError:
             self.dump_window_elements()
-            xml_tree = ET.parse('./XML/{}_{}_{}.xml'.format(self.device_serial, current_app[0], current_app[1]))
+            xml_tree = ET.parse(file)
         except ET.ParseError as error:
             print("XML Parse Error: ", error)
 

@@ -1,6 +1,8 @@
+import os
+
 from src.temp.actions import *
 from src.app import AdbClient
-from src.app import Device
+from src.app.Device import Device
 
 from src.gui.gui_camxoverride import gui_camxoverride
 from src.gui.gui_manual_cases import gui_manual_cases
@@ -12,13 +14,16 @@ import PySimpleGUI as sg
 APP_VERSION = '0.01 Beta'
 THREAD_EVENT = '-WATCHDOG-'
 MAX_DEVICES_AT_ONE_RUN = 6
+ROOT_DIR = os.path.abspath(os.curdir + "/../")  # This is Project Root
+
 
 def gui_auto_cases(attached_devices, device_obj):
     pass
 
+
 def loading(secs):  # Only gives fanciness
     for i in range(1, 15 * secs):
-        sg.popup_animated(image_source=r'.\images\loading3.gif', message='Loading...', no_titlebar=True,
+        sg.popup_animated(image_source=os.path.join(ROOT_DIR, 'images', 'loading3.gif'), message='Loading...', no_titlebar=True,
                           font=('Any', 25), text_color='black',
                           background_color='white',
                           alpha_channel=0.8,
@@ -40,8 +45,6 @@ def gui():
     sg.theme('DarkGrey5')  # Add a touch of color
 
     adb = AdbClient.AdbClient()
-    devices_list = adb.list_devices()
-    # devices_list = ['asd', 'fs', 'gfd']
 
     loading(3)
 
@@ -108,7 +111,7 @@ def gui():
 
     # All the stuff inside your window.
     layout = [
-        [sg.Image(r'./images/automated-video-testing-header.png')],
+        [sg.Image(os.path.join(ROOT_DIR, 'images', 'automated-video-testing-header.png'))],
         [sg.Frame('Devices', devices_frame, font='Any 12', title_color='white')],
         [sg.Frame('Settings', device_settings_frame_layout, font='Any 12', title_color='white')],
         [sg.Frame('Logs', logs_frame_layout, font='Any 12', title_color='white')],
@@ -123,7 +126,7 @@ def gui():
 
     # Create the Window
     window = sg.Window('Automated Photo/Video Testing', layout,
-                       icon=r'.\images\automated-video-testing-header-icon.ico')
+                       icon=os.path.join(ROOT_DIR, 'images', 'automated-video-testing-header-icon.ico'))
     device = {}  # List to store devices objects
 
     # Event Loop to process "events" and get the "values" of the inputs
@@ -262,7 +265,7 @@ def gui():
             if event.split('.')[0] == 'device_friendly':
                 device000 = values[f"device_serial.{event.split('.')[1]}"]
                 device[device000].friendly_name = values[f"device_friendly.{event.split('.')[1]}"]
-                print(device[device000].friendly_name)
+                print(f'for {device000} fr name is {device[device000].friendly_name}')
         else:
             # print('No attached devices!')
             window['camxoverride_btn'].Update(disabled=True)

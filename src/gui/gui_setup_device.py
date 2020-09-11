@@ -1,4 +1,7 @@
+import os
 import PySimpleGUI as sg
+
+ROOT_DIR = os.path.abspath(os.curdir + "/../")  # This is Project Root
 
 
 def gui_setup_device(attached_devices, device_obj):
@@ -40,7 +43,7 @@ def gui_setup_device(attached_devices, device_obj):
 
     # Create the Window
     window = sg.Window('Setup', layout,
-                       icon=r'.\images\automated-video-testing-header-icon.ico')
+                       icon=os.path.join(ROOT_DIR, 'images', 'automated-video-testing-header-icon.ico'))
 
     while True:
         event, values = window.read()

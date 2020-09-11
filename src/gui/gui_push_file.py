@@ -1,5 +1,8 @@
+import os
 import PySimpleGUI as sg
 from pathlib import Path
+
+ROOT_DIR = os.path.abspath(os.curdir + "/../")  # This is Project Root
 
 
 def gui_push_file(attached_devices, device_obj):
@@ -31,7 +34,7 @@ def gui_push_file(attached_devices, device_obj):
 
     # Create the Window
     window = sg.Window('Push file file', layout,
-                       icon=r'.\images\automated-video-testing-header-icon.ico')
+                       icon=os.path.join(ROOT_DIR, 'images', 'automated-video-testing-header-icon.ico'))
 
     while True:
         event, values = window.read()

@@ -1,13 +1,18 @@
 import os
 import PySimpleGUI as sg
 
+ROOT_DIR = os.path.abspath(os.curdir + "/../")  # This is Project Root
+
 
 def gui_camxoverride(attached_devices, device_obj):
+    file = os.path.join(ROOT_DIR, 'tmp', 'camxoverridesettings.txt')
+    file_new = os.path.join(ROOT_DIR, 'tmp', 'camxoverridesettings_new.txt')
+    print(file)
     print("Pulling camxoverridesettings.txt from device...")
     device_obj[attached_devices[0]].pull_file('/vendor/etc/camera/camxoverridesettings.txt',
-                                              r'.\tmp\camxoverridesettings.txt')
+                                              file)
 
-    camxoverride_content = open(r'.\tmp\camxoverridesettings.txt', 'r').read().rstrip()
+    file_content = open(file, 'r').read().rstrip()
 
     # All the stuff inside your window.
     layout = [
@@ -15,7 +20,7 @@ def gui_camxoverride(attached_devices, device_obj):
                   enable_events=True),
          sg.Text(text=device_obj[attached_devices[0]].friendly_name, key='device-friendly')],
         [sg.Text('camxoverridesettings.txt:')],
-        [sg.Multiline(camxoverride_content, size=(70, 30), key='camxoverride_input')],
+        [sg.Multiline(file_content, size=(70, 30), key='file_input')],
         [sg.CloseButton('Close'),
          sg.Button('Save')
          ]
@@ -23,32 +28,32 @@ def gui_camxoverride(attached_devices, device_obj):
 
     # Create the Window
     window = sg.Window('Edit camxoverridesettings', layout,
-                       icon=r'.\images\automated-video-testing-header-icon.ico')
+                       icon=os.path.join(ROOT_DIR, 'images', 'automated-video-testing-header-icon.ico'))
 
     while True:
         event, values = window.read()
 
         if event == sg.WIN_CLOSED or event == 'Close':  # if user closes window or clicks cancel
             try:
-                os.remove(r'.\tmp\camxoverridesettings.txt')
-                os.remove(r'.\tmp\camxoverridesettings_new.txt')
+                os.remove(file)
+                os.remove(file_new)
             except FileNotFoundError:
                 pass
             break
 
         if event == 'selected_device':
             try:
-                os.remove(r'.\tmp\camxoverridesettings.txt')
-                os.remove(r'.\tmp\camxoverridesettings_new.txt')
+                os.remove(file)
+                os.remove(file_new)
             except FileNotFoundError:
                 pass
 
             window['device-friendly'].Update(device_obj[values['selected_device']].friendly_name)
             print("Pulling camxoverridesettings.txt from device...")
             device_obj[values['selected_device']].pull_file('/vendor/etc/camera/camxoverridesettings.txt',
-                                                            r'.\tmp\camxoverridesettings.txt')
-            camxoverride_content = open(r'.\tmp\camxoverridesettings.txt', 'r').read()
-            window['camxoverride_input'].Update(camxoverride_content)
+                                                            file)
+            file_content = open(file, 'r').read()
+            window['file_input'].Update(file_content)
 
         if event == 'Save':
             print(values)
@@ -56,14 +61,14 @@ def gui_camxoverride(attached_devices, device_obj):
             print("Saving camxoverridesettings...")
 
             print("Generating new camxoverridesettings.txt...")
-            camxoverride_new = open(r'.\tmp\camxoverridesettings_new.txt', "w")
-            camxoverride_new.write(values['camxoverride_input'])
-            camxoverride_new.close()
+            file_new_content = open(file_new, "w")
+            file_new_content.write(values['camxoverride_input'])
+            file_new_content.close()
 
             device_obj[values['selected_device']].remount()
 
             print("Pushing new camxoverridesettings.txt file to device...")
-            device_obj[values['selected_device']].push_file(r'.\tmp\camxoverridesettings_new.txt',
+            device_obj[values['selected_device']].push_file(file_new,
                                                             "/vendor/etc/camera/camxoverridesettings.txt")
 
     window.close()
