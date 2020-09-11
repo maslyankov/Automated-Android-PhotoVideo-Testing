@@ -7,8 +7,9 @@ def shoot_video(obj, duration=10, with_logs=False, logs_filter="", logs_file="")
 
     if with_logs:
         # Logs
-        dlogs = DeviceLogs()
-        dlogs.start_logs(logs_filter, logs_file)
+        #dlogs = DeviceLogs()
+        #dlogs.start_logs(logs_filter, logs_file)
+        pass
 
     print("Waiting {} secs".format(duration))
     time.sleep(duration)
@@ -18,7 +19,8 @@ def shoot_video(obj, duration=10, with_logs=False, logs_filter="", logs_file="")
 
     if with_logs:
         # Logs
-        dlogs.stop_logs()
+        # dlogs.stop_logs()
+        pass
 
 
 def shoot_photo(obj, with_logs=False, logs_filter="", logs_file=""):
@@ -26,14 +28,16 @@ def shoot_photo(obj, with_logs=False, logs_filter="", logs_file=""):
 
     if with_logs:
         # Logs
-        dlogs = DeviceLogs()
-        dlogs.start_logs(logs_filter, logs_file)
+        #dlogs = DeviceLogs()
+        #dlogs.start_logs(logs_filter, logs_file)
+        pass
 
     obj.take_photo()
 
     if with_logs:
         # Logs
-        dlogs.stop_logs()
+        # dlogs.stop_logs()
+        pass
 
 
 def pull_camera_files(obj, folder, clear_after_pull):

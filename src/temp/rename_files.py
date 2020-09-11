@@ -7,7 +7,6 @@
 
 # importing modules
 import os, glob, sys
-from src.app import get_logs
 
 # Globals
 cases_cont_from = 0
@@ -52,31 +51,31 @@ def rename_files_in_dir(basepath, beg_with, ext):
 
     print("Cont from: " + str(cases_cont_from))
 
-    for handler in get_logs.root.handlers[:]:
-        get_logs.root.removeHandler(handler)
+    #for handler in get_logs.root.handlers[:]:
+    #    get_logs.root.removeHandler(handler)
 
     logfile = basepath + 'renaming.log'  # TODO - Add folder name to log file name
     print("Log File:" + logfile)
-    get_logs.basicConfig(filename=logfile, level=get_logs.DEBUG, format='%(asctime)s %(message)s')
+    #get_logs.basicConfig(filename=logfile, level=get_logs.DEBUG, format='%(asctime)s %(message)s')
 
-    get_logs.info('-----------------------------')
-    get_logs.info('Log started!')
+    #get_logs.info('-----------------------------')
+    #get_logs.info('Log started!')
 
-    get_logs.info('Starting at dir: ' + basepath + "\n")
+    #get_logs.info('Starting at dir: ' + basepath + "\n")
 
     files_list = sorted(glob.glob(basepath + beg_with + '*.' + ext), key=natural_key, reverse=False)
-    get_logs.info("Files List: \n" + str(files_list) + "\n")
+    #get_logs.info("Files List: \n" + str(files_list) + "\n")
 
     files_count = len(files_list)
     files_last_list_len = files_count
 
     if files_count == 0:
         print("No new files found! Terminating...")
-        get_logs.info("No new files found! Terminating...")
+        #get_logs.info("No new files found! Terminating...")
         return
 
     print("Beginning renaming in " + basepath + "\n")
-    get_logs.info("Beginning renaming in " + basepath + "\n")
+    #get_logs.info("Beginning renaming in " + basepath + "\n")
 
     # Iterate through the files in the dir
     for count, filename in enumerate(files_list):
@@ -89,10 +88,10 @@ def rename_files_in_dir(basepath, beg_with, ext):
         # try to rename all the files one by one
         try:
             os.rename(src, dst)
-            get_logs.info("Renaming file: " + src + " -> " + dst)
+            #get_logs.info("Renaming file: " + src + " -> " + dst)
         except OSError:
             print("Files with those names already exist! Aborting!")
-            get_logs.error("Files with those names already exist! Aborting!\n")
+            #get_logs.error("Files with those names already exist! Aborting!\n")
             return
-    get_logs.info("Done with this folder.\n")
+    #get_logs.info("Done with this folder.\n")
 
