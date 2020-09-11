@@ -2,7 +2,9 @@
 import subprocess
 from ppadb.client import Client as AdbPy
 
-ADB = "./scrcpy-win64-v1.16/adb.exe"
+ADB = "./vendor/scrcpy-win64-v1.16/adb.exe"
+
+print(ADB)
 
 class AdbClient:
     def __init__(self):

@@ -6,7 +6,8 @@
 # Second line (argument) specifies if we should start parsing files in ASCending (asc) or DESCending order (desc).
 
 # importing modules
-import get_logs, os, glob, sys, getopt
+import os, glob, sys
+from src.app import get_logs
 
 # Globals
 cases_cont_from = 0

@@ -1,5 +1,3 @@
-from device import Device
-from get_logs import DeviceLogs
 import time
 
 
