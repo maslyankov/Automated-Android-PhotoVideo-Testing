@@ -18,7 +18,7 @@ SCRCPY = os.path.join(ROOT_DIR, 'vendor', 'scrcpy-win64-v1.16', 'scrcpy.exe')
 # CLASS Device
 class Device:
     """
-    Class for interacting with devices using adb (ppadb)
+    Class for interacting with devices using adb (ppadb) and AdbClient class
     """
     def __init__(self, adb, device_serial):
         print("Attaching to device...")
