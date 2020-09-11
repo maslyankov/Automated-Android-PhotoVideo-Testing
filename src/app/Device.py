@@ -17,6 +17,9 @@ SCRCPY = os.path.join(ROOT_DIR, 'vendor', 'scrcpy-win64-v1.16', 'scrcpy.exe')
 
 # CLASS Device
 class Device:
+    """
+    Class for interacting with devices using adb (ppadb)
+    """
     def __init__(self, adb, device_serial):
         print("Attaching to device...")
 
@@ -36,6 +39,10 @@ class Device:
         print("Resolution: ", self.get_screen_resolution())  # Debugging
 
     def root(self):
+        """
+        Root the device
+        :return:None
+        """
         print("Rooting device " + self.device_serial)
         root = subprocess.Popen([ADB, '-s', self.device_serial, 'root'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = root.communicate()
@@ -49,6 +56,10 @@ class Device:
         root.terminate()
 
     def remount(self):
+        """
+        Remount the device
+        :return:None
+        """
         print("Remount device serial: " + self.device_serial)
         remount = subprocess.Popen([ADB, '-s', self.device_serial, 'remount'], stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
@@ -60,19 +71,25 @@ class Device:
         remount.terminate()
 
     def exec_shell(self, cmd):
+        """
+        Execute a shell command on the device
+        :param cmd:String command to execute
+        :return:None
+        """
         return self.d.shell(cmd)
 
     def input_tap(self, *coords):  # Send tap events
         """
         Sends tap input to device
         :param coords: tap coordinates to use
-        :return:
+        :return:None
         """
         self.d.shell("input tap {} {}".format(coords[0][0], coords[0][1]))
 
     def reboot(self):
         """
         Reboots the device.
+        :return:None
         """
         self.d.shell("reboot")  # TODO Remove device from connected_devices list after reboot
         # self.adb.detach_device(self.device_serial, self)
@@ -80,7 +97,7 @@ class Device:
     def get_current_app(self):
         """
         Returns currently opened app package and its current activity
-        :return:
+        :return:None
         """
         return self.d.shell("dumpsys window windows | grep -E 'mFocusedApp'").split(' ')[6].split('/')
 
@@ -101,7 +118,7 @@ class Device:
     def get_installed_packages(self):
         """
         Get the packages (apps) installed on device
-        :return: List of strings, each being an app package on the device
+        :return:List of strings, each being an app package on the device
         """
         return self.d.shell("cmd package list packages -e | sort").replace('package:', '').splitlines()
 
@@ -109,7 +126,7 @@ class Device:
         """
         Open an app package
         :param package: Specify the app package that you want to open
-        :return:
+        :return:None
         """
         if self.get_current_app() != package:
             print("Opening {}...".format(package))
@@ -122,7 +139,7 @@ class Device:
         Push file to device
         :param src: Path to file to push
         :param dst: Destination on device of file
-        :return:
+        :return:None
         """
         self.d.push(src, dst)
 
@@ -131,7 +148,7 @@ class Device:
         Pull file to device
         :param src: Path on device to file to pull
         :param dst: Destination to save the file to
-        :return:
+        :return:None
         """
         self.d.pull(src, dst)
 
@@ -152,7 +169,7 @@ class Device:
     def clear_folder(self, folder):
         """
         Deletes a folder
-        :return:
+        :return:None
         """
         self.d.shell(f"rm -rf {folder}")
         print(f"Deleting folder {folder} from device!")
@@ -160,14 +177,14 @@ class Device:
     def clear_camera_folder(self):
         """
         Deletes camera folder - probably will be deprecated
-        :return:
+        :return:None
         """
         self.clear_folder("sdcard/DCIM/Camera/*")
 
     def has_screen(self):  # TODO Make this return a valid boolean (now it sometimes works, sometimes doesn't)
         """
         Check if the device has an integrated screen (not working all the time)
-        :return: Should return a Bool
+        :return:Bool Should return a Bool
         """
         before = self.d.shell("dumpsys deviceidle | grep mScreenOn").split('=')[1].strip()
         self.d.shell('input keyevent 26')
@@ -182,14 +199,14 @@ class Device:
     def get_screen_resolution(self):
         """
         Get screen resolution of device
-        :return: List of height and width
+        :return:List height and width
         """
         return self.d.shell('dumpsys window | grep "mUnrestricted"').rstrip().split(' ')[1].split('x')
 
     def get_device_leds(self):
         """
         Get a list of the leds that the device has
-        :return:
+        :return:None
         """
         return natsorted(self.d.shell("ls /sys/class/leds/").strip().replace('\n', '').replace('  ', ' ').split(' '))
 
@@ -200,7 +217,7 @@ class Device:
         :param value: Value to send
         :param led: To which led to send
         :param target: To which target to send
-        :return:
+        :return:None
         """
         try:
             self.d.shell('echo {} > /sys/class/leds/{}/{}'.format(value, led, target))
@@ -210,7 +227,7 @@ class Device:
     def open_device_ctrl(self):
         """
         Open device screen view and control using scrcpy
-        :return:
+        :return:None
         """
         print("Opening scrcpy for device ", self.device_serial)
         scrcpy = subprocess.Popen([SCRCPY, '--serial', self.device_serial], stdout=subprocess.PIPE,
@@ -219,7 +236,7 @@ class Device:
     def identify(self):
         """
         Identify device by blinking it's screen or leds
-        :return:
+        :return:None
         """
         leds = self.get_device_leds()
         print(leds)  # Debugging
@@ -242,7 +259,7 @@ class Device:
         """
         Dump elements of currently opened app activity window
         and pull them from device to folder XML
-        :return:
+        :return:None
         """
         source = self.d.shell('uiautomator dump').split(': ')[1].rstrip()
         current_app = self.get_current_app()
@@ -259,7 +276,7 @@ class Device:
     def get_clickable_window_elements(self):
         """
         Parse the dumped window elements file and filter only elements that are "clickable"
-        :return: A dictionary - key: element_id or number,
+        :return:Dict key: element_id or number,
                 value: String of elem description, touch location (a list of x and y)
         """
         print('Parsing xml...')
