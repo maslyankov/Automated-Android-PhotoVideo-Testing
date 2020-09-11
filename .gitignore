@@ -3,6 +3,8 @@ __pycache__/
 *.py[cod]
 *$py.class
 
+!DRL_Dual_INCA_Controller.pyc
+
 # C extensions
 *.so
 
