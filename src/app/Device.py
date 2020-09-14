@@ -243,7 +243,8 @@ class Device:
 
         for k in range(1, 5):  # Blink Leds and screen
             if k != 1:
-                time.sleep(0.5)
+                # time.sleep(0.5)
+                pass
             self.d.shell('echo 0 > /sys/class/leds/{}/global_onoff'.format(leds[0]))
             time.sleep(0.3)
             self.d.shell('echo 1 > /sys/class/leds/{}/global_onoff'.format(leds[0]))
