@@ -59,7 +59,7 @@ class AdbClient:
         :param device_obj: Device object
         :return: None
         """
-        device_obj.set_led_color(100, 'RGB1', 'global_rgb')  # Poly
+        device_obj.set_led_color('0FFF00', 'RGB1', 'global_rgb')  # Poly
         self.attached_devices.append(device_serial)
 
     def detach_device(self, device_serial, device_obj):
@@ -69,7 +69,7 @@ class AdbClient:
         :param device_obj: Device object
         :return: None
         """
-        device_obj.set_led_color(10, 'RGB1', 'global_rgb')  # Poly
+        device_obj.set_led_color('FFA600', 'RGB1', 'global_rgb')  # Poly
         try:
             self.attached_devices.remove(device_serial)
         except ValueError:

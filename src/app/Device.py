@@ -214,7 +214,7 @@ class Device:
         """
         Send a value to a led and a target
         ex: /sys/class/leds/RGB1/group_onoff - led is RGB1, target is group_onoff
-        :param value: Value to send
+        :param value: RGB HEX Value to send
         :param led: To which led to send
         :param target: To which target to send
         :return:None
