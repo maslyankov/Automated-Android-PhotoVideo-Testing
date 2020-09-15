@@ -15,6 +15,11 @@ def gui_setup_device(attached_devices, device_obj):
         sg.Text(text=device_obj[attached_devices[0]].friendly_name, key='device-friendly')
     ], ]
 
+    logs_frame = [
+        [sg.Checkbox('Capture Logs', default=False, size=(10, 1), key='logs_bool', enable_events=True)],
+        [sg.Text('Logs Filter:'), sg.InputText(size=(42, 1), key='logs_filter', disabled=True)],
+    ]
+
     select_app_frame = [[
         sg.Combo(
             values=device_obj[attached_devices[0]].get_installed_packages(),
@@ -35,6 +40,7 @@ def gui_setup_device(attached_devices, device_obj):
 
     layout = [
         [sg.Frame('Select device', select_device_frame, font='Any 12', title_color='white')],
+        [sg.Frame('Logs', logs_frame, font='Any 12', title_color='white')],
         [sg.Frame('Select Camera App', select_app_frame, font='Any 12', title_color='white')],
         [sg.Frame('Take Photo Action Sequence', photo_sequence_frame, font='Any 12', title_color='white')],
         [sg.Button('Save Settings', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 2),

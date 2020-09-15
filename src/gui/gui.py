@@ -9,6 +9,7 @@ from src.gui.gui_manual_cases import gui_manual_cases
 from src.gui.gui_push_file import gui_push_file
 from src.gui.gui_reboot_device import gui_reboot_device
 from src.gui.gui_setup_device import gui_setup_device
+from src.gui.gui_test_lights import gui_test_lights
 import PySimpleGUI as sg
 
 APP_VERSION = '0.01 Beta'
@@ -105,9 +106,13 @@ def gui():
     ],
     ]
 
-    logs_frame_layout = [
-        [sg.Checkbox('Capture Logs', default=False, size=(10, 1), key='logs_bool', enable_events=True)],
-        [sg.Text('Logs Filter:'), sg.InputText(size=(42, 1), key='logs_filter', disabled=True)],
+    lights_frame_layout = [[
+        sg.OptionMenu(values=['SpectriWave', 'lightStudio'], key="selected_lights_model"),
+        sg.Button('Test Lights', button_color=(sg.theme_text_element_background_color(), 'silver'),
+                  size=(12, 3),
+                  key='test_lights_btn',
+                  disabled=False),
+    ],
     ]
 
     # All the stuff inside your window.
@@ -115,7 +120,7 @@ def gui():
         [sg.Image(os.path.join(ROOT_DIR, 'images', 'automated-video-testing-header.png'))],
         [sg.Frame('Devices', devices_frame, font='Any 12', title_color='white')],
         [sg.Frame('Settings', device_settings_frame_layout, font='Any 12', title_color='white')],
-        [sg.Frame('Logs', logs_frame_layout, font='Any 12', title_color='white')],
+        [sg.Frame('Lights', lights_frame_layout, font='Any 12', title_color='white')],
         [
             sg.Button('Exit', size=(6, 2)),
             sg.Button('Capture Cases (Manual)', size=(25, 2), key='capture_manual_btn', disabled=True),
@@ -267,6 +272,16 @@ def gui():
                 device000 = values[f"device_serial.{event.split('.')[1]}"]
                 device[device000].friendly_name = values[f"device_friendly.{event.split('.')[1]}"]
                 print(f'for {device000} fr name is {device[device000].friendly_name}')
+
+            if event == 'reboot_device_btn':
+                gui_reboot_device(adb.get_attached_devices(), device)
+
+            if event == 'capture_manual_btn':
+                gui_manual_cases(adb.get_attached_devices(), device)
+
+            if event == 'capture_auto_btn':
+                gui_auto_cases(adb.get_attached_devices(), device)
+
         else:
             # print('No attached devices!')
             window['camxoverride_btn'].Update(disabled=True)
@@ -276,14 +291,9 @@ def gui():
             window['capture_manual_btn'].Update(disabled=True)
             window['capture_auto_btn'].Update(disabled=True)
 
-        if event == 'reboot_device_btn':
-            gui_reboot_device(adb.get_attached_devices(), device)
+        if event == 'test_lights_btn':
+            gui_test_lights(values['selected_lights_model'])
 
-        if event == 'capture_manual_btn':
-            gui_manual_cases(adb.get_attached_devices(), device)
-
-        if event == 'capture_auto_btn':
-            gui_auto_cases(adb.get_attached_devices(), device)
 
     # Detach attached devices
     print("Detaching attached devices...")

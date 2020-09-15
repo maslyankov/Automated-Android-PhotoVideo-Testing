@@ -4,4 +4,5 @@ opencv-python==4.3.0.36
 Pillow==7.2.0
 pure-python-adb==0.3.0.dev0
 pyexiv2==2.3.1
+pyModbusTCP==0.1.8
 PySimpleGUI==4.29.0
