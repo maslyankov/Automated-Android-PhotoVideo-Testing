@@ -93,6 +93,7 @@ class LightsCtrl:
         print("Disconnecting from lights...")
         for light_color in self.available_lights:
             self.turn_off(light_color)
+        self.api.cbox_right.disconnect()
 
     def make_a_party(self):
         # Test D65
