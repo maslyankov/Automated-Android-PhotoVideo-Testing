@@ -91,9 +91,13 @@ class LightsCtrl:
 
     def disconnect(self):
         print("Disconnecting from lights...")
-        for light_color in self.available_lights:
-            self.turn_off(light_color)
-        self.api.cbox_right.disconnect()
+        if self.lights_model == LIGHTS_MODELS['SpectriWave']:
+            for light_color in self.available_lights:
+                print(f"Turning off {light_color}")
+                self.turn_off(light_color)
+            time.sleep(1)  # Added delay, because the API is slow
+            self.api.cbox_left.disconnect()
+            self.api.cbox_right.disconnect()
 
     def make_a_party(self):
         # Test D65
