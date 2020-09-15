@@ -14,13 +14,13 @@ def gui_test_lights(selected_lights_model):
                      key='selected_color_temp',
                      default_value='D65',
                      enable_events=True),
-            sg.Text(text='Connected', key='is-connected')
+            sg.Text(text='Connected', key='is-connected')  # make prettier and link to self.status()
         ],
         [
             sg.Text(text='Switch light (2-5 are only for INCA)'),
             sg.Combo(['all', '0', '1', '2', '3', '4', '5'], size=(20, 20),
                      key='selected_light_num',
-                     default_value='',
+                     default_value='all',
                      enable_events=True),
             sg.Button('Turn on', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 2),
                       key='on_1_btn', disabled=False),
@@ -70,4 +70,5 @@ def gui_test_lights(selected_lights_model):
             lights.set_brightness(values['selected_brightness'])
             pass
 
+    lights.disconnect()
     window.close()

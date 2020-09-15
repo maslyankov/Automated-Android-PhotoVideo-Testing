@@ -18,15 +18,28 @@ class LightsCtrl:
         self.lights_model = LIGHTS_MODELS[model]
 
         if self.lights_model == LIGHTS_MODELS['SpectriWave']:
+            self.available_lights = ['D65', 'D75', 'TL84', 'INCA']
             # Instance API object
             self.api = IQL_Dual_WiFi_Wireless_Lighting_API()
 
             # Connect to Light box
             self.api.connect()
+            print("This is the output", self.api.cbox_left.get_connection_status())
 
-        pass
+            pass
+
+    def status(self):
+        if self.lights_model == LIGHTS_MODELS['SpectriWave']:
+            status = self.api.cbox_left.get_connection_status(), self.api.cbox_right.get_connection_status()
+
+        print(status)
+        return status
+
+
+
 
     def turn_on(self, color_temp, selected_target_light='all'):
+        # TODO add check if color_temp is in self.available_lights
         if self.lights_model == LIGHTS_MODELS['SpectriWave']:
             if color_temp != 'INCA' and selected_target_light != 'all' and int(selected_target_light) > 2:
                 selected_target_light = 'all'
@@ -38,11 +51,12 @@ class LightsCtrl:
                 self.api.cbox_right.set_lamp(color_temp, int(selected_target_light), 1)
                 print('I did: ', color_temp, selected_target_light, 1)
 
-
         self.current_color_temp = color_temp
         print(f"[{color_temp}] turning on")
 
     def turn_off(self, color_temp, selected_target_light='all'):
+        # TODO add check if color_temp is in self.available_lights
+
         if self.lights_model == LIGHTS_MODELS['SpectriWave']:
             if color_temp != 'INCA' and selected_target_light != 'all' and int(selected_target_light) > 2:
                 selected_target_light = 'all'
@@ -74,6 +88,11 @@ class LightsCtrl:
 
     def set_color_temp(self, color_temp):
         self.current_color_temp = color_temp
+
+    def disconnect(self):
+        print("Disconnecting from lights...")
+        for light_color in self.available_lights:
+            self.turn_off(light_color)
 
     def make_a_party(self):
         # Test D65
