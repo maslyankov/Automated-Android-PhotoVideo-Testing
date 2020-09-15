@@ -27,16 +27,28 @@ class Device:
         self.adb_client = adb.client
         self.d = self.adb_client.device(device_serial)  # Create device client object
 
+        # Object Parameters #
+        # Info
         self.device_serial = device_serial  # Assign device serial as received in arguments
         self.friendly_name = self.get_device_model()
+
+        # Settings
+        self.camera_app = None
+        self.shoot_photo_seq = []
+        self.shoot_video_seq = []
+        self.actions_time_gap = 1
 
         self.root()  # Make sure we are using root for device
 
         # Add device to attached devices list
         adb.attach_device(device_serial, self)
+
+        # Persistence
+        self.device_xml = os.path.join(ROOT_DIR, 'settings', f'{device_serial}.xml')
+        # self.save_settings()
+
         print("Conn devs: ", adb.attached_devices)  # Debugging
         print("Device Serial: ", device_serial)  # Debugging
-        print("Resolution: ", self.get_screen_resolution())  # Debugging
 
     def root(self):
         """
@@ -201,8 +213,12 @@ class Device:
         Get screen resolution of device
         :return:List height and width
         """
-        return self.d.shell('dumpsys window | grep "mUnrestricted"').rstrip().split(' ')[1].split('x')
+        try:
+            res = self.d.shell('dumpsys window | grep "mUnrestricted"').strip().split(' ')[1].split('x')
+        except IndexError:
+            res = self.d.shell('dumpsys window | grep "mUnrestricted"').rstrip().split('][')[1].strip(']').split(',')
 
+        return res
     def get_device_leds(self):
         """
         Get a list of the leds that the device has
@@ -310,6 +326,75 @@ class Device:
                     elements[num] = elem_desc, elem_bounds
 
         return elements
+
+    def save_settings(self):
+        root = ET.Element('device')
+
+        # Device info
+        info = ET.SubElement(root, 'info')
+        root.append(info)
+
+        serial = ET.SubElement(info, "serial")
+        serial.text = self.device_serial
+
+        name = ET.SubElement(info, "name")
+        name.text = self.get_device_name()
+
+        model = ET.SubElement(info, "model")
+        model.text = self.get_device_model()
+
+        friendly = ET.SubElement(info, "friendly_name")
+        friendly.text = self.friendly_name
+
+        resolution = ET.SubElement(info, "screen_resolution")
+        res_data = self.get_screen_resolution()
+        print(res_data)
+        resolution.text = f'{res_data[0]}x{res_data[1]}'
+
+        # Device settings
+        settings = ET.SubElement(root, 'settings')
+        root.append(settings)
+
+        cam_app = ET.SubElement(settings, "camera_app")
+        cam_app.text = self.camera_app
+
+        shoot_photo_seq = ET.SubElement(settings, "shoot_photo_seq")
+        for action in self.shoot_photo_seq:
+            elem = ET.SubElement(shoot_photo_seq, "action")
+            elem_id = ET.SubElement(elem, "id")  # set
+            elem_desc = ET.SubElement(elem, "description")  # set
+            elem_coordinates = ET.SubElement(elem, "coordinates")
+            x = ET.SubElement(elem_coordinates, "x")  # set
+            y = ET.SubElement(elem_coordinates, "y")  # set
+
+            # if self.shoot_photo_seq = [['element_id', ['Description', [x, y]]]]
+            elem_id.text = action[0]
+            elem_desc.text = action[1][0]
+            x.text = action[1][1][0]
+            y.text = action[1][1][1]
+
+        shoot_video_seq = ET.SubElement(settings, "shoot_video_seq")
+        for action in self.shoot_video_seq:
+            elem = ET.SubElement(shoot_video_seq, "action")
+            elem_id = ET.SubElement(elem, "id")  # set
+            elem_desc = ET.SubElement(elem, "description")  # set
+            elem_coordinates = ET.SubElement(elem, "coordinates")
+            x = ET.SubElement(elem_coordinates, "x")  # set
+            y = ET.SubElement(elem_coordinates, "y")  # set
+
+            # if self.shoot_video_seq = [['element_id', ['Description', [x, y]]]]
+            elem_id.text = action[0]
+            elem_desc.text = action[1][0]
+            x.text = action[1][1][0]
+            y.text = action[1][1][1]
+
+        actions_time_gap = ET.SubElement(settings, "actions_time_gap")
+        actions_time_gap.text = self.actions_time_gap
+
+        # Save to file
+        tree = ET.ElementTree(root)
+        print(self.device_xml)
+        tree.write(str(self.device_xml), encoding='utf-8', xml_declaration=True)
 
     # Will be changed [START]
     def open_snap_cam(self):  # Todo Make this with an argument for app package

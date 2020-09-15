@@ -12,7 +12,9 @@ def gui_setup_device(attached_devices, device_obj):
             default_value=attached_devices[0],
             enable_events=True
         ),
-        sg.Text(text=device_obj[attached_devices[0]].friendly_name, key='device-friendly')
+        sg.Text(text=device_obj[attached_devices[0]].friendly_name,
+                key='device-friendly',
+                size=(25, 1))
     ], ]
 
     logs_frame = [
@@ -27,16 +29,34 @@ def gui_setup_device(attached_devices, device_obj):
             key='selected_app_package',
             default_value=device_obj[attached_devices[0]].get_current_app()[0]
         ),
-        sg.Button('Test it!', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 1),
+        sg.Button('Test!', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(5, 1),
                   key='test_app_btn', disabled=False)
     ], ]
 
-    photo_sequence_frame = [[  # add plenty of combo boxes, disabled by default and enable them after first is occupied
-        sg.Combo(values=list(device_obj[attached_devices[0]].get_clickable_window_elements().keys()), size=(40, 1),
-                 key='photo_selected_action.0'),
-        sg.Button('Test it!', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 1),
-                  key='test_btn_photo_selected_action.0', disabled=False)
-    ], ]
+    clickable_elements = list(device_obj[attached_devices[0]].get_clickable_window_elements().keys())
+
+    photo_sequence_frame = []
+
+    for num in range(4):
+        photo_sequence_frame += [  # add plenty of combo boxes, disabled by default and enable them after first is occupied
+            sg.Combo(values=clickable_elements,
+                     size=(40, 1),
+                     key=f'photo_selected_action.{num}',
+                     disabled=False if num == 0 else True),
+            sg.Button('Test!',
+                      button_color=(sg.theme_text_element_background_color(), 'silver'),
+                      size=(5, 1),
+                      key=f'test_btn_photo_selected_action.{num}',
+                      disabled=False if num == 0 else True)
+        ],
+
+    photo_sequence_frame += [  # add plenty of combo boxes, disabled by default and enable them after first is occupied
+                                sg.Button('Test sequence!',
+                                          button_color=(sg.theme_text_element_background_color(), 'silver'),
+                                          size=(45, 1),
+                                          key=f'test_btn_photo_selected_action_sequence',
+                                          disabled=False)
+                            ],
 
     layout = [
         [sg.Frame('Select device', select_device_frame, font='Any 12', title_color='white')],
