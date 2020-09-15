@@ -202,9 +202,6 @@ def gui():
 
         devices_list_old = devices_list
 
-        if event == "logs_bool":
-            window['logs_filter'].Update(disabled=not values['logs_bool'])
-
         if event.split('.')[0] == 'device_attached':
             # diff_device = [str(s) for s in (set(devices_values) ^ set(adb.get_attached_devices()))][0]
             diff_device = values[f"device_serial.{event.split('.')[1]}"]

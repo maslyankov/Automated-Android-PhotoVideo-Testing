@@ -221,6 +221,7 @@ class Device:
         """
         try:
             self.d.shell('echo {} > /sys/class/leds/{}/{}'.format(value, led, target))
+            self.d.shell('echo 60 > /sys/class/leds/{}/global_enable'.format(led))  # Poly
         except RuntimeError:
             print("Device was disconnected before we could detach it properly.. :(")
 
@@ -240,20 +241,20 @@ class Device:
         """
         leds = self.get_device_leds()
         print(leds)  # Debugging
+        # Poly
+        self.d.shell('echo 1 > /sys/class/leds/{}/global_onoff'.format(leds[0]))
 
-        for k in range(1, 5):  # Blink Leds and screen
+        for k in range(1, 60, 5):  # Blink Leds and screen
+            # Poly
             if k != 1:
-                # time.sleep(0.5)
-                pass
-            self.d.shell('echo 0 > /sys/class/leds/{}/global_onoff'.format(leds[0]))
-            time.sleep(0.3)
-            self.d.shell('echo 1 > /sys/class/leds/{}/global_onoff'.format(leds[0]))
+                time.sleep(0.3)
+            self.d.shell('echo {}{}{} > /sys/class/leds/{}/global_enable'.format(k, k, k, leds[0]))  # Poly
 
-            self.d.shell('input keyevent 26')  # Event Power Button
+            # Devices with screen
+            if (k % 11) % 2:
+                self.d.shell('input keyevent 26')  # Event Power Button
 
-        for led in leds:
-            self.d.shell('echo 0 > /sys/class/leds/{}/color_setting'.format(led))
-
+        self.d.shell('echo 60 > /sys/class/leds/{}/global_enable'.format(leds[0]))  # Poly
         print('Finished identifying!')
 
     def dump_window_elements(self):

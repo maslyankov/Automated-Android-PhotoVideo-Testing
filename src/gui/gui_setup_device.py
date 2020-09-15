@@ -60,6 +60,9 @@ def gui_setup_device(attached_devices, device_obj):
         print('vals', values)  # Debugging
         print('event', event)  # Debugging
 
+        if event == "logs_bool":
+            window['logs_filter'].Update(disabled=not values['logs_bool'])
+
         if event == 'test_app_btn':
             device_obj[values['selected_device']].open_app(values['selected_app_package'])
 
