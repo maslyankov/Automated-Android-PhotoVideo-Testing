@@ -291,7 +291,7 @@ class Device:
         )
         print('Dumped window elements for current app.')
 
-    def get_clickable_window_elements(self):
+    def get_clickable_window_elements(self, force_dump=False):
         """
         Parse the dumped window elements file and filter only elements that are "clickable"
         :return:Dict key: element_id or number,
@@ -301,6 +301,10 @@ class Device:
         current_app = self.get_current_app()
         print("Serial {} , app: {}".format(self.device_serial, current_app))
         file = os.path.join(ROOT_DIR, 'XML', '{}_{}_{}.xml'.format(self.device_serial, current_app[0], current_app[1]))
+
+        if force_dump:
+            self.dump_window_elements()
+
         try:
             xml_tree = ET.parse(file)
         except FileNotFoundError:

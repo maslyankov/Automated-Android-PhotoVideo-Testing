@@ -14,7 +14,7 @@ def gui_setup_device(attached_devices, device_obj):
         ),
         sg.Text(text=device_obj[attached_devices[0]].friendly_name,
                 key='device-friendly',
-                size=(25, 1))
+                font="Any 18")
     ], ]
 
     logs_frame = [

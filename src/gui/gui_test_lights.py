@@ -7,7 +7,11 @@ ROOT_DIR = os.path.abspath(os.curdir + "/../")  # This is Project Root
 
 def gui_test_lights(selected_lights_model):
     if selected_lights_model == 'SpectriWave':
-        status_layout = [
+        lights_header_image = [
+            sg.Image(os.path.join(ROOT_DIR, 'vendor', 'wireless_lighting', 'spectriwave.png'))
+        ]
+
+        status_frame = [[
                 sg.Text(text='Left Side:', font="Any 24", size=(10, 1)),
 
                 sg.Text(text='Relay - '),
@@ -22,9 +26,9 @@ def gui_test_lights(selected_lights_model):
                         key='is-connected-0-dimmer',
                         text_color="black",
                         background_color="red"),
-
-                sg.VerticalSeparator(),
-
+        ],
+            [sg.HorizontalSeparator()],
+        [
                 sg.Text(text='Right Side:', font="Any 24", size=(10, 1)),
 
                 sg.Text(text='Relay - '),
@@ -38,11 +42,16 @@ def gui_test_lights(selected_lights_model):
                         size=(15, 1),
                         key='is-connected-1-dimmer',
                         text_color="black",
-                        background_color="red")
-            ]
+                        background_color="red"),
+        ],
+        ]
+    else:
+        lights_header_image = []
+        status_frame = [[]]
 
     layout = [
-        status_layout,
+        lights_header_image,
+        [sg.Frame('Status', status_frame, font='Any 12', title_color='white')],
         [sg.HorizontalSeparator()],
         [
             sg.Text('Color Temperature:'),
@@ -53,7 +62,7 @@ def gui_test_lights(selected_lights_model):
         ],
         [
             sg.Text(text='Switch light (2-5 are only for INCA)'),
-            sg.Combo(['all', '0', '1', '2', '3', '4', '5'], size=(20, 20),
+            sg.Combo(['all', '0', '1', '2'], size=(20, 20),
                      key='selected_light_num',
                      default_value='all',
                      enable_events=True),
@@ -78,33 +87,42 @@ def gui_test_lights(selected_lights_model):
 
     lights = LightsCtrl(selected_lights_model)  # Create object
 
-    lights_status = lights.status()
+    if selected_lights_model == 'SpectriWave':  # SpectriWave Specific
+        lights_status = lights.status()
 
     while True:
-        event, values = window.read(200)
+        event, values = window.read(4000)
 
         if event == sg.WIN_CLOSED or event == 'Close':  # if user closes window or clicks cancel
             break
 
-        window['is-connected-0-relay'].Update(
-            "Connected" if lights_status[0]['relay'] else "Not Connected",
-            background_color='green' if lights_status[0]['relay'] else 'red'),
-        window['is-connected-0-dimmer'].Update(
-            "Connected" if lights_status[0]['dimmer'] else "Not Connected",
-            background_color='green' if lights_status[0]['dimmer'] else 'red'),
-        window['is-connected-1-relay'].Update(
-            "Connected" if lights_status[1]['relay'] else "Not Connected",
-            background_color='green' if lights_status[1]['relay'] else 'red'),
-        window['is-connected-1-dimmer'].Update(
-            "Connected" if lights_status[1]['dimmer'] else "Not Connected",
-            background_color='green' if lights_status[1]['dimmer'] else 'red')
+        if selected_lights_model == 'SpectriWave':  # SpectriWave Specific
+            if not lights_status[0]['relay']:
+                print("Checking again for status...")
+                # lights_status = lights.status()
 
+            window['is-connected-0-relay'].Update(
+                "Connected" if lights_status[0]['relay'] else "Not Connected",
+                background_color='green' if lights_status[0]['relay'] else 'red'),
+            window['is-connected-0-dimmer'].Update(
+                "Connected" if lights_status[0]['dimmer'] else "Not Connected",
+                background_color='green' if lights_status[0]['dimmer'] else 'red'),
+            window['is-connected-1-relay'].Update(
+                "Connected" if lights_status[1]['relay'] else "Not Connected",
+                background_color='green' if lights_status[1]['relay'] else 'red'),
+            window['is-connected-1-dimmer'].Update(
+                "Connected" if lights_status[1]['dimmer'] else "Not Connected",
+                background_color='green' if lights_status[1]['dimmer'] else 'red')
+
+            if event == 'selected_color_temp' and values['selected_color_temp'] == 'INCA':
+                window['selected_light_num'].Update(values=['all', '0', '1', '2', '3', '4', '5'])
+            elif event == 'selected_color_temp':
+                window['selected_light_num'].Update(values=['all', '0', '1', '2'])
 
         print('vals', values)  # Debugging
         print('event', event)  # Debugging
 
         if event == 'send_settings_btn':
-            print("Selected light ", selected_lights_model)
             lights.make_a_party()
 
         if event == 'on_1_btn':

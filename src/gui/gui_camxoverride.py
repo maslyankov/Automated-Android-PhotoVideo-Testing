@@ -18,7 +18,9 @@ def gui_camxoverride(attached_devices, device_obj):
     layout = [
         [sg.Combo(attached_devices, size=(20, 20), key='selected_device', default_value=attached_devices[0],
                   enable_events=True),
-         sg.Text(text=device_obj[attached_devices[0]].friendly_name, key='device-friendly')],
+         sg.Text(text=device_obj[attached_devices[0]].friendly_name,
+                 key='device-friendly',
+                 font="Any 18")],
         [sg.Text('camxoverridesettings.txt:')],
         [sg.Multiline(file_content, size=(70, 30), key='file_input')],
         [sg.CloseButton('Close'),

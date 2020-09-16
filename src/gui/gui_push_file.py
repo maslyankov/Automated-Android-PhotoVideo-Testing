@@ -17,7 +17,9 @@ def gui_push_file(attached_devices, device_obj):
             sg.Combo(attached_devices, size=(20, 20),
                      enable_events=True, key='selected_device',
                      default_value=attached_devices[0]),
-            sg.Text(text=device_obj[attached_devices[0]].friendly_name, key='device-friendly')
+            sg.Text(text=device_obj[attached_devices[0]].friendly_name,
+                    key='device-friendly',
+                    font="Any 18")
         ],
         [
             sg.Text('Destination: ', size=(9, 1)),

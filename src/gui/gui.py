@@ -51,7 +51,7 @@ def gui():
 
     devices_frame = []
     for num in range(MAX_DEVICES_AT_ONE_RUN):
-        print(f"Building row {num}")
+        print(f"Building row {num}")  # Debugging
         devices_frame += [place(sg.Checkbox('', key=f'device_attached.{num}',
                                             text_color="black",
                                             disabled=True,
@@ -134,11 +134,13 @@ def gui():
     window = sg.Window('Automated Photo/Video Testing', layout,
                        icon=os.path.join(ROOT_DIR, 'images', 'automated-video-testing-header-icon.ico'))
     device = {}  # List to store devices objects
+    devices_list_old = []  # set devices_list_old empty so that se can find devices from first run
 
     # Event Loop to process "events" and get the "values" of the inputs
     while True:
         event, values = window.read(timeout=100)
         devices_list = adb.list_devices()
+        attached_devices_list = adb.get_attached_devices()
 
         if event == sg.WIN_CLOSED or event == 'Exit':  # if user closes window or clicks cancel
             break
@@ -147,11 +149,6 @@ def gui():
         # print('Event: ', event)  # Debugging
         # print('ADB List Devices', devices_list)  # Debugging
         # print('Devices objects: ', device)
-
-        try:
-            devices_list_old
-        except NameError:
-            devices_list_old = []  # set devices_list_old empty so that se can find devices from first run
 
         try:
             if len(devices_list) > len(devices_list_old):  # If New devices found
@@ -196,14 +193,12 @@ def gui():
                         del device[diff_device]
                     except KeyError:
                         print("Wasn't attached anyway..")
-
         except UnboundLocalError:
             pass  # devices_list_old not set yet. No worries, will be set on next run of loop.
 
         devices_list_old = devices_list
 
         if event.split('.')[0] == 'device_attached':
-            # diff_device = [str(s) for s in (set(devices_values) ^ set(adb.get_attached_devices()))][0]
             diff_device = values[f"device_serial.{event.split('.')[1]}"]
 
             if values[f"device_attached.{event.split('.')[1]}"]:  # Attach device
@@ -236,7 +231,7 @@ def gui():
 
                 print('{} was detached!'.format(diff_device))
 
-        if adb.get_attached_devices():
+        if attached_devices_list:
             # print('At least one device is attached!') # Debugging
 
             # Disable/Enable buttons
@@ -257,13 +252,13 @@ def gui():
 
             # Buttons callbacks
             if event == "camxoverride_btn":
-                gui_camxoverride(adb.get_attached_devices(), device)
+                gui_camxoverride(attached_devices_list, device)
 
             if event == "push_file_btn":
-                gui_push_file(adb.get_attached_devices(), device)
+                gui_push_file(attached_devices_list, device)
 
             if event == "setup_device_btn":
-                gui_setup_device(adb.get_attached_devices(), device)
+                gui_setup_device(attached_devices_list, device)
 
             if event.split('.')[0] == 'device_friendly':
                 device000 = values[f"device_serial.{event.split('.')[1]}"]
@@ -271,13 +266,13 @@ def gui():
                 print(f'for {device000} fr name is {device[device000].friendly_name}')
 
             if event == 'reboot_device_btn':
-                gui_reboot_device(adb.get_attached_devices(), device)
+                gui_reboot_device(attached_devices_list, device)
 
             if event == 'capture_manual_btn':
-                gui_manual_cases(adb.get_attached_devices(), device)
+                gui_manual_cases(attached_devices_list, device)
 
             if event == 'capture_auto_btn':
-                gui_auto_cases(adb.get_attached_devices(), device)
+                gui_auto_cases(attached_devices_list, device)
 
         else:
             # print('No attached devices!')
@@ -294,7 +289,7 @@ def gui():
 
     # Detach attached devices
     print("Detaching attached devices...")
-    attached = adb.get_attached_devices().copy()
+    attached = attached_devices_list.copy()
     for dev in attached:
         print(f"Detaching {dev}")
         adb.detach_device(dev, device[dev])
