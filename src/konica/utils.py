@@ -14,7 +14,7 @@
  Set Hold status                                   55
 """
 
-from serial import Serial, PARITY_NONE, STOPBITS_ONE, EIGHTBITS, PARITY_EVEN, STOPBITS_TWO, SEVENBITS
+from serial import Serial, SerialException, PARITY_NONE, STOPBITS_ONE, EIGHTBITS, PARITY_EVEN, STOPBITS_TWO, SEVENBITS
 from serial.tools import list_ports
 from time import sleep
 
@@ -141,15 +141,23 @@ def cmd_formatter(cmd):
     return stx + cmd + etx + bcc + delimiter
 
 
-def write_serial_port(ser, cmd, sleep_time):
+def write_serial_port(ser, cmd, sleep_time, obj=None):
     """
     Writes in any serial port.
     :param ser: Serial object
     :param cmd: String containing the command
     :param sleep_time: Int or float containing the sleep time.
+    :param obj: Luxmeter object so we can pass it isAlive False if sth happens
     :return: None
     """
-    ser.write(cmd.encode())
+    try:
+        ser.write(cmd.encode())
+    except SerialException:
+        if obj:
+            obj.isAlive = False
+        print("Connection to Luxmeter was lost.")
+        return
+
     sleep(sleep_time)
     ser.reset_input_buffer()
 

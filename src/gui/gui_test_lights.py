@@ -134,8 +134,11 @@ def gui_test_lights(selected_lights_model, selected_luxmeter_model):
                 window['selected_light_num'].Update(values=['all', '0', '1', '2'])
 
         if selected_luxmeter_model == 'Konita Minolta CL-200A':  # Konita Minolta CL-200A Selected
-            window['luxmeter_name'].Update('Konita Minolta CL-200A')
-            window['luxmeter_lux_value'].Update(luxmeter.get_lux())
+            if luxmeter.isAlive:
+                window['luxmeter_name'].Update('Konita Minolta CL-200A')
+                window['luxmeter_lux_value'].Update(luxmeter.get_lux())
+            else:
+                window['luxmeter_lux_value'].Update("Connection Lost")
 
         print('vals', values)  # Debugging
         print('event', event)  # Debugging

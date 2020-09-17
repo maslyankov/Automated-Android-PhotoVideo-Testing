@@ -2,6 +2,7 @@ import subprocess
 import time
 import re
 import os
+import sys
 import xml.etree.cElementTree as ET
 from natsort import natsorted
 
@@ -92,6 +93,7 @@ class Device:
         :param coords: tap coordinates to use
         :return:None
         """
+        # print("X: ", coords[0][0], "Y: ", coords[0][1])  # Debugging
         self.d.shell("input tap {} {}".format(coords[0][0], coords[0][1]))
 
     def reboot(self):
@@ -351,7 +353,6 @@ class Device:
 
         resolution = ET.SubElement(info, "screen_resolution")
         res_data = self.get_screen_resolution()
-        print(res_data)
         resolution.text = f'{res_data[0]}x{res_data[1]}'
 
         # Device settings
@@ -367,39 +368,69 @@ class Device:
             elem_id = ET.SubElement(elem, "id")  # set
             elem_desc = ET.SubElement(elem, "description")  # set
             elem_coordinates = ET.SubElement(elem, "coordinates")
+
             x = ET.SubElement(elem_coordinates, "x")  # set
             y = ET.SubElement(elem_coordinates, "y")  # set
 
-            # if self.shoot_photo_seq = [['element_id', ['Description', [x, y]]]]
+            # list should be: self.shoot_photo_seq = [['element_id', ['Description', [x, y]]]]            elem_id.text = str(action[0])
             elem_id.text = action[0]
             elem_desc.text = action[1][0]
-            x.text = action[1][1][0]
-            y.text = action[1][1][1]
+            x.text = str(action[1][1][0])
+            y.text = str(action[1][1][1])
 
         shoot_video_seq = ET.SubElement(settings, "shoot_video_seq")
         for action in self.shoot_video_seq:
+            # set elements
             elem = ET.SubElement(shoot_video_seq, "action")
             elem_id = ET.SubElement(elem, "id")  # set
             elem_desc = ET.SubElement(elem, "description")  # set
             elem_coordinates = ET.SubElement(elem, "coordinates")
-            x = ET.SubElement(elem_coordinates, "x")  # set
-            y = ET.SubElement(elem_coordinates, "y")  # set
+            x = ET.SubElement(elem_coordinates, "x")
+            y = ET.SubElement(elem_coordinates, "y")
 
-            # if self.shoot_video_seq = [['element_id', ['Description', [x, y]]]]
-            elem_id.text = action[0]
-            elem_desc.text = action[1][0]
-            x.text = action[1][1][0]
-            y.text = action[1][1][1]
+            # Set value
+            # list should be: self.shoot_video_seq = [['element_id', ['Description', [x, y]]]]
+            elem_id.text = str(action[0])
+            elem_desc.text = str(action[1][0])
+            x.text = str(action[1][1][0])
+            y.text = str(action[1][1][1])
 
         actions_time_gap = ET.SubElement(settings, "actions_time_gap")
-        actions_time_gap.text = self.actions_time_gap
+        actions_time_gap.text = str(self.actions_time_gap)
+
+        # Clear file
+        print('Clearing file..')
+
+        old_root = ET.parse(self.device_xml).getroot()
+        print(old_root)
+        old_root.clear()
+
+        try:
+            old_root = ET.parse(self.device_xml).getroot()
+        except ET.ParseError:
+            print("File is possibly empty.. Not clearing then.")
+        else:
+            old_root.clear()
+
 
         # Save to file
         tree = ET.ElementTree(root)
-        print(self.device_xml)
-        tree.write(str(self.device_xml), encoding='utf-8', xml_declaration=True)
+        print('Writing settings to file...')
+        #tree.write(str(self.device_xml), encoding='utf-8', xml_declaration=True)
 
-    # Will be changed [START]
+    def set_shoot_photo_seq(self, seq):
+        self.shoot_photo_seq = seq
+
+    def get_shoot_photo_seq(self):
+        return self.shoot_photo_seq
+
+    def set_shoot_video_seq(self, seq):
+        self.shoot_video_seq = seq
+
+    def get_shoot_video_seq(self):
+        return self.shoot_video_seq
+
+        # Will be changed [START]
     def start_video(self):
         self.input_tap(shoot_video())
 

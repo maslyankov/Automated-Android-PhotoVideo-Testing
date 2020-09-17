@@ -17,6 +17,7 @@ class ChromaMeterKonica(object):
     def __init__(self):
         self.cmd_dict = cl200a_cmd_dict
         self.port = serial_port_luxmeter()
+        self.isAlive = True
 
         try:
             self.ser = connect_serial_port(self.port, parity=PARITY_EVEN, bytesize=SEVENBITS)
@@ -43,7 +44,7 @@ class ChromaMeterKonica(object):
         cmd_response = cmd_formatter(self.cmd_dict['command_54r'])
 
         for i in range(2):
-            write_serial_port(ser=self.ser, cmd=cmd_request, sleep_time=0.5)
+            write_serial_port(obj=self, ser=self.ser, cmd=cmd_request, sleep_time=0.5)
             pc_connected_mode = self.ser.readline().decode('ascii')
             self.ser.reset_input_buffer()
             self.ser.reset_output_buffer()
@@ -70,7 +71,7 @@ class ChromaMeterKonica(object):
         # Hold status
         self.ser.reset_input_buffer()
         self.ser.reset_output_buffer()
-        write_serial_port(ser=self.ser, cmd=cmd, sleep_time=0.5)
+        write_serial_port(obj=self, ser=self.ser, cmd=cmd, sleep_time=0.5)
 
     def __ext_mode(self):
         """
@@ -79,14 +80,13 @@ class ChromaMeterKonica(object):
         EXT mode is the mode for taking measurements according to the timing commands from the PC.
         :return: None
         """
-
         cmd = cmd_formatter(self.cmd_dict['command_40'])
         self.ser.reset_input_buffer()
         self.ser.reset_output_buffer()
 
         for i in range(2):
             # set CL-200A to EXT mode
-            write_serial_port(ser=self.ser, cmd=cmd, sleep_time=0.125)
+            write_serial_port(obj=self, ser=self.ser, cmd=cmd, sleep_time=0.125)
             ext_mode_err = self.ser.readline().decode('ascii')
             # If an error occurred when setting EXT mode (ERR byte = "4"), hold_mode was not completed
             # correctly. Repeat hold_mode and then set EXT mode again.
@@ -107,13 +107,21 @@ class ChromaMeterKonica(object):
         """
         self.ser.reset_input_buffer()
         self.ser.reset_output_buffer()
+        # Check if device still here
+
         # Perform measurement
         cmd_ext = cmd_formatter(self.cmd_dict['command_40r'])
         cmd_read = cmd_formatter(self.cmd_dict['command_02'])
-        write_serial_port(self.ser, cmd=cmd_ext, sleep_time=0.5)
+        write_serial_port(obj=self, ser=self.ser, cmd=cmd_ext, sleep_time=0.5)
         # read data
-        write_serial_port(ser=self.ser, cmd=cmd_read, sleep_time=0)
-        result = self.ser.readline().decode('ascii')
+        write_serial_port(obj=self, ser=self.ser, cmd=cmd_read, sleep_time=0)
+        try:
+            result = self.ser.readline().decode('ascii')
+        except SerialException:
+            self.isAlive = False
+            print('Connection to Luxmeter was lost.')
+            return
+
         if result[6] in ['1', '2', '3']:
             err = 'Switch off the CL-200A and then switch it back on'
             print(f'Error {err}')

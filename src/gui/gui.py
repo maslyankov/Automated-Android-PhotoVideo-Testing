@@ -59,7 +59,6 @@ def gui():
                                             size=(15, 1))),
                           place(sg.InputText(key=f'device_serial.{num}',
                                              background_color="red",
-                                             enable_events=True,
                                              size=(15, 1),
                                              readonly=True,
                                              default_text='',
