@@ -65,7 +65,7 @@ def gui_test_lights(selected_lights_model, selected_luxmeter_model):
             sg.Text('Color Temperature:'),
             sg.Combo(lights.available_lights, size=(20, 20),
                      key='selected_color_temp',
-                     default_value=lights.available_lights[0],
+                     default_value=lights.available_lights[0] if lights.available_lights else '',
                      enable_events=True),
         ],
         [
