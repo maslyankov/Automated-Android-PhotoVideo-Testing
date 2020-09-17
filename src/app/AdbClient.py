@@ -2,10 +2,7 @@
 import subprocess
 import os
 from ppadb.client import Client as AdbPy
-
-ROOT_DIR = os.path.abspath(os.curdir + "/../")  # This is Project Root
-ADB = os.path.join(ROOT_DIR, 'vendor', 'scrcpy-win64-v1.16', 'adb.exe')
-
+import src.constants as constants
 
 class AdbClient:
     """
@@ -14,7 +11,7 @@ class AdbClient:
     def __init__(self):
         print("Starting the ADB Server...")
         try:
-            self.adb = subprocess.Popen([ADB, 'start-server'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+            self.adb = subprocess.Popen([constants.ADB, 'start-server'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             stdout, stderr = self.adb.communicate()
             if stdout:
                 print("ADB Start Output: " + stdout.decode())  # Debugging

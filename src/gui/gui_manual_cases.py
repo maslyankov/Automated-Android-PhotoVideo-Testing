@@ -1,8 +1,7 @@
 import os
 import PySimpleGUI as sg
 
-ROOT_DIR = os.path.abspath(os.curdir + "/../")  # This is Project Root
-
+import src.constants as constants
 
 def gui_manual_cases(attached_devices, device_obj):  # TODO
     case_frame_layout = [[
@@ -32,7 +31,7 @@ def gui_manual_cases(attached_devices, device_obj):  # TODO
     ]
 
     window = sg.Window('Automated Photo/Video Testing', layout,
-                       icon=os.path.join(ROOT_DIR, 'images', 'automated-video-testing-header-icon.ico'))
+                       icon=os.path.join(constants.ROOT_DIR, 'images', 'automated-video-testing-header-icon.ico'))
 
     # Event Loop to process "events" and get the "values" of the inputs
     while True:
@@ -60,17 +59,20 @@ def gui_manual_cases(attached_devices, device_obj):  # TODO
             device_obj.open_snap_cam()
             # Photos Mode
             if values['mode_photos'] or values['mode_both']:
-                shoot_photo(device_obj, values['logs_bool'], values['logs_filter'],
-                            "{}/logfile.txt".format(values['save_location']))
+                # shoot_photo(device_obj, values['logs_bool'], values['logs_filter'],
+                 #           "{}/logfile.txt".format(values['save_location']))
+                pass
 
             # Videos Mode
             if values['mode_videos'] or values['mode_both']:
-                shoot_video(device_obj, values['duration_spinner'], values['logs_bool'], values['logs_filter'],
-                            "{}/logfile.txt".format(values['save_location']))
+                # shoot_video(device_obj, values['duration_spinner'], values['logs_bool'], values['logs_filter'],
+                #            "{}/logfile.txt".format(values['save_location']))
+                pass
 
             if values['pull_files']:
                 if values['save_location']:
-                    pull_camera_files(device_obj, values['save_location'], values['clear_files'])
+                    # pull_camera_files(device_obj, values['save_location'], values['clear_files'])
+                    pass
                 else:
                     print("Save Location must be set!")
 

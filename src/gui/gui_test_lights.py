@@ -3,13 +3,13 @@ import PySimpleGUI as sg
 from src.app.LightsCtrl import LightsCtrl
 from src.konica.ChromaMeterKonica import ChromaMeterKonica
 
-ROOT_DIR = os.path.abspath(os.curdir + "/../")  # This is Project Root
+import src.constants as constants
 
 
 def gui_test_lights(selected_lights_model, selected_luxmeter_model):
     if selected_lights_model == 'SpectriWave':
         lights_header_image = [
-            sg.Image(os.path.join(ROOT_DIR, 'vendor', 'wireless_lighting', 'spectriwave.png'))
+            sg.Image(os.path.join(constants.ROOT_DIR, 'vendor', 'wireless_lighting', 'spectriwave.png'))
         ]
 
         status_frame = [[
@@ -93,7 +93,7 @@ def gui_test_lights(selected_lights_model, selected_luxmeter_model):
 
     # Create the Window
     window = sg.Window('Lights Test', layout,
-                       icon=os.path.join(ROOT_DIR, 'images', 'automated-video-testing-header-icon.ico'))
+                       icon=os.path.join(constants.ROOT_DIR, 'images', 'automated-video-testing-header-icon.ico'))
 
     lights = LightsCtrl(selected_lights_model)  # Create object
 

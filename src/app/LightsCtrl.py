@@ -2,11 +2,7 @@ import os
 import time
 from vendor.wireless_lighting.wireless_lighting_api import IQL_Dual_WiFi_Wireless_Lighting_API
 
-ROOT_DIR = os.path.abspath(os.curdir + "/../")  # This is Project Root
-LIGHTS_MODELS = {
-    'SpectriWave': 0,
-    'lightStudio': 1
-}
+import src.constants as constants
 
 
 class LightsCtrl:
@@ -14,33 +10,27 @@ class LightsCtrl:
         self.current_color_temp = None
         self.current_brightness = None
 
-        print('Selected light model: ', LIGHTS_MODELS.get(model, "Invalid light model"))
-        self.lights_model = LIGHTS_MODELS[model]
+        print('Selected light model: ', constants.LIGHTS_MODELS.get(model, "Invalid light model"))
+        self.lights_model = constants.LIGHTS_MODELS[model]
 
-        if self.lights_model == LIGHTS_MODELS['SpectriWave']:
+        if self.lights_model == constants.LIGHTS_MODELS['SpectriWave']:
             self.available_lights = ['D65', 'D75', 'TL84', 'INCA']
             # Instance API object
             self.api = IQL_Dual_WiFi_Wireless_Lighting_API()
 
             # Connect to Light box
             self.api.connect()
-            print("This is the output", self.api.cbox_left.get_connection_status())
-
-            pass
+        else:
+            self.available_lights = []
 
     def status(self):
-        if self.lights_model == LIGHTS_MODELS['SpectriWave']:
-            status = self.api.cbox_left.get_connection_status(), self.api.cbox_right.get_connection_status()
-
-        print(status)
-        return status
-
-
-
+        if self.lights_model == constants.LIGHTS_MODELS['SpectriWave']:
+            return self.api.cbox_left.get_connection_status(), \
+                   self.api.cbox_right.get_connection_status()
 
     def turn_on(self, color_temp, selected_target_light='all'):
         # TODO add check if color_temp is in self.available_lights
-        if self.lights_model == LIGHTS_MODELS['SpectriWave']:
+        if self.lights_model == constants.LIGHTS_MODELS['SpectriWave']:
             if color_temp != 'INCA' and selected_target_light != 'all' and int(selected_target_light) > 2:
                 selected_target_light = 'all'
             num_lights_of_type = 3 if color_temp != 'INCA' else 6
@@ -57,7 +47,7 @@ class LightsCtrl:
     def turn_off(self, color_temp, selected_target_light='all'):
         # TODO add check if color_temp is in self.available_lights
 
-        if self.lights_model == LIGHTS_MODELS['SpectriWave']:
+        if self.lights_model == constants.LIGHTS_MODELS['SpectriWave']:
             if color_temp != 'INCA' and selected_target_light != 'all' and int(selected_target_light) > 2:
                 selected_target_light = 'all'
             num_lights_of_type = 3 if color_temp != 'INCA' else 6
@@ -80,7 +70,7 @@ class LightsCtrl:
             print("Target brightness invalid.")
             return
 
-        if self.lights_model == LIGHTS_MODELS['SpectriWave']:
+        if self.lights_model == constants.LIGHTS_MODELS['SpectriWave']:
             self.api.cbox_right.set_dimmer(self.current_color_temp, target_brightness)
 
         self.current_brightness = target_brightness
@@ -91,7 +81,7 @@ class LightsCtrl:
 
     def disconnect(self):
         print("Disconnecting from lights...")
-        if self.lights_model == LIGHTS_MODELS['SpectriWave']:
+        if self.lights_model == constants.LIGHTS_MODELS['SpectriWave']:
             for light_color in self.available_lights:
                 print(f"Turning off {light_color}")
                 self.turn_off(light_color)

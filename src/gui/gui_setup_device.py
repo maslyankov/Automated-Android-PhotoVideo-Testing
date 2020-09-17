@@ -1,7 +1,7 @@
 import os
 import PySimpleGUI as sg
 
-ROOT_DIR = os.path.abspath(os.curdir + "/../")  # This is Project Root
+import src.constants as constants
 
 
 def gui_setup_device(attached_devices, device_obj):
@@ -38,7 +38,8 @@ def gui_setup_device(attached_devices, device_obj):
     photo_sequence_frame = []
 
     for num in range(4):
-        photo_sequence_frame += [  # add plenty of combo boxes, disabled by default and enable them after first is occupied
+        photo_sequence_frame += [
+            # add plenty of combo boxes, disabled by default and enable them after first is occupied
             sg.Combo(values=clickable_elements,
                      size=(40, 1),
                      key=f'photo_selected_action.{num}',
@@ -69,7 +70,7 @@ def gui_setup_device(attached_devices, device_obj):
 
     # Create the Window
     window = sg.Window('Setup', layout,
-                       icon=os.path.join(ROOT_DIR, 'images', 'automated-video-testing-header-icon.ico'))
+                       icon=os.path.join(constants.ROOT_DIR, 'images', 'automated-video-testing-header-icon.ico'))
 
     while True:
         event, values = window.read()

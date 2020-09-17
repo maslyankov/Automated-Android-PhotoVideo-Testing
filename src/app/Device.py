@@ -5,14 +5,8 @@ import os
 import xml.etree.cElementTree as ET
 from natsort import natsorted
 
+import src.constants as constants
 from src.temp.coords import *
-
-SNAP_CAM = "org.codeaurora.snapcam"  # TODO Make this an option in app settings
-
-# DIRECTORIES
-ROOT_DIR = os.path.abspath(os.curdir + "/../")  # This is Project Root
-ADB = os.path.join(ROOT_DIR, 'vendor', 'scrcpy-win64-v1.16', 'adb.exe')
-SCRCPY = os.path.join(ROOT_DIR, 'vendor', 'scrcpy-win64-v1.16', 'scrcpy.exe')
 
 
 # CLASS Device
@@ -44,7 +38,7 @@ class Device:
         adb.attach_device(device_serial, self)
 
         # Persistence
-        self.device_xml = os.path.join(ROOT_DIR, 'settings', f'{device_serial}.xml')
+        self.device_xml = os.path.join(constants.ROOT_DIR, 'settings', f'{device_serial}.xml')
         # self.save_settings()
 
         print("Conn devs: ", adb.attached_devices)  # Debugging
@@ -56,7 +50,7 @@ class Device:
         :return:None
         """
         print("Rooting device " + self.device_serial)
-        root = subprocess.Popen([ADB, '-s', self.device_serial, 'root'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        root = subprocess.Popen([constants.ADB, '-s', self.device_serial, 'root'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         stdout, stderr = root.communicate()
         if stderr:
             print("Rooting Errors: {}".format(stderr.decode()))
@@ -73,7 +67,7 @@ class Device:
         :return:None
         """
         print("Remount device serial: " + self.device_serial)
-        remount = subprocess.Popen([ADB, '-s', self.device_serial, 'remount'], stdout=subprocess.PIPE,
+        remount = subprocess.Popen([constants.ADB, '-s', self.device_serial, 'remount'], stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
         stdout, stderr = remount.communicate()
         if stderr:
@@ -247,7 +241,7 @@ class Device:
         :return:None
         """
         print("Opening scrcpy for device ", self.device_serial)
-        scrcpy = subprocess.Popen([SCRCPY, '--serial', self.device_serial], stdout=subprocess.PIPE,
+        scrcpy = subprocess.Popen([constants.SCRCPY, '--serial', self.device_serial], stdout=subprocess.PIPE,
                                   stderr=subprocess.PIPE)
 
     def identify(self):
@@ -287,7 +281,7 @@ class Device:
 
         self.d.pull(
             source,
-            os.path.join(ROOT_DIR, 'XML', '{}_{}_{}.xml'.format(self.device_serial, current_app[0], current_app[1]))
+            os.path.join(constants.ROOT_DIR, 'XML', '{}_{}_{}.xml'.format(self.device_serial, current_app[0], current_app[1]))
         )
         print('Dumped window elements for current app.')
 
@@ -300,7 +294,7 @@ class Device:
         print('Parsing xml...')
         current_app = self.get_current_app()
         print("Serial {} , app: {}".format(self.device_serial, current_app))
-        file = os.path.join(ROOT_DIR, 'XML', '{}_{}_{}.xml'.format(self.device_serial, current_app[0], current_app[1]))
+        file = os.path.join(constants.ROOT_DIR, 'XML', '{}_{}_{}.xml'.format(self.device_serial, current_app[0], current_app[1]))
 
         if force_dump:
             self.dump_window_elements()
@@ -313,7 +307,10 @@ class Device:
         except ET.ParseError as error:
             print("XML Parse Error: ", error)
 
-        xml_root = xml_tree.getroot()
+        try:
+            xml_root = xml_tree.getroot()
+        except AttributeError:
+            print("XML wasn't opened correctly!")
         elements = {}
 
         for num, element in enumerate(xml_root.iter("node")):
@@ -401,13 +398,6 @@ class Device:
         tree.write(str(self.device_xml), encoding='utf-8', xml_declaration=True)
 
     # Will be changed [START]
-    def open_snap_cam(self):  # Todo Make this with an argument for app package
-        if self.get_current_app()[0] != SNAP_CAM:
-            print("Opening Snap Cam...")
-            self.d.shell("monkey -p '{}' -v 1".format(SNAP_CAM))
-        else:
-            print("Snap Cam was already opened! Continuing...")
-
     def start_video(self):
         self.input_tap(shoot_video())
 

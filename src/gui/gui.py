@@ -12,9 +12,8 @@ from src.gui.gui_setup_device import gui_setup_device
 from src.gui.gui_test_lights import gui_test_lights
 import PySimpleGUI as sg
 
-APP_VERSION = '0.01 Beta'
-THREAD_EVENT = '-WATCHDOG-'
-MAX_DEVICES_AT_ONE_RUN = 6
+import src.constants as constants
+
 ROOT_DIR = os.path.abspath(os.curdir + "/../")  # This is Project Root
 
 
@@ -50,7 +49,7 @@ def gui():
     loading(3)
 
     devices_frame = []
-    for num in range(MAX_DEVICES_AT_ONE_RUN):
+    for num in range(constants.MAX_DEVICES_AT_ONE_RUN):
         print(f"Building row {num}")  # Debugging
         devices_frame += [place(sg.Checkbox('', key=f'device_attached.{num}',
                                             text_color="black",
@@ -128,7 +127,7 @@ def gui():
             sg.Button('Capture Cases (Automated)', size=(25, 2), key='capture_auto_btn', disabled=True)],
         [sg.Text('_' * 75)],
         # [sg.Frame('Output', [[sg.Output(size=(70, 8))]], font='Any 12', title_color='white')],
-        [sg.Text('App Version: {}'.format(APP_VERSION), size=(65, 1), justification="right")]
+        [sg.Text('App Version: {}'.format(constants.APP_VERSION), size=(65, 1), justification="right")]
     ]
 
     # Create the Window
@@ -156,7 +155,7 @@ def gui():
                 for count, diff_device in enumerate([str(s) for s in (set(devices_list_old) ^ set(devices_list))]):
                     print("Found new device!!! -> ", diff_device)
 
-                    for numm in range(MAX_DEVICES_AT_ONE_RUN):
+                    for numm in range(constants.MAX_DEVICES_AT_ONE_RUN):
                         num = numm + count
                         try:
                             if values[f'device_serial.{num}'] == '' or values[f'device_serial.{num}'] == diff_device:
@@ -174,13 +173,13 @@ def gui():
                                 break
                         except KeyError:
                             print('Devices limit exceeded!')
-                            print(f'numm: {numm}, num: {num}, count: {count}, max: {MAX_DEVICES_AT_ONE_RUN}')
+                            print(f'numm: {numm}, num: {num}, count: {count}, max: {constants.MAX_DEVICES_AT_ONE_RUN}')
             elif len(devices_list) < len(devices_list_old):  # If device is disconnected
                 for count, diff_device in enumerate([str(s) for s in (set(devices_list_old) ^ set(devices_list))]):
                     print("Device detached :( -> ", diff_device)
 
                     # window['devices'].update(values=devices_list)
-                    for numm in range(MAX_DEVICES_AT_ONE_RUN):
+                    for numm in range(constants.MAX_DEVICES_AT_ONE_RUN):
                         num = numm + count
                         if values[f'device_serial.{num}'] == diff_device:
                             window[f'device_attached.{num}'].Update(value=False, background_color='red', disabled=True,
@@ -205,7 +204,7 @@ def gui():
             if values[f"device_attached.{event.split('.')[1]}"]:  # Attach device
                 device[diff_device] = Device(adb, diff_device)  # Assign device to object
 
-                for num in range(MAX_DEVICES_AT_ONE_RUN):
+                for num in range(constants.MAX_DEVICES_AT_ONE_RUN):
                     if values[f'device_serial.{num}'] == diff_device or values[f'device_serial.{num}'] == '':
                         window[f'device_attached.{num}'].Update(background_color='green')
                         window[f'device_friendly.{num}'].Update(background_color='green',
@@ -222,7 +221,7 @@ def gui():
                 adb.detach_device(diff_device, device[diff_device])
                 del device[diff_device]
 
-                for num in range(MAX_DEVICES_AT_ONE_RUN):
+                for num in range(constants.MAX_DEVICES_AT_ONE_RUN):
                     if values[f'device_serial.{num}'] == diff_device or values[f'device_serial.{num}'] == '':
                         window[f'device_attached.{num}'].Update(background_color='yellow')
                         window[f'device_friendly.{num}'].Update(background_color='yellow')

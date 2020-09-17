@@ -1,12 +1,12 @@
 import os
 import PySimpleGUI as sg
 
-ROOT_DIR = os.path.abspath(os.curdir + "/../")  # This is Project Root
+import src.constants as constants
 
 
 def gui_camxoverride(attached_devices, device_obj):
-    file = os.path.join(ROOT_DIR, 'tmp', 'camxoverridesettings.txt')
-    file_new = os.path.join(ROOT_DIR, 'tmp', 'camxoverridesettings_new.txt')
+    file = os.path.join(constants.ROOT_DIR, 'tmp', 'camxoverridesettings.txt')
+    file_new = os.path.join(constants.ROOT_DIR, 'tmp', 'camxoverridesettings_new.txt')
     print(file)
     print("Pulling camxoverridesettings.txt from device...")
     device_obj[attached_devices[0]].pull_file('/vendor/etc/camera/camxoverridesettings.txt',
@@ -30,7 +30,7 @@ def gui_camxoverride(attached_devices, device_obj):
 
     # Create the Window
     window = sg.Window('Edit camxoverridesettings', layout,
-                       icon=os.path.join(ROOT_DIR, 'images', 'automated-video-testing-header-icon.ico'))
+                       icon=os.path.join(constants.ROOT_DIR, 'images', 'automated-video-testing-header-icon.ico'))
 
     while True:
         event, values = window.read()
