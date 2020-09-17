@@ -30,6 +30,8 @@ class Device:
         self.camera_app = None
         self.shoot_photo_seq = []
         self.shoot_video_seq = []
+        self.goto_photo_seq = []
+        self.goto_video_seq = []
         self.actions_time_gap = 1
 
         self.root()  # Make sure we are using root for device
