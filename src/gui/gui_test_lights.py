@@ -7,6 +7,8 @@ import src.constants as constants
 
 
 def gui_test_lights(selected_lights_model, selected_luxmeter_model):
+    lights = LightsCtrl(selected_lights_model)  # Create object
+
     if selected_lights_model == 'SpectriWave':
         lights_header_image = [
             sg.Image(os.path.join(constants.ROOT_DIR, 'vendor', 'wireless_lighting', 'spectriwave.png'))
@@ -61,9 +63,9 @@ def gui_test_lights(selected_lights_model, selected_luxmeter_model):
         [sg.HorizontalSeparator()],
         [
             sg.Text('Color Temperature:'),
-            sg.Combo(['D65', 'D75', 'TL84', 'INCA'], size=(20, 20),
+            sg.Combo(lights.available_lights, size=(20, 20),
                      key='selected_color_temp',
-                     default_value='D65',
+                     default_value=lights.available_lights[0],
                      enable_events=True),
         ],
         [
@@ -94,8 +96,6 @@ def gui_test_lights(selected_lights_model, selected_luxmeter_model):
     # Create the Window
     window = sg.Window('Lights Test', layout,
                        icon=os.path.join(constants.ROOT_DIR, 'images', 'automated-video-testing-header-icon.ico'))
-
-    lights = LightsCtrl(selected_lights_model)  # Create object
 
     if selected_lights_model == 'SpectriWave':  # SpectriWave Specific
         lights_status = lights.status()
