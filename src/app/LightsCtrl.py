@@ -46,7 +46,7 @@ class LightsCtrl:
             num_lights_of_type = 3 if color_temp != 'INCA' else 6
             if selected_target_light == 'all':
                 for target_light in range(0, num_lights_of_type):
-                    self.api.cbox_right.set_lamp(color_temp, target_light, 1)
+                    (color_temp, target_light, 1)
             else:
                 self.api.cbox_right.set_lamp(color_temp, int(selected_target_light), 1)
                 print('I did: ', color_temp, selected_target_light, 1)

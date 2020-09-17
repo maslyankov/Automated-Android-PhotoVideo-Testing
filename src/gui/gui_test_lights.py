@@ -1,11 +1,12 @@
 import os
 import PySimpleGUI as sg
 from src.app.LightsCtrl import LightsCtrl
+from src.konica.ChromaMeterKonica import ChromaMeterKonica
 
 ROOT_DIR = os.path.abspath(os.curdir + "/../")  # This is Project Root
 
 
-def gui_test_lights(selected_lights_model):
+def gui_test_lights(selected_lights_model, selected_luxmeter_model):
     if selected_lights_model == 'SpectriWave':
         lights_header_image = [
             sg.Image(os.path.join(ROOT_DIR, 'vendor', 'wireless_lighting', 'spectriwave.png'))
@@ -49,6 +50,11 @@ def gui_test_lights(selected_lights_model):
         lights_header_image = []
         status_frame = [[]]
 
+    luxmeter_frame = [
+        [sg.Text('Luxmeter', font='Any 18', key='luxmeter_name', size=(20, 1))],
+        [sg.Text('Loading..', key='luxmeter_lux_value', font='Any 17', text_color='red')]
+    ]
+
     layout = [
         lights_header_image,
         [sg.Frame('Status', status_frame, font='Any 12', title_color='white')],
@@ -77,7 +83,11 @@ def gui_test_lights(selected_lights_model):
             sg.Button('Set', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 2),
                       key='set_brightness_btn', disabled=False)
         ],
-        [sg.Button('Party', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 2),
+        [
+            sg.Frame('Luxmeter', luxmeter_frame, font='Any 12', title_color='white', visible=False if selected_luxmeter_model == 'None' else True),
+            sg.Button('Party',
+                   button_color=(sg.theme_text_element_background_color(), 'silver'),
+                   size=(10, 2),
                    key='send_settings_btn', disabled=False)]
     ]
 
@@ -90,8 +100,12 @@ def gui_test_lights(selected_lights_model):
     if selected_lights_model == 'SpectriWave':  # SpectriWave Specific
         lights_status = lights.status()
 
+    if selected_luxmeter_model == 'Konita Minolta CL-200A': # Konita Minolta CL-200A Selected
+        print("Initializing Luxmeter...")
+        luxmeter = ChromaMeterKonica()
+
     while True:
-        event, values = window.read(4000)
+        event, values = window.read(600)
 
         if event == sg.WIN_CLOSED or event == 'Close':  # if user closes window or clicks cancel
             break
@@ -118,6 +132,10 @@ def gui_test_lights(selected_lights_model):
                 window['selected_light_num'].Update(values=['all', '0', '1', '2', '3', '4', '5'])
             elif event == 'selected_color_temp':
                 window['selected_light_num'].Update(values=['all', '0', '1', '2'])
+
+        if selected_luxmeter_model == 'Konita Minolta CL-200A':  # Konita Minolta CL-200A Selected
+            window['luxmeter_name'].Update('Konita Minolta CL-200A')
+            window['luxmeter_lux_value'].Update(luxmeter.get_lux())
 
         print('vals', values)  # Debugging
         print('event', event)  # Debugging

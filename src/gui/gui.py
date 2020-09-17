@@ -108,6 +108,7 @@ def gui():
 
     lights_frame_layout = [[
         sg.OptionMenu(values=['SpectriWave', 'lightStudio'], key="selected_lights_model"),
+        sg.OptionMenu(values=['None', 'Konita Minolta CL-200A', 'something else'], key="selected_luxmeter_model"),
         sg.Button('Test Lights', button_color=(sg.theme_text_element_background_color(), 'silver'),
                   size=(12, 3),
                   key='test_lights_btn',
@@ -284,7 +285,7 @@ def gui():
             window['capture_auto_btn'].Update(disabled=True)
 
         if event == 'test_lights_btn':
-            gui_test_lights(values['selected_lights_model'])
+            gui_test_lights(values['selected_lights_model'], values['selected_luxmeter_model'])
 
 
     # Detach attached devices
