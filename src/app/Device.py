@@ -25,7 +25,10 @@ class Device:
         # Object Parameters #
         # Info
         self.device_serial = device_serial  # Assign device serial as received in arguments
-        self.friendly_name = self.get_device_model()
+        try:
+            self.friendly_name = self.get_device_model()
+        except RuntimeError:
+            print("Device went offline!")
 
         # Settings
         self.camera_app = None
@@ -128,9 +131,11 @@ class Device:
     def get_installed_packages(self):
         """
         Get the packages (apps) installed on device
+        pm list packages - more widely available than:
+        'cmd package list packages -e'
         :return:List of strings, each being an app package on the device
         """
-        return self.d.shell("cmd package list packages -e | sort").replace('package:', '').splitlines()
+        return sorted(self.d.shell("pm list packages").replace('package:', '').splitlines())
 
     def open_app(self, package):
         """
@@ -332,7 +337,7 @@ class Device:
 
         return elements
 
-    def save_settings(self):
+    def save_settings(self):  # TODO Needs more work and testing
         root = ET.Element('device')
 
         # Device info
