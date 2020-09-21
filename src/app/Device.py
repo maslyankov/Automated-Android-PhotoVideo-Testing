@@ -370,11 +370,10 @@ class Device:
         tree = ET.parse(self.device_xml)
         root = tree.getroot()
         # all item attributes
-        print('\nAll attributes:')
         for elem in root:
             for subelem in elem:
                 if subelem.tag == 'serial' and subelem.text != self.device_serial:
-                    print('XML ERROR!')
+                    print('XML ERROR! Serial mismatch!')
 
                 if subelem.tag == 'friendly_name':
                     self.friendly_name = subelem.text
@@ -382,7 +381,47 @@ class Device:
                 if subelem.tag == 'camera_app':
                     self.camera_app = subelem.text
 
-                print(subelem.tag, subelem.text)
+                if subelem.tag == 'shoot_photo_seq':
+                    shoot_photo_seq_temp = []
+
+                    for action_num, action in enumerate(subelem):
+
+                        action_list = []
+                        data_list = []
+
+                        # self.shoot_photo_seq.append(action.tag)
+                        for action_elem_num, action_elem in enumerate(action):
+                            # import pdb; pdb.set_trace()
+                            print("action elem: ", action_elem)
+                            if action_elem.tag == 'id':
+                                action_list.append(action_elem.text)
+                                print(action_elem_num, action_elem.text)
+
+                            if action_elem.tag == 'description':
+                                print('description be: ', action_elem.text)
+                                if action_elem.text is not None:
+                                    data_list.append(action_elem.text)
+                                else:
+                                    data_list.append('')
+
+                            if action_elem.tag == 'coordinates':
+                                coords_list = []
+
+                                for inner_num, inner in enumerate(action_elem):
+                                    # list should be: self.shoot_photo_seq = [
+                                    # ['element_id', ['Description', [x, y] ] ]
+                                    # ]
+                                    coords_list.append(inner.text)
+                                print('data list before: ', data_list)
+                                data_list.append(coords_list)
+                        action_list.append(data_list)
+
+                        shoot_photo_seq_temp.append(action_list)
+                        print('Generated list for action: ', action_list)
+                    self.set_shoot_photo_seq(shoot_photo_seq_temp)
+                    print('Obj Seq List: ', self.get_shoot_photo_seq())
+                print(subelem.tag, '.. next subelem')
+            print(elem.tag, '.. next elem')
 
     def save_settings(self):  # TODO Needs more work and testing
         root = ET.Element('device')
@@ -417,18 +456,20 @@ class Device:
             elem = ET.SubElement(shoot_photo_seq, "action")
             elem_id = ET.SubElement(elem, "id")  # set
             elem_desc = ET.SubElement(elem, "description")  # set
-            elem_coordinates = ET.SubElement(elem, "coordinates")
+            if action[1][1][0] != 0 or action[1][1][1] != 0:  # If we have coords set, its a tap action
+                elem.set('type', 'tap')
+                elem_coordinates = ET.SubElement(elem, "coordinates")
 
-            x = ET.SubElement(elem_coordinates, "x")  # set
-            y = ET.SubElement(elem_coordinates, "y")  # set
+                x = ET.SubElement(elem_coordinates, "x")  # set
+                y = ET.SubElement(elem_coordinates, "y")  # set
 
-            # list should be: self.shoot_photo_seq = [
-            # ['element_id', ['Description', [x, y] ] ]
-            # ]
-            elem_id.text = str(action[0])
-            elem_desc.text = str(action[1][0])
-            x.text = str(action[1][1][0])
-            y.text = str(action[1][1][1])
+                # list should be: self.shoot_photo_seq = [
+                # ['element_id', ['Description', [x, y] ] ]
+                # ]
+                elem_id.text = str(action[0])
+                elem_desc.text = str(action[1][0])
+                x.text = str(action[1][1][0])
+                y.text = str(action[1][1][1])
 
         shoot_video_seq = ET.SubElement(settings, "shoot_video_seq")
         for action in self.shoot_video_seq:
@@ -436,16 +477,20 @@ class Device:
             elem = ET.SubElement(shoot_video_seq, "action")
             elem_id = ET.SubElement(elem, "id")  # set
             elem_desc = ET.SubElement(elem, "description")  # set
-            elem_coordinates = ET.SubElement(elem, "coordinates")
-            x = ET.SubElement(elem_coordinates, "x")
-            y = ET.SubElement(elem_coordinates, "y")
+            if action[1][1][0] != 0 or action[1][1][1] != 0:  # If we have coords set, its a tap action
+                elem.set('type', 'tap')
+                elem_coordinates = ET.SubElement(elem, "coordinates")
+                x = ET.SubElement(elem_coordinates, "x")
+                y = ET.SubElement(elem_coordinates, "y")
 
-            # Set value
-            # list should be: self.shoot_video_seq = [['element_id', ['Description', [x, y]]]]
-            elem_id.text = str(action[0])
-            elem_desc.text = str(action[1][0])
-            x.text = str(action[1][1][0])
-            y.text = str(action[1][1][1])
+                # Set value
+                # list should be: self.shoot_photo_seq = [
+                # ['element_id', ['Description', [x, y] ] ]
+                # ]
+                elem_id.text = str(action[0])
+                elem_desc.text = str(action[1][0])
+                x.text = str(action[1][1][0])
+                y.text = str(action[1][1][1])
 
         actions_time_gap = ET.SubElement(settings, "actions_time_gap")
         actions_time_gap.text = str(self.actions_time_gap)
