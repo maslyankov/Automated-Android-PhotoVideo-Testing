@@ -15,12 +15,14 @@ class Device:
     """
     Class for interacting with devices using adb (ppadb) and AdbClient class
     """
+
     def __init__(self, adb, device_serial):
         print("Attaching to device...")
 
         self.adb = adb
         self.adb_client = adb.client
         self.d = self.adb_client.device(device_serial)  # Create device client object
+        self.scrcpy = None
 
         # Object Parameters #
         # Info
@@ -31,7 +33,7 @@ class Device:
             print("Device went offline!")
 
         # Settings
-        self.camera_app = None
+        self.camera_app = self.get_current_app()
         self.shoot_photo_seq = []
         self.shoot_video_seq = []
         self.goto_photo_seq = []
@@ -50,13 +52,17 @@ class Device:
         print("Conn devs: ", adb.attached_devices)  # Debugging
         print("Device Serial: ", device_serial)  # Debugging
 
+        self.load_settings_file()
+
     def root(self):
         """
         Root the device
         :return:None
         """
         print("Rooting device " + self.device_serial)
-        root = subprocess.Popen([constants.ADB, '-s', self.device_serial, 'root'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        root = subprocess.Popen([constants.ADB, '-s', self.device_serial, 'root'],
+                                stdout=subprocess.PIPE,
+                                stderr=subprocess.PIPE)
         stdout, stderr = root.communicate()
         if stderr:
             print("Rooting Errors: {}".format(stderr.decode()))
@@ -172,14 +178,12 @@ class Device:
         Get a list of files in sdcard/DCIM/Camera on the device
         :return: List of strings, each being a file located in sdcard/DCIM/Camera
         """
-        try:
-            files_list = self.d.shell("ls -1 sdcard/DCIM/Camera").splitlines()
-            if files_list[0] == 'ls: sdcard/DCIM/Camera: No such file or directory':  # TODO Fix this shit
-                return
-            else:
-                return files_list
-        except:
-            print("sdcard/DCIM/Camera not found")
+
+        files_list = self.d.shell("ls -1 sdcard/DCIM/Camera").splitlines()
+        if files_list[0] == 'ls: sdcard/DCIM/Camera: No such file or directory':  # TODO Fix this shit
+            return
+        else:
+            return files_list
 
     def clear_folder(self, folder):
         """
@@ -222,6 +226,7 @@ class Device:
             res = self.d.shell('dumpsys window | grep "mUnrestricted"').rstrip().split('][')[1].strip(']').split(',')
 
         return res
+
     def get_device_leds(self):
         """
         Get a list of the leds that the device has
@@ -250,8 +255,9 @@ class Device:
         :return:None
         """
         print("Opening scrcpy for device ", self.device_serial)
-        scrcpy = subprocess.Popen([constants.SCRCPY, '--serial', self.device_serial], stdout=subprocess.PIPE,
-                                  stderr=subprocess.PIPE)
+        self.scrcpy = subprocess.Popen([constants.SCRCPY, '--serial', self.device_serial],
+                                       stdout=subprocess.PIPE,
+                                       stderr=subprocess.PIPE)
 
     def identify(self):
         """
@@ -288,9 +294,12 @@ class Device:
             print("UIAutomator error! :( Try dumping UI elements again. (It looks like a known error)")
             return
 
+        print('Source returned: ', source)  # Debugging
+
         self.d.pull(
             source,
-            os.path.join(constants.ROOT_DIR, 'XML', '{}_{}_{}.xml'.format(self.device_serial, current_app[0], current_app[1]))
+            os.path.join(constants.ROOT_DIR,
+                         'XML', '{}_{}_{}.xml'.format(self.device_serial, current_app[0], current_app[1]))
         )
         print('Dumped window elements for current app.')
 
@@ -303,10 +312,13 @@ class Device:
         print('Parsing xml...')
         current_app = self.get_current_app()
         print("Serial {} , app: {}".format(self.device_serial, current_app))
-        file = os.path.join(constants.ROOT_DIR, 'XML', '{}_{}_{}.xml'.format(self.device_serial, current_app[0], current_app[1]))
+        file = os.path.join(constants.ROOT_DIR,
+                            'XML', '{}_{}_{}.xml'.format(self.device_serial, current_app[0], current_app[1]))
 
         if force_dump:
             self.dump_window_elements()
+
+        xml_tree = None
 
         try:
             xml_tree = ET.parse(file)
@@ -320,12 +332,18 @@ class Device:
             xml_root = xml_tree.getroot()
         except AttributeError:
             print("XML wasn't opened correctly!")
+            return
+        except UnboundLocalError:
+            print("UI Elements XML is probably empty... :( Retrying...")
+            self.dump_window_elements()
+            xml_tree = ET.parse(file)
+            xml_root = xml_tree.getroot()
         elements = {}
 
         for num, element in enumerate(xml_root.iter("node")):
             elem_res_id = element.attrib['resource-id'].split('/')
             elem_desc = element.attrib['content-desc']
-            elem_bounds = re.findall(r'\[([^]]*)\]', element.attrib['bounds'])[0].split(',')
+            elem_bounds = re.findall(r'\[([^]]*)]', element.attrib['bounds'])[0].split(',')
 
             if (elem_res_id or elem_desc) and int(elem_bounds[0]) > 0:
                 elem_bounds[0] = int(elem_bounds[0]) + 1
@@ -337,12 +355,32 @@ class Device:
 
         return elements
 
+    def load_settings_file(self):
+        print("Checking for Device settings file and possibly loading it..")
+
+        tree = ET.parse(self.device_xml)
+        root = tree.getroot()
+        # all item attributes
+        print('\nAll attributes:')
+        for elem in root:
+            for subelem in elem:
+                if subelem.tag == 'serial' and subelem.text != self.device_serial:
+                    print('XML ERROR!')
+
+                if subelem.tag == 'friendly_name':
+                    self.friendly_name = subelem.text
+
+                if subelem.tag == 'camera_app':
+                    self.camera_app = subelem.text
+
+
+                print(subelem.tag, subelem.text)
+
     def save_settings(self):  # TODO Needs more work and testing
         root = ET.Element('device')
 
         # Device info
         info = ET.SubElement(root, 'info')
-        root.append(info)
 
         serial = ET.SubElement(info, "serial")
         serial.text = self.device_serial
@@ -362,7 +400,6 @@ class Device:
 
         # Device settings
         settings = ET.SubElement(root, 'settings')
-        root.append(settings)
 
         cam_app = ET.SubElement(settings, "camera_app")
         cam_app.text = self.camera_app
@@ -377,9 +414,11 @@ class Device:
             x = ET.SubElement(elem_coordinates, "x")  # set
             y = ET.SubElement(elem_coordinates, "y")  # set
 
-            # list should be: self.shoot_photo_seq = [['element_id', ['Description', [x, y]]]]            elem_id.text = str(action[0])
-            elem_id.text = action[0]
-            elem_desc.text = action[1][0]
+            # list should be: self.shoot_photo_seq = [
+            # ['element_id', ['Description', [x, y] ] ]
+            # ]
+            elem_id.text = str(action[0])
+            elem_desc.text = str(action[1][0])
             x.text = str(action[1][1][0])
             y.text = str(action[1][1][1])
 
@@ -404,24 +443,25 @@ class Device:
         actions_time_gap.text = str(self.actions_time_gap)
 
         # Clear file
-        print('Clearing file..')
-
-        old_root = ET.parse(self.device_xml).getroot()
-        print(old_root)
-        old_root.clear()
-
-        try:
-            old_root = ET.parse(self.device_xml).getroot()
-        except ET.ParseError:
-            print("File is possibly empty.. Not clearing then.")
-        else:
-            old_root.clear()
-
+        #
+        # try:
+        #     old_root = ET.parse(self.device_xml).getroot()
+        # except ET.ParseError:
+        #     print("File is possibly empty.. Not clearing then.")
+        # except FileNotFoundError:
+        #     print("Creating XML as it does not exit...")  # Debugging
+        # else:
+        #     old_root.clear()
+        #     print(ET.tostring(old_root))
+        #     return
 
         # Save to file
+        #root = ET.parse(self.device_xml).getroot()
+
         tree = ET.ElementTree(root)
-        print('Writing settings to file...')
-        #tree.write(str(self.device_xml), encoding='utf-8', xml_declaration=True)
+        print(tree.getroot())
+        print(f'Writing settings to file {self.device_xml}')
+        tree.write(self.device_xml, encoding='UTF8', xml_declaration=True)
 
     def set_shoot_photo_seq(self, seq):
         self.shoot_photo_seq = seq
@@ -435,7 +475,14 @@ class Device:
     def get_shoot_video_seq(self):
         return self.shoot_video_seq
 
+    def set_camera_app_pkg(self, pkg):
+        self.camera_app = pkg
+
+    def get_camera_app_pkg(self):
+        return self.camera_app
+
         # Will be changed [START]
+
     def start_video(self):
         self.input_tap(shoot_video())
 

@@ -41,7 +41,7 @@ def gui_setup_device(attached_devices, device_obj):
             values=device_obj[attached_devices[0]].get_installed_packages(),
             size=(43, 1),
             key='selected_app_package',
-            default_value=device_obj[attached_devices[0]].get_current_app()[0]
+            default_value=device_obj[attached_devices[0]].get_camera_app_pkg()
         ),
         sg.Button('Test!', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(5, 1),
                   key='test_app_btn', disabled=False)
@@ -149,7 +149,6 @@ def gui_setup_device(attached_devices, device_obj):
             except KeyError:
                 print("Element not found! :(")
 
-
             new_ui_elements = list(
                 device_obj[values['selected_device']].get_clickable_window_elements(force_dump=True).keys())
 
@@ -171,6 +170,7 @@ def gui_setup_device(attached_devices, device_obj):
                     ])
 
             # Save to object
+            device_obj[values['selected_device']].set_camera_app_pkg(values['selected_app_package'])
             device_obj[values['selected_device']].set_shoot_photo_seq(shoot_photo_sequence)
             device_obj[values['selected_device']].save_settings()
             print('Device photo seq: ', device_obj[values['selected_device']].shoot_photo_seq)
