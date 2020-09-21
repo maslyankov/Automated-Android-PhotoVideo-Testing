@@ -115,7 +115,6 @@ def gui_setup_device(attached_devices, device_obj):
                 value=device_obj[values['selected_device']].get_current_app()[0]
             )
 
-            # Load device stuff
             window['photo_selected_action.0'].Update(  # TODO
                 values=list(device_obj[values['selected_device']].get_clickable_window_elements().keys())
             )
@@ -125,6 +124,13 @@ def gui_setup_device(attached_devices, device_obj):
 
         if event == 'test_app_btn':
             device_obj[values['selected_device']].open_app(values['selected_app_package'])
+
+            new_ui_elements = list(
+                device_obj[values['selected_device']].get_clickable_window_elements().keys())
+
+            for element in range(constants.MAX_ACTIONS_DISPLAY):
+                if values['photo_selected_action.' + str(element)] == '':
+                    window['photo_selected_action.' + str(element)].Update(values=new_ui_elements)
 
         if event.split('.')[0] == 'photo_selected_action':
             data = device_obj[values['selected_device']].get_clickable_window_elements()[

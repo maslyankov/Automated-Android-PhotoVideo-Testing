@@ -323,6 +323,7 @@ class Device:
         try:
             xml_tree = ET.parse(file)
         except FileNotFoundError:
+            print('XML for this UI not found, dumping a new one...')
             self.dump_window_elements()
             xml_tree = ET.parse(file)
         except ET.ParseError as error:
@@ -349,7 +350,15 @@ class Device:
                 elem_bounds[0] = int(elem_bounds[0]) + 1
                 elem_bounds[1] = int(elem_bounds[1]) + 1
                 if elem_res_id[0] != '':
-                    elements[elem_res_id[1]] = elem_desc, elem_bounds
+                    print('00 elem_res_id: ', elem_res_id)
+                    print('00 desc: ', elem_desc)
+                    print('00 bounds: ', elem_bounds)
+
+                    try:
+                        elements[elem_res_id[1]] = elem_desc, elem_bounds
+                    except IndexError:
+                        # For elements that don't have an app id as first element
+                        elements[elem_res_id[0]] = elem_desc, elem_bounds
                 else:
                     elements[num] = elem_desc, elem_bounds
 
@@ -372,7 +381,6 @@ class Device:
 
                 if subelem.tag == 'camera_app':
                     self.camera_app = subelem.text
-
 
                 print(subelem.tag, subelem.text)
 
