@@ -10,6 +10,67 @@ import src.constants as constants
 from src.temp.coords import *
 
 
+def generate_sequence(subelem):
+    seq_temp = []
+
+    for action_num, action in enumerate(subelem):
+
+        action_list = []
+        data_list = []
+
+        # self.shoot_photo_seq.append(action.tag)
+        for action_elem_num, action_elem in enumerate(action):
+            # import pdb; pdb.set_trace()
+            print("action elem: ", action_elem)
+            if action_elem.tag == 'id':
+                action_list.append(action_elem.text)
+                print(action_elem_num, action_elem.text)
+
+            if action_elem.tag == 'description':
+                print('description be: ', action_elem.text)
+                if action_elem.text is not None:
+                    data_list.append(action_elem.text)
+                else:
+                    data_list.append('')
+
+            if action_elem.tag == 'coordinates':
+                coords_list = []
+
+                for inner_num, inner in enumerate(action_elem):
+                    # list should be: self.shoot_photo_seq = [
+                    # ['element_id', ['Description', [x, y] ] ]
+                    # ]
+                    coords_list.append(inner.text)
+                print('data list before: ', data_list)
+                data_list.append(coords_list)
+        action_list.append(data_list)
+
+        seq_temp.append(action_list)
+        print('Generated list for action: ', action_list)
+    return seq_temp
+
+
+def xml_from_sequence(obj_sequence, xml_obj):
+    for action in obj_sequence:
+        elem = ET.SubElement(xml_obj, "action")
+        elem_id = ET.SubElement(elem, "id")  # set
+        elem_desc = ET.SubElement(elem, "description")  # set
+        if action[1][1][0] != 0 or action[1][1][1] != 0:  # If we have coords set, its a tap action
+            elem.set('type', 'tap')
+            elem_coordinates = ET.SubElement(elem, "coordinates")
+
+            x = ET.SubElement(elem_coordinates, "x")  # set
+            y = ET.SubElement(elem_coordinates, "y")  # set
+
+            # list should be: self.shoot_photo_seq = [
+            # ['element_id', ['Description', [x, y] ] ]
+            # ]
+            elem_id.text = str(action[0])
+            elem_desc.text = str(action[1][0])
+            x.text = str(action[1][1][0])
+            y.text = str(action[1][1][1])
+
+
 # CLASS Device
 class Device:
     """
@@ -382,46 +443,12 @@ class Device:
                     self.camera_app = subelem.text
 
                 if subelem.tag == 'shoot_photo_seq':
-                    shoot_photo_seq_temp = []
-
-                    for action_num, action in enumerate(subelem):
-
-                        action_list = []
-                        data_list = []
-
-                        # self.shoot_photo_seq.append(action.tag)
-                        for action_elem_num, action_elem in enumerate(action):
-                            # import pdb; pdb.set_trace()
-                            print("action elem: ", action_elem)
-                            if action_elem.tag == 'id':
-                                action_list.append(action_elem.text)
-                                print(action_elem_num, action_elem.text)
-
-                            if action_elem.tag == 'description':
-                                print('description be: ', action_elem.text)
-                                if action_elem.text is not None:
-                                    data_list.append(action_elem.text)
-                                else:
-                                    data_list.append('')
-
-                            if action_elem.tag == 'coordinates':
-                                coords_list = []
-
-                                for inner_num, inner in enumerate(action_elem):
-                                    # list should be: self.shoot_photo_seq = [
-                                    # ['element_id', ['Description', [x, y] ] ]
-                                    # ]
-                                    coords_list.append(inner.text)
-                                print('data list before: ', data_list)
-                                data_list.append(coords_list)
-                        action_list.append(data_list)
-
-                        shoot_photo_seq_temp.append(action_list)
-                        print('Generated list for action: ', action_list)
-                    self.set_shoot_photo_seq(shoot_photo_seq_temp)
+                    self.set_shoot_photo_seq(generate_sequence(subelem))
                     print('Obj Seq List: ', self.get_shoot_photo_seq())
-                print(subelem.tag, '.. next subelem')
-            print(elem.tag, '.. next elem')
+
+                if subelem.tag == 'shoot_video_seq':
+                    self.set_shoot_video_seq(generate_sequence(subelem))
+                    print('Obj Seq List: ', self.get_shoot_video_seq())
 
     def save_settings(self):  # TODO Needs more work and testing
         root = ET.Element('device')
@@ -452,64 +479,13 @@ class Device:
         cam_app.text = self.camera_app
 
         shoot_photo_seq = ET.SubElement(settings, "shoot_photo_seq")
-        for action in self.shoot_photo_seq:
-            elem = ET.SubElement(shoot_photo_seq, "action")
-            elem_id = ET.SubElement(elem, "id")  # set
-            elem_desc = ET.SubElement(elem, "description")  # set
-            if action[1][1][0] != 0 or action[1][1][1] != 0:  # If we have coords set, its a tap action
-                elem.set('type', 'tap')
-                elem_coordinates = ET.SubElement(elem, "coordinates")
-
-                x = ET.SubElement(elem_coordinates, "x")  # set
-                y = ET.SubElement(elem_coordinates, "y")  # set
-
-                # list should be: self.shoot_photo_seq = [
-                # ['element_id', ['Description', [x, y] ] ]
-                # ]
-                elem_id.text = str(action[0])
-                elem_desc.text = str(action[1][0])
-                x.text = str(action[1][1][0])
-                y.text = str(action[1][1][1])
+        xml_from_sequence(self.shoot_photo_seq, shoot_photo_seq)
 
         shoot_video_seq = ET.SubElement(settings, "shoot_video_seq")
-        for action in self.shoot_video_seq:
-            # set elements
-            elem = ET.SubElement(shoot_video_seq, "action")
-            elem_id = ET.SubElement(elem, "id")  # set
-            elem_desc = ET.SubElement(elem, "description")  # set
-            if action[1][1][0] != 0 or action[1][1][1] != 0:  # If we have coords set, its a tap action
-                elem.set('type', 'tap')
-                elem_coordinates = ET.SubElement(elem, "coordinates")
-                x = ET.SubElement(elem_coordinates, "x")
-                y = ET.SubElement(elem_coordinates, "y")
-
-                # Set value
-                # list should be: self.shoot_photo_seq = [
-                # ['element_id', ['Description', [x, y] ] ]
-                # ]
-                elem_id.text = str(action[0])
-                elem_desc.text = str(action[1][0])
-                x.text = str(action[1][1][0])
-                y.text = str(action[1][1][1])
+        xml_from_sequence(self.shoot_video_seq, shoot_video_seq)
 
         actions_time_gap = ET.SubElement(settings, "actions_time_gap")
         actions_time_gap.text = str(self.actions_time_gap)
-
-        # Clear file
-        #
-        # try:
-        #     old_root = ET.parse(self.device_xml).getroot()
-        # except ET.ParseError:
-        #     print("File is possibly empty.. Not clearing then.")
-        # except FileNotFoundError:
-        #     print("Creating XML as it does not exit...")  # Debugging
-        # else:
-        #     old_root.clear()
-        #     print(ET.tostring(old_root))
-        #     return
-
-        # Save to file
-        #root = ET.parse(self.device_xml).getroot()
 
         tree = ET.ElementTree(root)
         print(tree.getroot())
@@ -533,15 +509,3 @@ class Device:
 
     def get_camera_app_pkg(self):
         return self.camera_app
-
-        # Will be changed [START]
-
-    def start_video(self):
-        self.input_tap(shoot_video())
-
-    def stop_video(self):
-        self.input_tap(stop_video())
-
-    def take_photo(self):
-        self.input_tap(shoot_photo())
-    # Will be changed [END]
