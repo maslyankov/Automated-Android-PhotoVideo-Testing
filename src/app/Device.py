@@ -108,12 +108,14 @@ class Device:
 
         # Persistence
         self.device_xml = os.path.join(constants.ROOT_DIR, 'settings', f'{device_serial}.xml')
-        # self.save_settings()
 
         print("Conn devs: ", adb.attached_devices)  # Debugging
         print("Device Serial: ", device_serial)  # Debugging
+        print(f"Device is {self.get_wakefulness()}")
 
         self.load_settings_file()
+        self.setup_device_settings()
+        self.turn_on_and_unlock()
 
     def root(self):
         """
@@ -179,7 +181,20 @@ class Device:
         Returns currently opened app package and its current activity
         :return:None
         """
-        return self.d.shell("dumpsys window windows | grep -E 'mFocusedApp'").split(' ')[6].split('/')
+        # dumpsys window windows | grep -E 'mFocusedApp' <- had issues with this one, sometimes returns null
+        # Alternative -> dumpsys activity | grep top-activity
+        try:
+            current = self.d.shell("dumpsys activity | grep -E 'mFocusedActivity'").strip().split(' ')[3].split('/')
+            if current is None:
+                print('(Get Current App) Focused Activity is empty, trying top-activity...')
+                current = self.d.shell("dumpsys activity | grep top-activity").strip().split(' ')[9].split(':')
+                temp = current[1].split('/')
+                temp.append(current[0])  # -> [pkg, activity_id, pid]
+                return temp
+        except IndexError:
+            print('We had trouble detecting currently opened app!')
+            return
+        return current
 
     def get_device_model(self):
         """
@@ -276,6 +291,16 @@ class Device:
 
         self.d.shell('input keyevent 26')
 
+    def get_wakefulness(self):
+        return self.d.shell("dumpsys activity | grep -E 'mWakefulness'").split('=')[1]
+
+    def is_sleeping(self):
+        state = self.d.shell("dumpsys activity | grep -E 'mSleeping'").strip().split(' ')
+        is_sleeping = state[0].split('=')[1]
+        lock_screen = state[1].split('=')[1]
+        return is_sleeping, lock_screen
+
+
     def get_screen_resolution(self):
         """
         Get screen resolution of device
@@ -287,6 +312,25 @@ class Device:
             res = self.d.shell('dumpsys window | grep "mUnrestricted"').rstrip().split('][')[1].strip(']').split(',')
 
         return res
+
+    def is_adb_enabled(self):
+        # Kind of useless as if this is actually false, we will not be able to connect
+        return True if self.d.shell('settings get global adb_enabled').strip() == '1' else False
+
+    def setup_device_settings(self):
+        print('Making the device an insomniac!')
+        self.d.shell('settings put global stay_on_while_plugged_in 1')
+        self.d.shell('settings put system screen_off_timeout 9999999')
+
+    def turn_on_and_unlock(self):
+        state = self.is_sleeping()
+        # print(f"predicate: {state[0] == 'false'}")
+        if state[0] == 'true':
+            print('Device should have been already turned on')
+            self.d.shell('input keyevent 26')  # Event Power Button
+            self.d.shell('input keyevent 82')  # Unlock
+
+
 
     def get_device_leds(self):
         """
@@ -372,6 +416,11 @@ class Device:
         """
         print('Parsing xml...')
         current_app = self.get_current_app()
+
+        if current_app is None:
+            print("Current app unknown... We don't know how to name the xml file so we will say NO! :D ")
+            return {}
+
         print("Serial {} , app: {}".format(self.device_serial, current_app))
         file = os.path.join(constants.ROOT_DIR,
                             'XML', '{}_{}_{}.xml'.format(self.device_serial, current_app[0], current_app[1]))
@@ -411,10 +460,6 @@ class Device:
                 elem_bounds[0] = int(elem_bounds[0]) + 1
                 elem_bounds[1] = int(elem_bounds[1]) + 1
                 if elem_res_id[0] != '':
-                    print('00 elem_res_id: ', elem_res_id)
-                    print('00 desc: ', elem_desc)
-                    print('00 bounds: ', elem_bounds)
-
                     try:
                         elements[elem_res_id[1]] = elem_desc, elem_bounds
                     except IndexError:

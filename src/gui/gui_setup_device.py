@@ -36,16 +36,29 @@ def gui_setup_device(attached_devices, device_obj):
         [sg.Text('Logs Filter:'), sg.InputText(size=(42, 1), key='logs_filter', disabled=True)],
     ]
 
-    select_app_frame = [[
-        sg.Combo(
-            values=device_obj[attached_devices[0]].get_installed_packages(),
-            size=(43, 1),
-            key='selected_app_package',
-            default_value=device_obj[attached_devices[0]].get_camera_app_pkg()
-        ),
-        sg.Button('Test!', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(5, 1),
-                  key='test_app_btn', disabled=False)
-    ], ]
+    current_app = device_obj[attached_devices[0]].get_current_app()
+    if current_app is None:
+        current_app = ['...', '...']
+
+    select_app_frame = [
+        [sg.Text(f'Currently opened app: {current_app[0]}',
+                 key='currently_opened_app',
+                 font='Any 13')],
+        [sg.Text(f'Current app activity: {current_app[1]}',
+                 key='current_app_activity',
+                 font='Any 13')],
+        [
+            sg.Combo(
+                values=device_obj[attached_devices[0]].get_installed_packages(),
+                size=(43, 1),
+                key='selected_app_package',
+                default_value=device_obj[attached_devices[0]].get_camera_app_pkg()
+            ),
+            sg.Button('Test!',
+                      button_color=(sg.theme_text_element_background_color(), 'silver'),
+                      size=(5, 1),
+                      key='test_app_btn', disabled=False)
+        ], ]
 
     clickable_elements = list(device_obj[attached_devices[0]].get_clickable_window_elements().keys())
 
@@ -107,6 +120,13 @@ def gui_setup_device(attached_devices, device_obj):
 
         print('vals', values)  # Debugging
         print('event', event)  # Debugging
+
+        current_app = device_obj[attached_devices[0]].get_current_app()
+        if current_app is None:
+            current_app = ['...', '...']
+
+        window['currently_opened_app'].Update(current_app[0])
+        window['current_app_activity'].Update(current_app[1])
 
         if event == 'selected_device':
             window['device-friendly'].Update(device_obj[values['selected_device']].friendly_name)
@@ -172,7 +192,7 @@ def gui_setup_device(attached_devices, device_obj):
                             values[item.replace("action", "action_desc")], [
                                 values[item.replace("action", "action_x")],
                                 values[item.replace("action", "action_y")]]
-                            ]
+                        ]
                     ])
 
             # Save to object
@@ -180,6 +200,5 @@ def gui_setup_device(attached_devices, device_obj):
             device_obj[values['selected_device']].set_shoot_photo_seq(shoot_photo_sequence)
             device_obj[values['selected_device']].save_settings()
             print('Device photo seq: ', device_obj[values['selected_device']].shoot_photo_seq)
-
 
     window.close()
