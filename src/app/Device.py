@@ -38,11 +38,15 @@ def generate_sequence(subelem):
 
                 for inner_num, inner in enumerate(action_elem):
                     # list should be: self.shoot_photo_seq = [
-                    # ['element_id', ['Description', [x, y] ] ]
+                    # ['element_id', ['Description', [x, y], 'tap' ] ]
                     # ]
                     coords_list.append(inner.text)
-                print('data list before: ', data_list)
+                print('data list before: ', data_list)  # Debugging
                 data_list.append(coords_list)
+
+        if action.attrib["type"] == 'tap':
+            data_list.append('tap')
+
         action_list.append(data_list)
 
         seq_temp.append(action_list)
@@ -55,15 +59,17 @@ def xml_from_sequence(obj_sequence, xml_obj):
         elem = ET.SubElement(xml_obj, "action")
         elem_id = ET.SubElement(elem, "id")  # set
         elem_desc = ET.SubElement(elem, "description")  # set
-        if action[1][1][0] != 0 or action[1][1][1] != 0:  # If we have coords set, its a tap action
-            elem.set('type', 'tap')
+
+        print(action)
+        elem.set('type', action[1][2])
+        if action[1][2] == 'tap':  # If we have coords set, its a tap action
             elem_coordinates = ET.SubElement(elem, "coordinates")
 
             x = ET.SubElement(elem_coordinates, "x")  # set
             y = ET.SubElement(elem_coordinates, "y")  # set
 
             # list should be: self.shoot_photo_seq = [
-            # ['element_id', ['Description', [x, y] ] ]
+            # ['element_id', ['Description', [x, y] , type] ]
             # ]
             elem_id.text = str(action[0])
             elem_desc.text = str(action[1][0])
@@ -300,7 +306,6 @@ class Device:
         lock_screen = state[1].split('=')[1]
         return is_sleeping, lock_screen
 
-
     def get_screen_resolution(self):
         """
         Get screen resolution of device
@@ -329,8 +334,6 @@ class Device:
             print('Device should have been already turned on')
             self.d.shell('input keyevent 26')  # Event Power Button
             self.d.shell('input keyevent 82')  # Unlock
-
-
 
     def get_device_leds(self):
         """
@@ -533,7 +536,6 @@ class Device:
         actions_time_gap.text = str(self.actions_time_gap)
 
         tree = ET.ElementTree(root)
-        print(tree.getroot())
         print(f'Writing settings to file {self.device_xml}')
         tree.write(self.device_xml, encoding='UTF8', xml_declaration=True)
 
@@ -554,3 +556,12 @@ class Device:
 
     def get_camera_app_pkg(self):
         return self.camera_app
+
+    def do(self, sequence):
+        '''
+        Parses an actions sequence that is passed
+        :param sequence: List of actions
+        :return:
+        '''
+        for action in sequence:
+            print(action)
