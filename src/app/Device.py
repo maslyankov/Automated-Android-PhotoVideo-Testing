@@ -26,14 +26,14 @@ def generate_sequence(subelem):
                 action_list.append(action_elem.text)
                 print(action_elem_num, action_elem.text)
 
-            if action_elem.tag == 'description':
+            elif action_elem.tag == 'description':
                 print('description be: ', action_elem.text)
                 if action_elem.text is not None:
                     data_list.append(action_elem.text)
                 else:
                     data_list.append('')
 
-            if action_elem.tag == 'coordinates':
+            elif action_elem.tag == 'coordinates':
                 coords_list = []
 
                 for inner_num, inner in enumerate(action_elem):
@@ -41,11 +41,12 @@ def generate_sequence(subelem):
                     # ['element_id', ['Description', [x, y], 'tap' ] ]
                     # ]
                     coords_list.append(inner.text)
-                print('data list before: ', data_list)  # Debugging
                 data_list.append(coords_list)
 
-        if action.attrib["type"] == 'tap':
-            data_list.append('tap')
+            elif action_elem.tag == 'value':
+                data_list.append(action_elem.text)
+
+        data_list.append(action.attrib["type"])  # Set type
 
         action_list.append(data_list)
 
@@ -75,6 +76,9 @@ def xml_from_sequence(obj_sequence, xml_obj):
             elem_desc.text = str(action[1][0])
             x.text = str(action[1][1][0])
             y.text = str(action[1][1][1])
+        else:
+            elem_value = ET.SubElement(elem, "value")
+            elem_value.text = str(action[1][1][0])
 
 
 # CLASS Device

@@ -10,12 +10,14 @@ def list_from_data(values, fltr):
     for item in values.keys():
         print('second part: ', item.split('.')[0])
         if item.split('.')[0] == fltr and values[item] != '':
+            item_value = values[item.replace("action", "action_x")] if values[item.replace("action", "action_type")] == 'tap' else values[item.replace("action", "action_value")]
+            item_value2 = values[item.replace("action", "action_y")] if values[item.replace("action", "action_type")] == 'tap' else ''
             seq.append([
                 values[item], [
                     values[item.replace("action", "action_desc")],
                     [
-                        values[item.replace("action", "action_x")],
-                        values[item.replace("action", "action_y")]
+                        item_value,
+                        item_value2
                     ],
                     values[item.replace("action", "action_type")]
                 ]
@@ -92,6 +94,10 @@ def gui_setup_device(attached_devices, device_obj):
                                                    disabled=False if num == 0 else True,
                                                    visible=True if num == 0 else False,
                                                    enable_events=True)),
+                                    sg.Spin([i for i in range(1, 10)],
+                                            key=f'photo_selected_action_value.{num}',
+                                            disabled=True,
+                                            visible=False),
                                     place(sg.Button('Test!',
                                                     button_color=(sg.theme_text_element_background_color(), 'silver'),
                                                     size=(5, 1),
@@ -177,6 +183,8 @@ def gui_setup_device(attached_devices, device_obj):
         if event.split('.')[0] == 'photo_selected_action':
             if values[f"photo_selected_action.{event.split('.')[1]}"] == 'delay':
                 window[f"photo_selected_action_type.{event.split('.')[1]}"].Update('delay')
+                window[f"photo_selected_action_value.{event.split('.')[1]}"].Update(visible=True, disabled=False)
+                window[f"photo_selected_action_test_btn.{event.split('.')[1]}"].Update(visible=False, disabled=True)
             else:
                 data = device_obj[values['selected_device']].get_clickable_window_elements()[
                     values['photo_selected_action.' + event.split('.')[1]]
