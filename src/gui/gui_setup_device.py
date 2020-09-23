@@ -223,11 +223,13 @@ def gui_setup_device(attached_devices, device_obj):
         if event == 'save_btn':
             shoot_photo_sequence = list_from_data(values, 'photo_selected_action')
             # Save to object
+            device_obj[values['selected_device']].set_logs(values['logs_bool'], values['logs_filter'])
             device_obj[values['selected_device']].set_camera_app_pkg(values['selected_app_package'])
             device_obj[values['selected_device']].set_shoot_photo_seq(shoot_photo_sequence)
 
             # Save to file
             device_obj[values['selected_device']].save_settings()
+            print("Device logs settings: ", device_obj[values['selected_device']].logs)
             print('Device photo seq: ', device_obj[values['selected_device']].shoot_photo_seq)
 
     window.close()

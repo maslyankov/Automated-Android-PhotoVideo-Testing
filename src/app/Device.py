@@ -10,6 +10,7 @@ import src.constants as constants
 from src.temp.coords import *
 
 
+# Static Functions
 def generate_sequence(subelem):
     seq_temp = []
 
@@ -107,6 +108,7 @@ class Device:
             print("Device went offline!")
 
         # Settings
+        self.logs = False
         self.camera_app = self.get_current_app()
         self.shoot_photo_seq = []
         self.shoot_video_seq = []
@@ -499,12 +501,15 @@ class Device:
         return elements
 
     def load_settings_file(self):
-        print("Checking for Device settings file and possibly loading it..")
+        print(f'Checking for Device settings file at "{self.device_xml}" and possibly loading it..')
 
         try:
             tree = ET.parse(self.device_xml)
         except FileNotFoundError:
             print("Settings file for device nonexistent! Clean slate... :)")
+            return
+        except ET.ParseError:
+            print("Failed to load Device settings! :( XML Error!")
             return
 
         root = tree.getroot()
@@ -519,6 +524,10 @@ class Device:
 
                 if subelem.tag == 'camera_app':
                     self.camera_app = subelem.text
+
+                if subelem.tag == 'logs':
+                    for data in subelem:
+                        print(data.tag, data.text)
 
                 if subelem.tag == 'shoot_photo_seq':
                     self.set_shoot_photo_seq(generate_sequence(subelem))
@@ -568,6 +577,14 @@ class Device:
         cam_app = ET.SubElement(settings, "camera_app")
         cam_app.text = self.camera_app
 
+        logs = ET.SubElement(settings, "logs")
+
+        logs_bool = ET.SubElement(logs, "enabled")
+        logs_bool.text = str(1 if self.logs is not None and self.logs else 0)
+
+        logs_filter = ET.SubElement(logs, "filter")
+        logs_filter.text = self.logs if logs_bool.text and not isinstance(self.logs, bool) else ''
+
         shoot_photo_seq = ET.SubElement(settings, "shoot_photo_seq")
         xml_from_sequence(self.shoot_photo_seq, shoot_photo_seq)
 
@@ -580,6 +597,15 @@ class Device:
         tree = ET.ElementTree(root)
         print(f'Writing settings to file {self.device_xml}')
         tree.write(self.device_xml, encoding='UTF8', xml_declaration=True)
+
+    def set_logs(self, logs_bool, fltr=None):
+        if not isinstance(logs_bool, bool):
+            print('Logs setter got a non bool type... Defaulting to False.')
+            self.logs = False
+        elif fltr is None:
+            self.logs = logs_bool
+        elif fltr is not None and logs_bool:
+            self.logs = fltr
 
     def set_shoot_photo_seq(self, seq):
         self.shoot_photo_seq = seq
