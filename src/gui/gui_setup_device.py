@@ -73,7 +73,7 @@ def device_data_to_gui(device, window):
             value=action[0],
             values=clickable_elements,
             visible=True,
-            disabled=True
+            disabled=False
         )
         window['photo_selected_action_test_btn.' + str(act_num)].Update(
             disabled=False,
@@ -122,13 +122,13 @@ def gui_setup_device(attached_devices, device_obj):
             default_value=attached_devices[0],
             enable_events=True
         ),
-        sg.Text(text="Loading...",
+        sg.Text(text=device_obj[attached_devices[0]].friendly_name,
                 key='device-friendly',
                 font="Any 18",
                 size=(15, 1))
     ], ]
 
-    logs_frame = [
+    logs_frame = [  # TODO Update with element info if available
         [sg.Checkbox('Capture Logs', default=False, size=(10, 1), key='logs_bool', enable_events=True)],
         [sg.Text('Logs Filter:'), sg.InputText(size=(42, 1), key='logs_filter', disabled=True)],
     ]
@@ -182,8 +182,8 @@ def gui_setup_device(attached_devices, device_obj):
                                         values=clickable_elements,
                                         size=(43, 1),
                                         key=f'photo_selected_action.{num}',
-                                        disabled=False if num == 0 or current_obj_elem is not None else True,
-                                        visible=True if num == 0 or current_obj_elem is not None else False,
+                                        disabled=False if num == 0 or num == len(obj_seq)+1 or current_obj_elem is not None else True,
+                                        visible=True if num == 0 or num == len(obj_seq)+1 or current_obj_elem is not None else False,
                                         enable_events=True
                                     )),
                                     sg.Spin(
@@ -201,8 +201,8 @@ def gui_setup_device(attached_devices, device_obj):
                                         button_color=(sg.theme_text_element_background_color(), 'silver'),
                                         size=(5, 1),
                                         key=f'photo_selected_action_test_btn.{num}',
-                                        disabled=False if num == 0 or current_obj_elem is not None else True,
-                                        visible=True if num == 0 or current_obj_elem is not None else False
+                                        disabled=False if num == 0 or num == len(obj_seq)+1 or current_obj_elem is not None else True,
+                                        visible=True if num == 0 or num == len(obj_seq)+1 or current_obj_elem is not None else False
                                     )),
 
                                     # to keep data
@@ -294,6 +294,8 @@ def gui_setup_device(attached_devices, device_obj):
                 window[f"photo_selected_action_type.{event.split('.')[1]}"].Update('delay')
                 window[f"photo_selected_action_value.{event.split('.')[1]}"].Update(visible=True, disabled=False)
                 window[f"photo_selected_action_test_btn.{event.split('.')[1]}"].Update(visible=False, disabled=True)
+            elif values[f"photo_selected_action.{event.split('.')[1]}"] == 'Empty':
+                pass
             else:
                 data = device_obj[values['selected_device']].get_clickable_window_elements()[
                     values['photo_selected_action.' + event.split('.')[1]]
