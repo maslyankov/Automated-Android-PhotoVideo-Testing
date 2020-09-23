@@ -22,7 +22,8 @@ def generate_sequence(subelem):
         # self.shoot_photo_seq.append(action.tag)
         for action_elem_num, action_elem in enumerate(action):
             # import pdb; pdb.set_trace()
-            print("action elem: ", action_elem)
+            print("\naction elem: ", action_elem)
+            print("data_list before", data_list)
             if action_elem.tag == 'id':
                 action_list.append(action_elem.text)
                 print(action_elem_num, action_elem.text)
@@ -47,6 +48,7 @@ def generate_sequence(subelem):
             elif action_elem.tag == 'value':
                 data_list.append(action_elem.text)
 
+            print("data_list after", data_list)
         try:
             data_list.append(action.attrib["type"])  # Set type
         except KeyError:
@@ -81,8 +83,10 @@ def xml_from_sequence(obj_sequence, xml_obj):
             x.text = str(action[1][1][0])
             y.text = str(action[1][1][1])
         else:
+            elem_id.text = str(action[0])
+            elem_desc.text = str(action[1][0])
             elem_value = ET.SubElement(elem, "value")
-            elem_value.text = str(action[1][1][0])
+            elem_value.text = str(action[1][1])
 
 
 # CLASS Device
@@ -129,6 +133,9 @@ class Device:
         print(f"Device is {self.get_wakefulness()}")
 
         self.load_settings_file()
+
+        self.print_attributes()
+
         self.setup_device_settings()
         self.turn_on_and_unlock()
 
@@ -633,3 +640,16 @@ class Device:
         '''
         for action in sequence:
             print(action)
+
+    def print_attributes(self):
+        # For debugging
+        print("Object properties:\n")
+        print(f"Serial: {self.device_serial}")
+        print(f"Cam app: {self.camera_app}")
+        print(f"Logs: {self.logs}")
+        print(f"shoot_photo_seq: {self.shoot_photo_seq}")
+        print(f"shoot_video_seq: {self.shoot_video_seq}")
+        print(f"goto_photo_seq: {self.goto_photo_seq}")
+        print(f"goto_video_seq: {self.goto_video_seq}")
+        print(f"actions_time_gap: {self.actions_time_gap}")
+        print(f"settings xml file location: {self.device_xml}")

@@ -10,15 +10,17 @@ def list_from_data(values, fltr):
     for item in values.keys():
         print('second part: ', item.split('.')[0])
         if item.split('.')[0] == fltr and values[item] != '':
-            item_value = values[item.replace("action", "action_x")] if values[item.replace("action", "action_type")] == 'tap' else values[item.replace("action", "action_value")]
-            item_value2 = values[item.replace("action", "action_y")] if values[item.replace("action", "action_type")] == 'tap' else ''
+            if values[item.replace("action", "action_type")] == 'tap':
+                value = [
+                    values[item.replace("action", "action_x")],
+                    values[item.replace("action", "action_y")]
+                ]
+            else:
+                value = values[item.replace("action", "action_value")]
             seq.append([
                 values[item], [
                     values[item.replace("action", "action_desc")],
-                    [
-                        item_value,
-                        item_value2
-                    ],
+                    value,
                     values[item.replace("action", "action_type")]
                 ]
             ])
@@ -168,6 +170,8 @@ def gui_setup_device(attached_devices, device_obj):
             )
 
         if event == "logs_bool":
+
+            device_obj[values['selected_device']].print_attributes()
             window['logs_filter'].Update(disabled=not values['logs_bool'])
 
         if event == 'test_app_btn':
