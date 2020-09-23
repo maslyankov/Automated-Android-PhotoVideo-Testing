@@ -46,7 +46,10 @@ def generate_sequence(subelem):
             elif action_elem.tag == 'value':
                 data_list.append(action_elem.text)
 
-        data_list.append(action.attrib["type"])  # Set type
+        try:
+            data_list.append(action.attrib["type"])  # Set type
+        except KeyError:
+            print("Error! Invalid XML!")
 
         action_list.append(data_list)
 
@@ -193,7 +196,7 @@ class Device:
         """
         # dumpsys window windows | grep -E 'mFocusedApp' <- had issues with this one, sometimes returns null
         # Alternative -> dumpsys activity | grep top-activity
-        try:
+        try:   # This works on older Android versions
             current = self.d.shell("dumpsys activity | grep -E 'mFocusedActivity'").strip().split(' ')[3].split('/')
             if current is None:
                 print('(Get Current App) Focused Activity is empty, trying top-activity...')
@@ -202,23 +205,9 @@ class Device:
                 temp.append(current[0])  # -> [pkg, activity_id, pid]
                 return temp
         except IndexError:
-            print('We had trouble detecting currently opened app!')
-            return
+            print('We had trouble detecting currently opened app! Trying another method!')
+            current = self.d.shell("dumpsys window windows | grep -E 'mFocusedApp'").split(' ')[6].split('/')
         return current
-
-    def get_device_model(self):
-        """
-        Get the device model
-        :return: String of device model
-        """
-        return self.d.shell("getprop ro.product.model").rstrip()
-
-    def get_device_name(self):
-        """
-        Get the device name
-        :return: String of device name
-        """
-        return self.d.shell("getprop ro.product.name").rstrip()
 
     def get_installed_packages(self):
         """
@@ -301,15 +290,6 @@ class Device:
 
         self.d.shell('input keyevent 26')
 
-    def get_wakefulness(self):
-        return self.d.shell("dumpsys activity | grep -E 'mWakefulness'").split('=')[1]
-
-    def is_sleeping(self):
-        state = self.d.shell("dumpsys activity | grep -E 'mSleeping'").strip().split(' ')
-        is_sleeping = state[0].split('=')[1]
-        lock_screen = state[1].split('=')[1]
-        return is_sleeping, lock_screen
-
     def get_screen_resolution(self):
         """
         Get screen resolution of device
@@ -321,6 +301,44 @@ class Device:
             res = self.d.shell('dumpsys window | grep "mUnrestricted"').rstrip().split('][')[1].strip(']').split(',')
 
         return res
+
+    def get_wakefulness(self):
+        return self.d.shell("dumpsys activity | grep -E 'mWakefulness'").split('=')[1]
+
+    def is_sleeping(self):
+        state = self.d.shell("dumpsys activity | grep -E 'mSleeping'").strip().split(' ')
+        is_sleeping = state[0].split('=')[1]
+        try:
+            lock_screen = state[1].split('=')[1]
+        except IndexError:
+            lock_screen = None
+        return is_sleeping, lock_screen
+
+    def get_device_model(self):
+        """
+        Get the device model
+        :return: String of device model
+        """
+        return self.d.shell("getprop ro.product.model").strip()
+
+    def get_device_name(self):
+        """
+        Get the device name
+        :return: String of device name
+        """
+        return self.d.shell("getprop ro.product.name").strip()
+
+    def get_manufacturer(self):
+        return self.d.shell("getprop ro.product.manufacturer").strip()
+
+    def get_android_version(self):
+        return self.d.shell("getprop ro.build.version.release").strip()
+
+    def get_sdk_version(self):
+        return self.d.shell("getprop ro.build.version.sdk").strip()
+
+    def get_cpu(self):
+        return self.d.shell("getprop ro.product.cpu.abi").strip()
 
     def is_adb_enabled(self):
         # Kind of useless as if this is actually false, we will not be able to connect
@@ -480,7 +498,12 @@ class Device:
     def load_settings_file(self):
         print("Checking for Device settings file and possibly loading it..")
 
-        tree = ET.parse(self.device_xml)
+        try:
+            tree = ET.parse(self.device_xml)
+        except FileNotFoundError:
+            print("Settings file for device nonexistent! Clean slate... :)")
+            return
+
         root = tree.getroot()
         # all item attributes
         for elem in root:
@@ -511,18 +534,27 @@ class Device:
         serial = ET.SubElement(info, "serial")
         serial.text = self.device_serial
 
+        manufacturer = ET.SubElement(info, "manufacturer")
+        manufacturer.text = self.get_manufacturer()
+
         name = ET.SubElement(info, "name")
         name.text = self.get_device_name()
 
         model = ET.SubElement(info, "model")
         model.text = self.get_device_model()
 
-        friendly = ET.SubElement(info, "friendly_name")
-        friendly.text = self.friendly_name
+        cpu = ET.SubElement(info, "cpu")
+        cpu.text = self.get_cpu()
 
         resolution = ET.SubElement(info, "screen_resolution")
         res_data = self.get_screen_resolution()
         resolution.text = f'{res_data[0]}x{res_data[1]}'
+
+        android_version = ET.SubElement(info, "android_version")
+        android_version.text = self.get_android_version()
+
+        friendly = ET.SubElement(info, "friendly_name")
+        friendly.text = self.friendly_name
 
         # Device settings
         settings = ET.SubElement(root, 'settings')
