@@ -331,6 +331,9 @@ class Device:
     def get_manufacturer(self):
         return self.d.shell("getprop ro.product.manufacturer").strip()
 
+    def get_board(self):
+        return self.d.shell("getprop ro.product.board").strip()
+
     def get_android_version(self):
         return self.d.shell("getprop ro.build.version.release").strip()
 
@@ -536,6 +539,9 @@ class Device:
 
         manufacturer = ET.SubElement(info, "manufacturer")
         manufacturer.text = self.get_manufacturer()
+
+        board = ET.SubElement(info, "board")
+        board.text = self.get_board()
 
         name = ET.SubElement(info, "name")
         name.text = self.get_device_name()
