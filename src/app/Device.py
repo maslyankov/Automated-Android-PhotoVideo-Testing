@@ -113,7 +113,8 @@ class Device:
 
         # Settings
         self.logs = False
-        self.camera_app = self.get_current_app()
+        self.camera_app = None
+        self.current_camera_app_mode = None
         self.shoot_photo_seq = []
         self.shoot_video_seq = []
         self.goto_photo_seq = []
@@ -187,7 +188,7 @@ class Device:
         :param coords: tap coordinates to use
         :return:None
         """
-        # print("X: ", coords[0][0], "Y: ", coords[0][1])  # Debugging
+        print("X: ", coords[0][0], "Y: ", coords[0][1])  # Debugging
         self.d.shell("input tap {} {}".format(coords[0][0], coords[0][1]))
 
     def reboot(self):
@@ -534,7 +535,13 @@ class Device:
 
                 if subelem.tag == 'logs':
                     for data in subelem:
-                        print(data.tag, data.text)
+                        if data.tag == 'enabled':
+                            if data.text == '1':
+                                self.logs = True
+                            else:
+                                self.logs = False
+                        if self.logs and data.tag == 'filter':
+                            self.logs = data.text
 
                 if subelem.tag == 'shoot_photo_seq':
                     self.set_shoot_photo_seq(generate_sequence(subelem))
@@ -544,7 +551,7 @@ class Device:
                     self.set_shoot_video_seq(generate_sequence(subelem))
                     print('Obj Seq List: ', self.get_shoot_video_seq())
 
-    def save_settings(self):  # TODO Needs more work and testing
+    def save_settings(self):
         root = ET.Element('device')
 
         # Device info
@@ -633,17 +640,27 @@ class Device:
         return self.camera_app
 
     def do(self, sequence):
-        '''
+        """
         Parses an actions sequence that is passed
         :param sequence: List of actions
         :return:
-        '''
+        """
         for action in sequence:
-            print(action)
+            act_id = action[0]
+            act_data = action[1]
+            act_type = act_data[2]
+            act_value = act_data[1]
+            print(f"Performing {act_id}")
+            if act_type == 'tap':
+                self.input_tap(act_value)
+            if act_type == 'delay':
+                print(f"Sleeping {act_value}")
+                time.sleep(int(act_value))
 
     def print_attributes(self):
         # For debugging
         print("Object properties:\n")
+        print(f"Friendly Name: {self.friendly_name}")
         print(f"Serial: {self.device_serial}")
         print(f"Cam app: {self.camera_app}")
         print(f"Logs: {self.logs}")

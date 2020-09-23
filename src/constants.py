@@ -11,6 +11,12 @@ MAX_ACTIONS_DISPLAY = 5
 
 APP_VERSION = '0.01 Beta'
 
+# Custom actions
+CUSTOM_ACTIONS = [
+    'Empty',
+    'delay'
+]
+
 # Lights
 LIGHTS_MODELS = {
     'SpectriWave': 0,

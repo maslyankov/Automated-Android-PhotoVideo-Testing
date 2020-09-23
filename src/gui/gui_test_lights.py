@@ -53,8 +53,8 @@ def gui_test_lights(selected_lights_model, selected_luxmeter_model):
         status_frame = [[]]
 
     luxmeter_frame = [
-        [sg.Text('Luxmeter', font='Any 18', key='luxmeter_name', size=(20, 1))],
-        [sg.Text('Loading..', key='luxmeter_lux_value', font='Any 17', text_color='red')]
+        [sg.Text('Luxmeter', font='Any 18', key='luxmeter_name', size=(20, 1), auto_size_text=True)],
+        [sg.Text('Loading..', key='luxmeter_lux_value', font='Any 17', text_color='red', auto_size_text=True)]
     ]
 
     layout = [

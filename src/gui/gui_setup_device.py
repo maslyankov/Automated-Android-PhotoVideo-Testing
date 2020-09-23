@@ -8,7 +8,9 @@ def list_from_data(values, fltr):
     seq = []
     print('List from data got: ', values)
     for item in values.keys():
-        print('second part: ', item.split('.')[0])
+        if values[item] == 'Empty':
+            continue  # Skip empty items
+
         if item.split('.')[0] == fltr and values[item] != '':
             if values[item.replace("action", "action_type")] == 'tap':
                 value = [
@@ -28,6 +30,81 @@ def list_from_data(values, fltr):
     return seq
 
 
+def device_data_to_gui(device, window):
+    print("Parsing device object data and updating GUI accordingly...\n")
+
+    device.print_attributes()
+
+    clickable_elements = constants.CUSTOM_ACTIONS + list(device.get_clickable_window_elements().keys())
+
+    # Update window elements
+    window['device-friendly'].Update(device.friendly_name)
+
+    onebool = True if device.logs else False
+    print('logs111 :', (device.logs), 'type: ', type(device.logs))
+
+    window['logs_bool'].Update(value=True if device.logs else False)
+    window['logs_filter'].Update(device.logs if device.logs else '')
+
+    window['selected_app_package'].Update(
+        values=list(device.get_installed_packages()),
+        value=device.get_current_app()[0] if device.camera_app is None else device.camera_app
+    )
+
+    # Cleanup before populating
+    for row in range(constants.MAX_ACTIONS_DISPLAY):
+        print('Clearing row ', row)  # Debugging
+
+        window['photo_selected_action.' + str(row)].Update('Empty', values='', disabled=True, visible=False)
+        window['photo_selected_action_test_btn.' + str(row)].Update(disabled=True, visible=False)
+
+        window['photo_selected_action_desc.' + str(row)].Update('Empty')
+        window['photo_selected_action_x.' + str(row)].Update('Empty')
+        window['photo_selected_action_y.' + str(row)].Update('Empty')
+        window['photo_selected_action_type.' + str(row)].Update('Empty')
+
+    for act_num, action in enumerate(device.shoot_photo_seq):
+        print('Populating row ', act_num)
+        if act_num > constants.MAX_ACTIONS_DISPLAY:
+            print("Max displayable actions reached!")
+            break
+
+        window['photo_selected_action.' + str(act_num)].Update(
+            value=action[0],
+            values=clickable_elements,
+            visible=True,
+            disabled=True
+        )
+        window['photo_selected_action_test_btn.' + str(act_num)].Update(
+            disabled=False,
+            visible=True)
+
+        window['photo_selected_action_type.' + str(act_num)].Update(
+            value=action[1][2]
+        )
+        window['photo_selected_action_desc.' + str(act_num)].Update(value=action[1][0])
+
+        if action[1][2] == 'tap':
+            window['photo_selected_action_x.' + str(act_num)].Update(value=action[1][1][0])
+            window['photo_selected_action_y.' + str(act_num)].Update(value=action[1][1][1])
+        else:
+            window['photo_selected_action_x.' + str(act_num)].Update(value=action[1][1])
+            window['photo_selected_action_value.' + str(act_num)].Update(visible=True, disabled=False)
+            window['photo_selected_action_test_btn.' + str(act_num)].Update(visible=False, disabled=True)
+
+        next_elem = act_num + 1
+        clickable_elements = constants.CUSTOM_ACTIONS + list(
+            device.get_clickable_window_elements().keys())
+        if next_elem <= constants.MAX_ACTIONS_DISPLAY:
+            window['photo_selected_action.' + str(next_elem)].Update(
+                values=clickable_elements,
+                disabled=False,
+                visible=True)
+            window['photo_selected_action_test_btn.' + str(next_elem)].Update(
+                disabled=False,
+                visible=True)
+
+
 def place(elem):
     """
     Places element provided into a Column element so that its placement in the layout is retained.
@@ -45,7 +122,7 @@ def gui_setup_device(attached_devices, device_obj):
             default_value=attached_devices[0],
             enable_events=True
         ),
-        sg.Text(text=device_obj[attached_devices[0]].friendly_name,
+        sg.Text(text="Loading...",
                 key='device-friendly',
                 font="Any 18",
                 size=(15, 1))
@@ -62,10 +139,10 @@ def gui_setup_device(attached_devices, device_obj):
 
     select_app_frame = [
         [sg.Text('Currently:')],
-        [sg.Text({current_app[0]},
+        [sg.Text(current_app[0],
                  key='currently_opened_app',
                  font='Any 13')],
-        [sg.Text({current_app[1]},
+        [sg.Text(current_app[1],
                  key='current_app_activity',
                  font='Any 13')],
         [
@@ -73,7 +150,8 @@ def gui_setup_device(attached_devices, device_obj):
                 values=device_obj[attached_devices[0]].get_installed_packages(),
                 size=(43, 1),
                 key='selected_app_package',
-                default_value=device_obj[attached_devices[0]].get_camera_app_pkg()
+                default_value=device_obj[attached_devices[0]].get_camera_app_pkg() if device_obj[attached_devices[
+                    0]].get_camera_app_pkg() is not None else ''
             ),
             sg.Button('Test!',
                       button_color=(sg.theme_text_element_background_color(), 'silver'),
@@ -81,46 +159,83 @@ def gui_setup_device(attached_devices, device_obj):
                       key='test_app_btn', disabled=False)
         ], ]
 
-    clickable_elements = list(device_obj[attached_devices[0]].get_clickable_window_elements().keys())
+    # - Sequences -
+    clickable_elements = constants.CUSTOM_ACTIONS + list(
+        device_obj[attached_devices[0]].get_clickable_window_elements().keys())
 
-    actions_list = ['delay'] + clickable_elements
-
+    # Photo sequence
     photo_sequence_frame = []
-
+    obj_seq = device_obj[attached_devices[0]].shoot_photo_seq
     for num in range(constants.MAX_ACTIONS_DISPLAY):
-        photo_sequence_frame += [
-                                    # add plenty of combo boxes, disabled by default and enable the next after one has been selected
-                                    place(sg.Combo(values=actions_list,
-                                                   size=(43, 1),
-                                                   key=f'photo_selected_action.{num}',
-                                                   disabled=False if num == 0 else True,
-                                                   visible=True if num == 0 else False,
-                                                   enable_events=True)),
-                                    sg.Spin([i for i in range(1, 10)],
-                                            key=f'photo_selected_action_value.{num}',
-                                            disabled=True,
-                                            visible=False),
-                                    place(sg.Button('Test!',
-                                                    button_color=(sg.theme_text_element_background_color(), 'silver'),
-                                                    size=(5, 1),
-                                                    key=f'photo_selected_action_test_btn.{num}',
-                                                    disabled=False if num == 0 else True,
-                                                    visible=True if num == 0 else False)),
-                                    # to keep data
-                                    sg.InputText(key=f'photo_selected_action_desc.{num}',
-                                                 readonly=True,
-                                                 visible=False),
-                                    sg.InputText(key=f'photo_selected_action_x.{num}',
-                                                 readonly=True,
-                                                 visible=False),
-                                    sg.InputText(key=f'photo_selected_action_y.{num}',
-                                                 readonly=True,
-                                                 visible=False),
-                                    sg.InputText(key=f'photo_selected_action_type.{num}',
-                                                 readonly=True,
-                                                 visible=False),
-                                ],
+        if obj_seq != [] and len(obj_seq) > num:
+            current_obj_elem = obj_seq[num]
+        else:
+            current_obj_elem = None
 
+        photo_sequence_frame += [
+                                    # add plenty of combo boxes, disabled by default and
+                                    # enable the next after one has been selected
+                                    place(sg.Combo(
+                                        default_value=
+                                        'Empty' if current_obj_elem is None
+                                        else current_obj_elem[0],
+                                        values=clickable_elements,
+                                        size=(43, 1),
+                                        key=f'photo_selected_action.{num}',
+                                        disabled=False if num == 0 or current_obj_elem is not None else True,
+                                        visible=True if num == 0 or current_obj_elem is not None else False,
+                                        enable_events=True
+                                    )),
+                                    sg.Spin(
+                                        [i for i in range(1, 10)],
+                                        initial_value=
+                                        1 if current_obj_elem is None
+                                        else
+                                        current_obj_elem[1][1] if current_obj_elem[1][2] != 'tap' else 1,
+                                        key=f'photo_selected_action_value.{num}',
+                                        disabled=True,
+                                        visible=False
+                                    ),
+                                    place(sg.Button(
+                                        'Test!',
+                                        button_color=(sg.theme_text_element_background_color(), 'silver'),
+                                        size=(5, 1),
+                                        key=f'photo_selected_action_test_btn.{num}',
+                                        disabled=False if num == 0 or current_obj_elem is not None else True,
+                                        visible=True if num == 0 or current_obj_elem is not None else False
+                                    )),
+
+                                    # to keep data
+                                    sg.InputText(
+                                        'Empty' if current_obj_elem is None
+                                        else current_obj_elem[1][0],
+                                        key=f'photo_selected_action_desc.{num}',
+                                        readonly=True,
+                                        visible=False
+                                    ),
+                                    sg.InputText(
+                                        'Empty' if current_obj_elem is None
+                                        else current_obj_elem[1][1][0] if current_obj_elem[1][2] == 'tap'
+                                        else current_obj_elem[1][1],
+                                        key=f'photo_selected_action_x.{num}',
+                                        readonly=True,
+                                        visible=False
+                                    ),
+                                    sg.InputText(
+                                        'Empty' if current_obj_elem is None or current_obj_elem[1][2] != 'tap'
+                                        else current_obj_elem[1][1][1],
+                                        key=f'photo_selected_action_y.{num}',
+                                        readonly=True,
+                                        visible=False
+                                    ),
+                                    sg.InputText(
+                                        'Empty' if current_obj_elem is None
+                                        else current_obj_elem[1][2],
+                                        key=f'photo_selected_action_type.{num}',
+                                        readonly=True,
+                                        visible=False
+                                    ),
+                                ],
     photo_sequence_frame += [
                                 sg.Button('Test sequence!',
                                           button_color=(sg.theme_text_element_background_color(), 'silver'),
@@ -159,29 +274,19 @@ def gui_setup_device(attached_devices, device_obj):
         window['current_app_activity'].Update(current_app[1])
 
         if event == 'selected_device':
-            window['device-friendly'].Update(device_obj[values['selected_device']].friendly_name)
-            window['selected_app_package'].Update(
-                values=list(device_obj[values['selected_device']].get_installed_packages()),
-                value=device_obj[values['selected_device']].get_current_app()[0]
-            )
-
-            window['photo_selected_action.0'].Update(  # TODO
-                values=list(device_obj[values['selected_device']].get_clickable_window_elements().keys())
-            )
+            device_data_to_gui(device_obj[values['selected_device']], window)
 
         if event == "logs_bool":
-
-            device_obj[values['selected_device']].print_attributes()
             window['logs_filter'].Update(disabled=not values['logs_bool'])
 
         if event == 'test_app_btn':
             device_obj[values['selected_device']].open_app(values['selected_app_package'])
 
-            new_ui_elements = list(
+            new_ui_elements = constants.CUSTOM_ACTIONS + list(
                 device_obj[values['selected_device']].get_clickable_window_elements().keys())
 
             for element in range(constants.MAX_ACTIONS_DISPLAY):
-                if values['photo_selected_action.' + str(element)] == '':
+                if values['photo_selected_action.' + str(element)] == 'Empty':
                     window['photo_selected_action.' + str(element)].Update(values=new_ui_elements)
 
         if event.split('.')[0] == 'photo_selected_action':
@@ -202,7 +307,7 @@ def gui_setup_device(attached_devices, device_obj):
                 window['photo_selected_action.' + str(next_elem)].Update(
                     disabled=False,
                     visible=True)
-                window['photo_selected_action_test_btn.' + str(int(event.split(".")[1]) + 1)].Update(
+                window['photo_selected_action_test_btn.' + str(next_elem)].Update(
                     disabled=False,
                     visible=True)
 
@@ -214,11 +319,11 @@ def gui_setup_device(attached_devices, device_obj):
             except KeyError:
                 print("Element not found! :(")
 
-            new_ui_elements = list(
+            new_ui_elements = constants.CUSTOM_ACTIONS + list(
                 device_obj[values['selected_device']].get_clickable_window_elements(force_dump=True).keys())
 
             for element in range(constants.MAX_ACTIONS_DISPLAY):
-                if values['photo_selected_action.' + str(element)] == '':
+                if values['photo_selected_action.' + str(element)] == 'Empty':
                     window['photo_selected_action.' + str(element)].Update(values=new_ui_elements)
 
         if event == 'photo_selected_action_sequence_test_btn':
