@@ -112,7 +112,8 @@ class Device:
             print("Device went offline!")
 
         # Settings
-        self.logs = False
+        self.logs_enabled = False
+        self.logs_filter = ''
         self.camera_app = None
         self.current_camera_app_mode = None
         self.shoot_photo_seq = []
@@ -537,11 +538,11 @@ class Device:
                     for data in subelem:
                         if data.tag == 'enabled':
                             if data.text == '1':
-                                self.logs = True
+                                self.logs_enabled = True
                             else:
-                                self.logs = False
-                        if self.logs and data.tag == 'filter':
-                            self.logs = data.text
+                                self.logs_enabled = False
+                        if data.tag == 'filter':
+                            self.logs_filter = data.text
 
                 if subelem.tag == 'shoot_photo_seq':
                     self.set_shoot_photo_seq(generate_sequence(subelem))
@@ -594,10 +595,10 @@ class Device:
         logs = ET.SubElement(settings, "logs")
 
         logs_bool = ET.SubElement(logs, "enabled")
-        logs_bool.text = str(1 if self.logs is not None and self.logs else 0)
+        logs_bool.text = str(1 if self.logs_enabled else 0)
 
         logs_filter = ET.SubElement(logs, "filter")
-        logs_filter.text = self.logs if logs_bool.text and not isinstance(self.logs, bool) else ''
+        logs_filter.text = self.logs_filter
 
         shoot_photo_seq = ET.SubElement(settings, "shoot_photo_seq")
         xml_from_sequence(self.shoot_photo_seq, shoot_photo_seq)
@@ -615,11 +616,12 @@ class Device:
     def set_logs(self, logs_bool, fltr=None):
         if not isinstance(logs_bool, bool):
             print('Logs setter got a non bool type... Defaulting to False.')
-            self.logs = False
-        elif fltr is None:
-            self.logs = logs_bool
-        elif fltr is not None and logs_bool:
-            self.logs = fltr
+            self.logs_enabled = False
+        else:
+            self.logs_enabled = logs_bool
+
+        if fltr is not None:
+            self.logs_filter = fltr
 
     def set_shoot_photo_seq(self, seq):
         self.shoot_photo_seq = seq
@@ -663,7 +665,7 @@ class Device:
         print(f"Friendly Name: {self.friendly_name}")
         print(f"Serial: {self.device_serial}")
         print(f"Cam app: {self.camera_app}")
-        print(f"Logs: {self.logs}")
+        print(f"Logs: enabled ({self.logs_enabled}), filter ({self.logs_filter})")
         print(f"shoot_photo_seq: {self.shoot_photo_seq}")
         print(f"shoot_video_seq: {self.shoot_video_seq}")
         print(f"goto_photo_seq: {self.goto_photo_seq}")

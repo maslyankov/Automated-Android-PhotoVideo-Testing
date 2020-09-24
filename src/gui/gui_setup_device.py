@@ -40,11 +40,8 @@ def device_data_to_gui(device, window):
     # Update window elements
     window['device-friendly'].Update(device.friendly_name)
 
-    onebool = True if device.logs else False
-    print('logs111 :', (device.logs), 'type: ', type(device.logs))
-
-    window['logs_bool'].Update(value=True if device.logs else False)
-    window['logs_filter'].Update(device.logs if device.logs else '')
+    window['logs_bool'].Update(value=True if device.logs_enabled else False)
+    window['logs_filter'].Update(device.logs_filter)
 
     window['selected_app_package'].Update(
         values=list(device.get_installed_packages()),
@@ -129,8 +126,16 @@ def gui_setup_device(attached_devices, device_obj):
     ], ]
 
     logs_frame = [  # TODO Update with element info if available
-        [sg.Checkbox('Capture Logs', default=False, size=(10, 1), key='logs_bool', enable_events=True)],
-        [sg.Text('Logs Filter:'), sg.InputText(size=(42, 1), key='logs_filter', disabled=True)],
+        [sg.Checkbox('Capture Logs',
+                     default=True if device_obj[attached_devices[0]].logs_enabled else False,
+                     size=(10, 1),
+                     key='logs_bool',
+                     enable_events=True)],
+        [sg.Text('Logs Filter:'),
+         sg.InputText(size=(42, 1),
+                      key='logs_filter',
+                      default_text=device_obj[attached_devices[0]].logs_filter,
+                      disabled=False if device_obj[attached_devices[0]].logs_enabled else True)],
     ]
 
     current_app = device_obj[attached_devices[0]].get_current_app()
@@ -340,7 +345,7 @@ def gui_setup_device(attached_devices, device_obj):
 
             # Save to file
             device_obj[values['selected_device']].save_settings()
-            print("Device logs settings: ", device_obj[values['selected_device']].logs)
+            print("Device logs settings: ", device_obj[values['selected_device']].logs_enabled, device_obj[values['selected_device']].logs_filter)
             print('Device photo seq: ', device_obj[values['selected_device']].shoot_photo_seq)
 
     window.close()
