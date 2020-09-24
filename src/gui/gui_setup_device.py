@@ -89,9 +89,11 @@ def device_data_to_gui(device, window):
             if action[1][2] == 'tap':
                 window[f'{seq_type}_selected_action_x.' + str(act_num)].Update(value=action[1][1][0])
                 window[f'{seq_type}_selected_action_y.' + str(act_num)].Update(value=action[1][1][1])
-                window[f'{seq_type}_selected_action_value.' + str(act_num)].Update(value=0, visible=False, disabled=True)
+                window[f'{seq_type}_selected_action_value.' + str(act_num)].Update(value=0, visible=False,
+                                                                                   disabled=True)
             else:
-                window[f'{seq_type}_selected_action_value.' + str(act_num)].Update(value=action[1][1], visible=True, disabled=False)
+                window[f'{seq_type}_selected_action_value.' + str(act_num)].Update(value=action[1][1], visible=True,
+                                                                                   disabled=False)
                 window[f'{seq_type}_selected_action_test_btn.' + str(act_num)].Update(visible=False, disabled=True)
 
             next_elem = act_num + 1
@@ -107,87 +109,92 @@ def device_data_to_gui(device, window):
                     visible=True)
 
 
-def build_seq_gui(obj, prop_key, clickable_elements):
+def build_seq_gui(obj, prop_key, clickable_elements):  # TODO - Fix list of actions to choose from
     gui_seq = []
     print("GUI Builder got: ", obj, prop_key, clickable_elements)
 
     for num in range(constants.MAX_ACTIONS_DISPLAY):
-        if getattr(obj, constants.act_sequences[prop_key]) != [] and len(getattr(obj, constants.act_sequences[prop_key])) > num:
+        if getattr(obj, constants.act_sequences[prop_key]) != [] and len(
+                getattr(obj, constants.act_sequences[prop_key])) > num:
             current_obj_elem = getattr(obj, constants.act_sequences[prop_key])[num]
         else:
             current_obj_elem = None
 
         gui_seq += [
-                                    # add plenty of combo boxes, disabled by default and
-                                    # enable the next after one has been selected
-                                    place(sg.Combo(
-                                        default_value=
-                                        'Empty' if current_obj_elem is None
-                                        else current_obj_elem[0],
-                                        values=clickable_elements,
-                                        size=(43, 1),
-                                        key=f'{prop_key}_selected_action.{num}',
-                                        disabled=False if num == 0 or num == len(getattr(obj, constants.act_sequences[prop_key])) or current_obj_elem is not None else True,
-                                        visible=True if num == 0 or num == len(getattr(obj, constants.act_sequences[prop_key])) or current_obj_elem is not None else False,
-                                        enable_events=True
-                                    )),
-                                    sg.Spin(
-                                        [i for i in range(1, 10)],
-                                        initial_value=
-                                        1 if current_obj_elem is None
-                                        else
-                                        current_obj_elem[1][1] if current_obj_elem[1][2] != 'tap' else 1,
-                                        key=f'{prop_key}_selected_action_value.{num}',
-                                        disabled=True,
-                                        visible=False
-                                    ),
-                                    place(sg.Button(
-                                        'Test!',
-                                        button_color=(sg.theme_text_element_background_color(), 'silver'),
-                                        size=(5, 1),
-                                        key=f'{prop_key}_selected_action_test_btn.{num}',
-                                        disabled=False if num == 0 or num == len(getattr(obj, constants.act_sequences[prop_key])) or current_obj_elem is not None else True,
-                                        visible=True if num == 0 or num == len(getattr(obj, constants.act_sequences[prop_key])) or current_obj_elem is not None else False
-                                    )),
+                       # add plenty of combo boxes, disabled by default and
+                       # enable the next after one has been selected
+                       place(sg.Combo(
+                           default_value=
+                           'Empty' if current_obj_elem is None
+                           else current_obj_elem[0],
+                           values=clickable_elements,
+                           size=(43, 1),
+                           key=f'{prop_key}_selected_action.{num}',
+                           disabled=False if num == 0 or num == len(getattr(obj, constants.act_sequences[
+                               prop_key])) or current_obj_elem is not None else True,
+                           visible=True if num == 0 or num == len(getattr(obj, constants.act_sequences[
+                               prop_key])) or current_obj_elem is not None else False,
+                           enable_events=True
+                       )),
+                       sg.Spin(
+                           [i for i in range(1, 10)],
+                           initial_value=
+                           1 if current_obj_elem is None
+                           else
+                           current_obj_elem[1][1] if current_obj_elem[1][2] != 'tap' else 1,
+                           key=f'{prop_key}_selected_action_value.{num}',
+                           disabled=True,
+                           visible=False
+                       ),
+                       place(sg.Button(
+                           'Test!',
+                           button_color=(sg.theme_text_element_background_color(), 'silver'),
+                           size=(5, 1),
+                           key=f'{prop_key}_selected_action_test_btn.{num}',
+                           disabled=False if num == 0 or num == len(getattr(obj, constants.act_sequences[
+                               prop_key])) or current_obj_elem is not None else True,
+                           visible=True if num == 0 or num == len(getattr(obj, constants.act_sequences[
+                               prop_key])) or current_obj_elem is not None else False
+                       )),
 
-                                    # to keep data
-                                    sg.InputText(
-                                        'Empty' if current_obj_elem is None
-                                        else current_obj_elem[1][0],
-                                        key=f'{prop_key}_selected_action_desc.{num}',
-                                        readonly=True,
-                                        visible=False
-                                    ),
-                                    sg.InputText(
-                                        'Empty' if current_obj_elem is None
-                                        else current_obj_elem[1][1][0] if current_obj_elem[1][2] == 'tap'
-                                        else current_obj_elem[1][1],
-                                        key=f'{prop_key}_selected_action_x.{num}',
-                                        readonly=True,
-                                        visible=False
-                                    ),
-                                    sg.InputText(
-                                        'Empty' if current_obj_elem is None or current_obj_elem[1][2] != 'tap'
-                                        else current_obj_elem[1][1][1],
-                                        key=f'{prop_key}_selected_action_y.{num}',
-                                        readonly=True,
-                                        visible=False
-                                    ),
-                                    sg.InputText(
-                                        'Empty' if current_obj_elem is None
-                                        else current_obj_elem[1][2],
-                                        key=f'{prop_key}_selected_action_type.{num}',
-                                        readonly=True,
-                                        visible=False
-                                    ),
-                                ],
+                       # to keep data
+                       sg.InputText(
+                           'Empty' if current_obj_elem is None
+                           else current_obj_elem[1][0],
+                           key=f'{prop_key}_selected_action_desc.{num}',
+                           readonly=True,
+                           visible=False
+                       ),
+                       sg.InputText(
+                           'Empty' if current_obj_elem is None
+                           else current_obj_elem[1][1][0] if current_obj_elem[1][2] == 'tap'
+                           else current_obj_elem[1][1],
+                           key=f'{prop_key}_selected_action_x.{num}',
+                           readonly=True,
+                           visible=False
+                       ),
+                       sg.InputText(
+                           'Empty' if current_obj_elem is None or current_obj_elem[1][2] != 'tap'
+                           else current_obj_elem[1][1][1],
+                           key=f'{prop_key}_selected_action_y.{num}',
+                           readonly=True,
+                           visible=False
+                       ),
+                       sg.InputText(
+                           'Empty' if current_obj_elem is None
+                           else current_obj_elem[1][2],
+                           key=f'{prop_key}_selected_action_type.{num}',
+                           readonly=True,
+                           visible=False
+                       ),
+                   ],
     gui_seq += [
-                                sg.Button('Test sequence!',
-                                          button_color=(sg.theme_text_element_background_color(), 'silver'),
-                                          size=(45, 1),
-                                          key=f'{prop_key}_selected_action_sequence_test_btn',
-                                          disabled=False)
-                            ],
+                   sg.Button('Test sequence!',
+                             button_color=(sg.theme_text_element_background_color(), 'silver'),
+                             size=(45, 1),
+                             key=f'{prop_key}_selected_action_sequence_test_btn',
+                             disabled=False)
+               ],
     return gui_seq
 
 
@@ -265,11 +272,14 @@ def gui_setup_device(attached_devices, device_obj):
         [sg.Frame('Select Camera App', select_app_frame, font='Any 12', title_color='white')]
     ]
 
-    save_btn = [sg.Button('Save Settings', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 2),
-                   key='save_btn', disabled=False)]
+    save_btn = [
+        sg.Button('Save Settings', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 2),
+                  key='save_btn', disabled=False)]
 
     for elem in list(constants.act_sequences.keys()):
-        frame = [sg.Frame(f'{constants.act_sequences_desc[elem]} Action Sequence', build_seq_gui(device_obj[attached_devices[0]], elem, clickable_elements), font='Any 12', title_color='white')]
+        frame = [sg.Frame(f'{constants.act_sequences_desc[elem]} Action Sequence',
+                          build_seq_gui(device_obj[attached_devices[0]], elem, clickable_elements), font='Any 12',
+                          title_color='white')]
         layout.append(frame)
     layout.append(save_btn)
 
@@ -313,8 +323,10 @@ def gui_setup_device(attached_devices, device_obj):
             if event.split('.')[0] == f'{seq_type}_selected_action':
                 if values[f"{seq_type}_selected_action.{event.split('.')[1]}"] == 'delay':
                     window[f"{seq_type}_selected_action_type.{event.split('.')[1]}"].Update('delay')
-                    window[f"{seq_type}_selected_action_value.{event.split('.')[1]}"].Update(visible=True, disabled=False)
-                    window[f"{seq_type}_selected_action_test_btn.{event.split('.')[1]}"].Update(visible=False, disabled=True)
+                    window[f"{seq_type}_selected_action_value.{event.split('.')[1]}"].Update(visible=True,
+                                                                                             disabled=False)
+                    window[f"{seq_type}_selected_action_test_btn.{event.split('.')[1]}"].Update(visible=False,
+                                                                                                disabled=True)
                 elif values[f"{seq_type}_selected_action.{event.split('.')[1]}"] == 'Empty':
                     pass
                 else:
@@ -364,7 +376,8 @@ def gui_setup_device(attached_devices, device_obj):
 
             # Save to file
             device.save_settings()
-            print("Device logs settings: ", device_obj[values['selected_device']].logs_enabled, device_obj[values['selected_device']].logs_filter)
+            print("Device logs settings: ", device_obj[values['selected_device']].logs_enabled,
+                  device_obj[values['selected_device']].logs_filter)
             print('Device photo seq: ', device_obj[values['selected_device']].shoot_photo_seq)
 
     window.close()
