@@ -61,8 +61,8 @@ def generate_sequence(subelem):
     return seq_temp
 
 
-def xml_from_sequence(obj_sequence, xml_obj):
-    for action in obj_sequence:
+def xml_from_sequence(obj, prop, xml_obj):
+    for action in getattr(obj, prop):
         elem = ET.SubElement(xml_obj, "action")
         elem_id = ET.SubElement(elem, "id")  # set
         elem_desc = ET.SubElement(elem, "description")  # set
@@ -544,13 +544,10 @@ class Device:
                         if data.tag == 'filter':
                             self.logs_filter = data.text if data.text is not None else ''
 
-                if subelem.tag == 'shoot_photo_seq':
-                    self.set_shoot_photo_seq(generate_sequence(subelem))
-                    print('Obj Seq List: ', self.get_shoot_photo_seq())
-
-                if subelem.tag == 'shoot_video_seq':
-                    self.set_shoot_video_seq(generate_sequence(subelem))
-                    print('Obj Seq List: ', self.get_shoot_video_seq())
+                for seq_type in list(constants.act_sequences.keys()):
+                    if subelem.tag == constants.act_sequences[seq_type]:
+                        setattr(self, constants.act_sequences[seq_type], generate_sequence(subelem))
+                        print('Obj Seq List: ', getattr(self, constants.act_sequences[seq_type]))
 
     def save_settings(self):
         root = ET.Element('device')
@@ -600,11 +597,9 @@ class Device:
         logs_filter = ET.SubElement(logs, "filter")
         logs_filter.text = self.logs_filter
 
-        shoot_photo_seq = ET.SubElement(settings, "shoot_photo_seq")
-        xml_from_sequence(self.shoot_photo_seq, shoot_photo_seq)
-
-        shoot_video_seq = ET.SubElement(settings, "shoot_video_seq")
-        xml_from_sequence(self.shoot_video_seq, shoot_video_seq)
+        for seq_type in list(constants.act_sequences.keys()):
+            curr_seq = ET.SubElement(settings, constants.act_sequences[seq_type])
+            xml_from_sequence(self, constants.act_sequences[seq_type], curr_seq)
 
         actions_time_gap = ET.SubElement(settings, "actions_time_gap")
         actions_time_gap.text = str(self.actions_time_gap)

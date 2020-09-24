@@ -106,7 +106,7 @@ def gui():
     ]
 
     lights_frame_layout = [[
-        sg.OptionMenu(values=['SpectriWave', 'lightStudio'], key="selected_lights_model"),
+        sg.OptionMenu(values=list(constants.LIGHTS_MODELS.keys()), key="selected_lights_model"),
         sg.OptionMenu(values=['None', 'Konita Minolta CL-200A', 'something else'], key="selected_luxmeter_model"),
         sg.Button('Test Lights', button_color=(sg.theme_text_element_background_color(), 'silver'),
                   size=(12, 3),

@@ -11,6 +11,13 @@ MAX_ACTIONS_DISPLAY = 5
 
 APP_VERSION = '0.01 Beta'
 
+# - Actions - #
+
+# Action types
+act_sequences = {
+    'photo': 'shoot_photo_seq',
+    'video': 'shoot_video_seq'}
+
 # Custom actions
 CUSTOM_ACTIONS = [
     'Empty',
