@@ -1,4 +1,5 @@
 import os
+import time
 import PySimpleGUI as sg
 from src.app.LightsCtrl import LightsCtrl
 from src.konica.ChromaMeterKonica import ChromaMeterKonica
@@ -54,7 +55,9 @@ def gui_test_lights(selected_lights_model, selected_luxmeter_model):
 
     luxmeter_frame = [
         [sg.Text('Luxmeter', font='Any 18', key='luxmeter_name', size=(20, 1), auto_size_text=True)],
-        [sg.Text('Loading..', key='luxmeter_lux_value', font='Any 17', text_color='red', auto_size_text=True)]
+        [sg.Text('Loading..', key='luxmeter_lux_value', font='Any 17', text_color='red', auto_size_text=True)],
+        [sg.HorizontalSeparator()],
+        [sg.Input(key='target_lux'), sg.Button("Set Lights to this LUX value", key='set_target_lux_btn')]
     ]
 
     layout = [
@@ -98,6 +101,7 @@ def gui_test_lights(selected_lights_model, selected_luxmeter_model):
                        icon=os.path.join(constants.ROOT_DIR, 'images', 'automated-video-testing-header-icon.ico'))
 
     if selected_lights_model == 'SpectriWave':  # SpectriWave Specific
+        time.sleep(1)
         lights_status = lights.status()
 
     if selected_luxmeter_model == 'Konita Minolta CL-200A': # Konita Minolta CL-200A Selected
@@ -136,7 +140,7 @@ def gui_test_lights(selected_lights_model, selected_luxmeter_model):
         if selected_luxmeter_model == 'Konita Minolta CL-200A':  # Konita Minolta CL-200A Selected
             if luxmeter.isAlive:
                 window['luxmeter_name'].Update('Konita Minolta CL-200A')
-                window['luxmeter_lux_value'].Update(luxmeter.get_lux())
+                window['luxmeter_lux_value'].Update(str(luxmeter.get_lux()))
             else:
                 window['luxmeter_lux_value'].Update("Connection Lost")
 
@@ -161,6 +165,9 @@ def gui_test_lights(selected_lights_model, selected_luxmeter_model):
         if event == 'set_brightness_btn':
             lights.set_brightness(values['selected_brightness'])
             pass
+
+        if event == 'set_target_lux_btn':
+            lights.set_lux(luxmeter, int(values['target_lux']))
 
     window.close()
     lights.disconnect()

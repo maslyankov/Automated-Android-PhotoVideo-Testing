@@ -8,7 +8,7 @@ import src.constants as constants
 class LightsCtrl:
     def __init__(self, model):
         self.current_color_temp = None
-        self.current_brightness = None
+        self.current_brightness = 1
 
         print('Selected light model: ', constants.LIGHTS_MODELS.get(model, "Invalid light model"))
         self.lights_model = constants.LIGHTS_MODELS[model]
@@ -78,6 +78,28 @@ class LightsCtrl:
 
     def set_color_temp(self, color_temp):
         self.current_color_temp = color_temp
+
+    def set_lux(self, luxmeter_obj, target_lux):
+        print(f"Setting lux to {target_lux}")
+        curr_lux = luxmeter_obj.get_lux()
+        threshold = 10  # How much can we vary with lux value
+        luxmeter_resp_time = 0.6
+        lights_resp_time = 1
+        step = 4
+        print('\n\n\nBefore diff: ', abs(curr_lux - target_lux), '\n\n\n')
+
+        while abs(curr_lux - target_lux) > threshold:
+            print(f"Target lux: {target_lux}, current lux: {curr_lux}")
+            if curr_lux > target_lux:  # We need to go down
+                self.set_brightness(self.current_brightness - step)
+            elif curr_lux < target_lux:  # We need to go up
+                self.set_brightness(self.current_brightness + step)
+            else:  # If we are at the exact luxes (this seems almost impossible, I think)
+                break
+
+            # Wait for lights to adjust
+            time.sleep(lights_resp_time)
+            curr_lux = luxmeter_obj.get_lux()  # Update lux measurement
 
     def disconnect(self):
         print("Disconnecting from lights...")

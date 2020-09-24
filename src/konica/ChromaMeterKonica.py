@@ -147,6 +147,6 @@ class ChromaMeterKonica(object):
         lux_num = float(result[10:14])
         lux_pow = float(result[14]) - 4
         # lux = float(signal * lux_num * (10 ** lux_pow))
-        lux = str(round(float(signal * lux_num * (10 ** lux_pow)), 3))
+        lux = round(float(signal * lux_num * (10 ** lux_pow)), 3)
         return lux
 
