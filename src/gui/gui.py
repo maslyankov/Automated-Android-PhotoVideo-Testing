@@ -4,6 +4,7 @@ from src.temp.actions import *
 from src.app import AdbClient
 from src.app.Device import Device
 
+from src.gui.gui_help import gui_help
 from src.gui.gui_camxoverride import gui_camxoverride
 from src.gui.gui_manual_cases import gui_manual_cases
 from src.gui.gui_push_file import gui_push_file
@@ -123,7 +124,9 @@ def gui():
         [
             sg.Button('Exit', size=(6, 2)),
             sg.Button('Capture Cases (Manual)', size=(25, 2), key='capture_manual_btn', disabled=True),
-            sg.Button('Capture Cases (Automated)', size=(25, 2), key='capture_auto_btn', disabled=True)],
+            sg.Button('Capture Cases (Automated)', size=(25, 2), key='capture_auto_btn', disabled=True),
+            sg.Button('?', size=(4, 2), key='help_btn', disabled=False)
+        ],
         [sg.Text('_' * 75)],
         # [sg.Frame('Output', [[sg.Output(size=(70, 8))]], font='Any 12', title_color='white')],
         [sg.Text('App Version: {}'.format(constants.APP_VERSION), size=(65, 1), justification="right")]
@@ -285,6 +288,8 @@ def gui():
         if event == 'test_lights_btn':
             gui_test_lights(values['selected_lights_model'], values['selected_luxmeter_model'])
 
+        if event == 'help_btn':
+            gui_help()
 
     # Detach attached devices
     print("Detaching attached devices...")

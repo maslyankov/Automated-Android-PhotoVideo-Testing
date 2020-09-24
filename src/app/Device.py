@@ -542,7 +542,7 @@ class Device:
                             else:
                                 self.logs_enabled = False
                         if data.tag == 'filter':
-                            self.logs_filter = data.text
+                            self.logs_filter = data.text if data.text is not None else ''
 
                 if subelem.tag == 'shoot_photo_seq':
                     self.set_shoot_photo_seq(generate_sequence(subelem))

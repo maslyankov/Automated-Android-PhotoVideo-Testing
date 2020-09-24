@@ -41,6 +41,8 @@ def device_data_to_gui(device, window):
     window['device-friendly'].Update(device.friendly_name)
 
     window['logs_bool'].Update(value=True if device.logs_enabled else False)
+
+    print(device.logs_filter)
     window['logs_filter'].Update(device.logs_filter)
 
     window['selected_app_package'].Update(
@@ -56,6 +58,7 @@ def device_data_to_gui(device, window):
         window['photo_selected_action_test_btn.' + str(row)].Update(disabled=True, visible=False)
 
         window['photo_selected_action_desc.' + str(row)].Update('Empty')
+        window['photo_selected_action_value.' + str(row)].Update(0)
         window['photo_selected_action_x.' + str(row)].Update('Empty')
         window['photo_selected_action_y.' + str(row)].Update('Empty')
         window['photo_selected_action_type.' + str(row)].Update('Empty')
@@ -84,15 +87,15 @@ def device_data_to_gui(device, window):
         if action[1][2] == 'tap':
             window['photo_selected_action_x.' + str(act_num)].Update(value=action[1][1][0])
             window['photo_selected_action_y.' + str(act_num)].Update(value=action[1][1][1])
+            window['photo_selected_action_value.' + str(act_num)].Update(value=0, visible=False, disabled=True)
         else:
-            window['photo_selected_action_x.' + str(act_num)].Update(value=action[1][1])
-            window['photo_selected_action_value.' + str(act_num)].Update(visible=True, disabled=False)
+            window['photo_selected_action_value.' + str(act_num)].Update(value=action[1][1], visible=True, disabled=False)
             window['photo_selected_action_test_btn.' + str(act_num)].Update(visible=False, disabled=True)
 
         next_elem = act_num + 1
         clickable_elements = constants.CUSTOM_ACTIONS + list(
             device.get_clickable_window_elements().keys())
-        if next_elem <= constants.MAX_ACTIONS_DISPLAY:
+        if next_elem < constants.MAX_ACTIONS_DISPLAY:
             window['photo_selected_action.' + str(next_elem)].Update(
                 values=clickable_elements,
                 disabled=False,
@@ -124,6 +127,8 @@ def gui_setup_device(attached_devices, device_obj):
                 font="Any 18",
                 size=(15, 1))
     ], ]
+
+    print('Device Logs filter:', device_obj[attached_devices[0]].logs_filter)
 
     logs_frame = [  # TODO Update with element info if available
         [sg.Checkbox('Capture Logs',
@@ -176,7 +181,7 @@ def gui_setup_device(attached_devices, device_obj):
             current_obj_elem = obj_seq[num]
         else:
             current_obj_elem = None
-
+        
         photo_sequence_frame += [
                                     # add plenty of combo boxes, disabled by default and
                                     # enable the next after one has been selected
@@ -187,8 +192,8 @@ def gui_setup_device(attached_devices, device_obj):
                                         values=clickable_elements,
                                         size=(43, 1),
                                         key=f'photo_selected_action.{num}',
-                                        disabled=False if num == 0 or num == len(obj_seq)+1 or current_obj_elem is not None else True,
-                                        visible=True if num == 0 or num == len(obj_seq)+1 or current_obj_elem is not None else False,
+                                        disabled=False if num == 0 or num == len(obj_seq) or current_obj_elem is not None else True,
+                                        visible=True if num == 0 or num == len(obj_seq) or current_obj_elem is not None else False,
                                         enable_events=True
                                     )),
                                     sg.Spin(
@@ -206,8 +211,8 @@ def gui_setup_device(attached_devices, device_obj):
                                         button_color=(sg.theme_text_element_background_color(), 'silver'),
                                         size=(5, 1),
                                         key=f'photo_selected_action_test_btn.{num}',
-                                        disabled=False if num == 0 or num == len(obj_seq)+1 or current_obj_elem is not None else True,
-                                        visible=True if num == 0 or num == len(obj_seq)+1 or current_obj_elem is not None else False
+                                        disabled=False if num == 0 or num == len(obj_seq) or current_obj_elem is not None else True,
+                                        visible=True if num == 0 or num == len(obj_seq) or current_obj_elem is not None else False
                                     )),
 
                                     # to keep data
