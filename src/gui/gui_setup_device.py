@@ -51,8 +51,6 @@ def device_data_to_gui(device, window):
     )
 
     # List
-
-
     for seq_type in list(constants.act_sequences.keys()):
         # Cleanup before populating
         for row in range(constants.MAX_ACTIONS_DISPLAY):
@@ -109,12 +107,13 @@ def device_data_to_gui(device, window):
                     visible=True)
 
 
-def build_seq_gui(obj_seq, clickable_elements, fltr):
+def build_seq_gui(obj, prop_key, clickable_elements):
     gui_seq = []
+    print("GUI Builder got: ", obj, prop_key, clickable_elements)
 
     for num in range(constants.MAX_ACTIONS_DISPLAY):
-        if obj_seq != [] and len(obj_seq) > num:
-            current_obj_elem = obj_seq[num]
+        if getattr(obj, constants.act_sequences[prop_key]) != [] and len(getattr(obj, constants.act_sequences[prop_key])) > num:
+            current_obj_elem = getattr(obj, constants.act_sequences[prop_key])[num]
         else:
             current_obj_elem = None
 
@@ -127,9 +126,9 @@ def build_seq_gui(obj_seq, clickable_elements, fltr):
                                         else current_obj_elem[0],
                                         values=clickable_elements,
                                         size=(43, 1),
-                                        key=f'{fltr}_selected_action.{num}',
-                                        disabled=False if num == 0 or num == len(obj_seq) or current_obj_elem is not None else True,
-                                        visible=True if num == 0 or num == len(obj_seq) or current_obj_elem is not None else False,
+                                        key=f'{prop_key}_selected_action.{num}',
+                                        disabled=False if num == 0 or num == len(getattr(obj, constants.act_sequences[prop_key])) or current_obj_elem is not None else True,
+                                        visible=True if num == 0 or num == len(getattr(obj, constants.act_sequences[prop_key])) or current_obj_elem is not None else False,
                                         enable_events=True
                                     )),
                                     sg.Spin(
@@ -138,7 +137,7 @@ def build_seq_gui(obj_seq, clickable_elements, fltr):
                                         1 if current_obj_elem is None
                                         else
                                         current_obj_elem[1][1] if current_obj_elem[1][2] != 'tap' else 1,
-                                        key=f'{fltr}_selected_action_value.{num}',
+                                        key=f'{prop_key}_selected_action_value.{num}',
                                         disabled=True,
                                         visible=False
                                     ),
@@ -146,16 +145,16 @@ def build_seq_gui(obj_seq, clickable_elements, fltr):
                                         'Test!',
                                         button_color=(sg.theme_text_element_background_color(), 'silver'),
                                         size=(5, 1),
-                                        key=f'{fltr}_selected_action_test_btn.{num}',
-                                        disabled=False if num == 0 or num == len(obj_seq) or current_obj_elem is not None else True,
-                                        visible=True if num == 0 or num == len(obj_seq) or current_obj_elem is not None else False
+                                        key=f'{prop_key}_selected_action_test_btn.{num}',
+                                        disabled=False if num == 0 or num == len(getattr(obj, constants.act_sequences[prop_key])) or current_obj_elem is not None else True,
+                                        visible=True if num == 0 or num == len(getattr(obj, constants.act_sequences[prop_key])) or current_obj_elem is not None else False
                                     )),
 
                                     # to keep data
                                     sg.InputText(
                                         'Empty' if current_obj_elem is None
                                         else current_obj_elem[1][0],
-                                        key=f'{fltr}_selected_action_desc.{num}',
+                                        key=f'{prop_key}_selected_action_desc.{num}',
                                         readonly=True,
                                         visible=False
                                     ),
@@ -163,21 +162,21 @@ def build_seq_gui(obj_seq, clickable_elements, fltr):
                                         'Empty' if current_obj_elem is None
                                         else current_obj_elem[1][1][0] if current_obj_elem[1][2] == 'tap'
                                         else current_obj_elem[1][1],
-                                        key=f'{fltr}_selected_action_x.{num}',
+                                        key=f'{prop_key}_selected_action_x.{num}',
                                         readonly=True,
                                         visible=False
                                     ),
                                     sg.InputText(
                                         'Empty' if current_obj_elem is None or current_obj_elem[1][2] != 'tap'
                                         else current_obj_elem[1][1][1],
-                                        key=f'{fltr}_selected_action_y.{num}',
+                                        key=f'{prop_key}_selected_action_y.{num}',
                                         readonly=True,
                                         visible=False
                                     ),
                                     sg.InputText(
                                         'Empty' if current_obj_elem is None
                                         else current_obj_elem[1][2],
-                                        key=f'{fltr}_selected_action_type.{num}',
+                                        key=f'{prop_key}_selected_action_type.{num}',
                                         readonly=True,
                                         visible=False
                                     ),
@@ -186,7 +185,7 @@ def build_seq_gui(obj_seq, clickable_elements, fltr):
                                 sg.Button('Test sequence!',
                                           button_color=(sg.theme_text_element_background_color(), 'silver'),
                                           size=(45, 1),
-                                          key=f'{fltr}_selected_action_sequence_test_btn',
+                                          key=f'{prop_key}_selected_action_sequence_test_btn',
                                           disabled=False)
                             ],
     return gui_seq
@@ -260,20 +259,19 @@ def gui_setup_device(attached_devices, device_obj):
     clickable_elements = constants.CUSTOM_ACTIONS + list(
         device_obj[attached_devices[0]].get_clickable_window_elements().keys())
 
-    # Photo sequence
-
-    photo_sequence_frame = build_seq_gui(device_obj[attached_devices[0]].shoot_photo_seq, clickable_elements, 'photo')    # TODO
-    video_sequence_frame = build_seq_gui(device_obj[attached_devices[0]].shoot_video_seq, clickable_elements, 'video')
-
     layout = [
         [sg.Frame('Select device', select_device_frame, font='Any 12', title_color='white')],
         [sg.Frame('Logs', logs_frame, font='Any 12', title_color='white')],
-        [sg.Frame('Select Camera App', select_app_frame, font='Any 12', title_color='white')],
-        [sg.Frame('Take Photo Action Sequence', photo_sequence_frame, font='Any 12', title_color='white')],
-        [sg.Frame('Shoot Video Action Sequence', video_sequence_frame, font='Any 12', title_color='white')],
-        [sg.Button('Save Settings', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 2),
-                   key='save_btn', disabled=False)]
+        [sg.Frame('Select Camera App', select_app_frame, font='Any 12', title_color='white')]
     ]
+
+    save_btn = [sg.Button('Save Settings', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 2),
+                   key='save_btn', disabled=False)]
+
+    for elem in list(constants.act_sequences.keys()):
+        frame = [sg.Frame(f'{constants.act_sequences_desc[elem]} Action Sequence', build_seq_gui(device_obj[attached_devices[0]], elem, clickable_elements), font='Any 12', title_color='white')]
+        layout.append(frame)
+    layout.append(save_btn)
 
     # Create the Window
     window = sg.Window('Setup', layout,
@@ -281,9 +279,6 @@ def gui_setup_device(attached_devices, device_obj):
 
     while True:
         event, values = window.read()
-        act_sequences = {
-            'photo': 'shoot_photo_seq',
-            'video': 'shoot_video_seq'}
 
         if event == sg.WIN_CLOSED or event == 'Close':  # if user closes window or clicks cancel
             break
@@ -314,7 +309,7 @@ def gui_setup_device(attached_devices, device_obj):
                 if values['photo_selected_action.' + str(element)] == 'Empty':
                     window['photo_selected_action.' + str(element)].Update(values=new_ui_elements)
 
-        for seq_type in list(act_sequences.keys()):
+        for seq_type in list(constants.act_sequences.keys()):
             if event.split('.')[0] == f'{seq_type}_selected_action':
                 if values[f"{seq_type}_selected_action.{event.split('.')[1]}"] == 'delay':
                     window[f"{seq_type}_selected_action_type.{event.split('.')[1]}"].Update('delay')
@@ -363,9 +358,9 @@ def gui_setup_device(attached_devices, device_obj):
             # Save to object
             device.set_logs(values['logs_bool'], values['logs_filter'])
             device.set_camera_app_pkg(values['selected_app_package'])
-            for seq_type in list(act_sequences.keys()):
+            for seq_type in list(constants.act_sequences.keys()):
                 val = list_from_data(values, f'{seq_type}_selected_action')
-                setattr(device, act_sequences[seq_type], val)
+                setattr(device, constants.act_sequences[seq_type], val)
 
             # Save to file
             device.save_settings()

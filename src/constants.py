@@ -16,7 +16,17 @@ APP_VERSION = '0.01 Beta'
 # Action types
 act_sequences = {
     'photo': 'shoot_photo_seq',
-    'video': 'shoot_video_seq'}
+    'video': 'shoot_video_seq',
+    'goto_photo': 'goto_photo_seq',
+    'goto_video': 'goto_video_seq'
+}
+
+act_sequences_desc = {
+    'photo': 'Shoot Photo',
+    'video': 'Shoot Video',
+    'goto_photo': 'Change Mode to Photo',
+    'goto_video': 'Change Mode to Video'
+}
 
 # Custom actions
 CUSTOM_ACTIONS = [
