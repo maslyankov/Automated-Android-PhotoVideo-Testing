@@ -117,7 +117,8 @@ class Device:
         self.camera_app = None
         self.current_camera_app_mode = None
         self.shoot_photo_seq = []
-        self.shoot_video_seq = []
+        self.start_video_seq = []
+        self.stop_video_seq = []
         self.goto_photo_seq = []
         self.goto_video_seq = []
         self.actions_time_gap = 1
@@ -654,6 +655,17 @@ class Device:
                 print(f"Sleeping {act_value}")
                 time.sleep(int(act_value))
 
+    def shoot_photo(self):
+        self.do(self.shoot_photo_seq)
+
+    def start_video(self):
+        self.do(self.start_video_seq)
+
+    def stop_video(self):
+        self.do(self.stop_video_seq)
+
+
+
     def print_attributes(self):
         # For debugging
         print("Object properties:\n")
@@ -662,7 +674,8 @@ class Device:
         print(f"Cam app: {self.camera_app}")
         print(f"Logs: enabled ({self.logs_enabled}), filter ({self.logs_filter})")
         print(f"shoot_photo_seq: {self.shoot_photo_seq}")
-        print(f"shoot_video_seq: {self.shoot_video_seq}")
+        print(f"start_video_seq: {self.start_video_seq}")
+        print(f"stop_video_seq: {self.stop_video_seq}")
         print(f"goto_photo_seq: {self.goto_photo_seq}")
         print(f"goto_video_seq: {self.goto_video_seq}")
         print(f"actions_time_gap: {self.actions_time_gap}")

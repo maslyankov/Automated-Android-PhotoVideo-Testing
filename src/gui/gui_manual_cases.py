@@ -27,7 +27,8 @@ def gui_manual_cases(attached_devices, device_obj):  # TODO
 
     layout = [
         [sg.Frame('Test Case', case_frame_layout, font='Any 12', title_color='white')],
-        [sg.Frame('After Case', post_case_frame_layout, font='Any 12', title_color='white')]
+        [sg.Frame('After Case', post_case_frame_layout, font='Any 12', title_color='white')],
+        [sg.Button('Do Case', key='capture_case_btn')]
     ]
 
     window = sg.Window('Automated Photo/Video Testing', layout,
@@ -56,7 +57,6 @@ def gui_manual_cases(attached_devices, device_obj):  # TODO
                 window['capture_multi_cases_btn'].Update(disabled=True)
 
         if event == "capture_case_btn":
-            device_obj.open_snap_cam()
             # Photos Mode
             if values['mode_photos'] or values['mode_both']:
                 # shoot_photo(device_obj, values['logs_bool'], values['logs_filter'],

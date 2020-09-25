@@ -315,9 +315,10 @@ def gui_setup_device(attached_devices, device_obj):
             new_ui_elements = constants.CUSTOM_ACTIONS + list(
                 device_obj[values['selected_device']].get_clickable_window_elements().keys())
 
-            for element in range(constants.MAX_ACTIONS_DISPLAY):
-                if values['photo_selected_action.' + str(element)] == 'Empty':
-                    window['photo_selected_action.' + str(element)].Update(values=new_ui_elements)
+            for seq_type in list(constants.act_sequences.keys()):
+                for element in range(constants.MAX_ACTIONS_DISPLAY):
+                    #if values[f'{seq_type}_selected_action.{str(element)}'] == 'Empty':
+                    window[f'{seq_type}_selected_action.{str(element)}'].Update(values=new_ui_elements)
 
         for seq_type in list(constants.act_sequences.keys()):
             if event.split('.')[0] == f'{seq_type}_selected_action':
