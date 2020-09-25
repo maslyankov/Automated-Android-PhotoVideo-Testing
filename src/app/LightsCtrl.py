@@ -10,6 +10,7 @@ class LightsCtrl:
         self.current_color_temp = None
         self.current_brightness = 1
         self.anything_on = False
+        self.lights_on = []
 
         print('Selected light model: ', constants.LIGHTS_MODELS.get(model, "Invalid light model"))
         self.lights_model = constants.LIGHTS_MODELS[model]
@@ -45,14 +46,15 @@ class LightsCtrl:
         self.current_color_temp = color_temp
         print(f"[{color_temp}] turning on")
 
-        if not self.anything_on:
-            self.anything_on = []
-        elif color_temp not in self.anything_on:
-            self.anything_on.append(color_temp)
+        if color_temp not in self.lights_on:
+            self.lights_on.append(color_temp)
+            self.anything_on = True
+
+        print('Lights on: ', self.lights_on)
 
     def turn_off(self, color_temp, selected_target_light='all'):
         # TODO add check if color_temp is in self.available_lights
-        if self.anything_on and color_temp in self.anything_on:
+        if color_temp in self.lights_on:
             if self.lights_model == constants.LIGHTS_MODELS['SpectriWave']:
                 if color_temp != 'INCA' and selected_target_light != 'all' and int(selected_target_light) > 2:
                     selected_target_light = 'all'
@@ -64,10 +66,15 @@ class LightsCtrl:
                     self.api.cbox_right.set_lamp(color_temp, int(selected_target_light), 0)
                     print('I did: ', color_temp, selected_target_light, 0)
 
-            self.current_color_temp = color_temp
             print(f"[{color_temp}] turning off")
+            self.current_color_temp = color_temp
+            self.lights_on.remove(color_temp)
+            if not self.lights_on:
+                self.anything_on = False
         else:
             print('This light color was not turned on anyway...')
+
+        print('Lights on: ', self.lights_on)
 
     def set_brightness(self, target_brightness):
         if not self.anything_on:
@@ -92,6 +99,10 @@ class LightsCtrl:
         self.current_color_temp = color_temp
 
     def set_lux(self, luxmeter_obj, target_lux):
+        if not self.anything_on:
+            print('Cannot set desired lux as none of the lights are turned on!')
+            return
+
         print(f"\n\nSetting lux to {target_lux}")
         curr_lux = luxmeter_obj.get_lux()
         threshold = 10  # How much can we vary with lux value
