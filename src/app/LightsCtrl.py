@@ -9,6 +9,7 @@ class LightsCtrl:
     def __init__(self, model):
         self.current_color_temp = None
         self.current_brightness = 1
+        self.anything_on = False
 
         print('Selected light model: ', constants.LIGHTS_MODELS.get(model, "Invalid light model"))
         self.lights_model = constants.LIGHTS_MODELS[model]
@@ -44,24 +45,35 @@ class LightsCtrl:
         self.current_color_temp = color_temp
         print(f"[{color_temp}] turning on")
 
+        if not self.anything_on:
+            self.anything_on = []
+        elif color_temp not in self.anything_on:
+            self.anything_on.append(color_temp)
+
     def turn_off(self, color_temp, selected_target_light='all'):
         # TODO add check if color_temp is in self.available_lights
+        if self.anything_on and color_temp in self.anything_on:
+            if self.lights_model == constants.LIGHTS_MODELS['SpectriWave']:
+                if color_temp != 'INCA' and selected_target_light != 'all' and int(selected_target_light) > 2:
+                    selected_target_light = 'all'
+                num_lights_of_type = 3 if color_temp != 'INCA' else 6
+                if selected_target_light == 'all':
+                    for target_light in range(0, num_lights_of_type):
+                        self.api.cbox_right.set_lamp(color_temp, target_light, 0)
+                else:
+                    self.api.cbox_right.set_lamp(color_temp, int(selected_target_light), 0)
+                    print('I did: ', color_temp, selected_target_light, 0)
 
-        if self.lights_model == constants.LIGHTS_MODELS['SpectriWave']:
-            if color_temp != 'INCA' and selected_target_light != 'all' and int(selected_target_light) > 2:
-                selected_target_light = 'all'
-            num_lights_of_type = 3 if color_temp != 'INCA' else 6
-            if selected_target_light == 'all':
-                for target_light in range(0, num_lights_of_type):
-                    self.api.cbox_right.set_lamp(color_temp, target_light, 0)
-            else:
-                self.api.cbox_right.set_lamp(color_temp, int(selected_target_light), 0)
-                print('I did: ', color_temp, selected_target_light, 0)
-
-        self.current_color_temp = color_temp
-        print(f"[{color_temp}] turning on")
+            self.current_color_temp = color_temp
+            print(f"[{color_temp}] turning off")
+        else:
+            print('This light color was not turned on anyway...')
 
     def set_brightness(self, target_brightness):
+        if not self.anything_on:
+            print("You need to turn on any light color in order to change it's brightness!")
+            return
+
         if self.current_color_temp is None:
             print("Color temp not set.")
             return
