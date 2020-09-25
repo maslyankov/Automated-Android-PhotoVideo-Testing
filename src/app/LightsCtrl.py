@@ -80,7 +80,7 @@ class LightsCtrl:
         self.current_color_temp = color_temp
 
     def set_lux(self, luxmeter_obj, target_lux):
-        print(f"Setting lux to {target_lux}")
+        print(f"\n\nSetting lux to {target_lux}")
         curr_lux = luxmeter_obj.get_lux()
         threshold = 10  # How much can we vary with lux value
         luxmeter_resp_time = 0.6

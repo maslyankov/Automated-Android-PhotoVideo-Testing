@@ -398,7 +398,7 @@ class Device:
         except RuntimeError:
             print("Device was disconnected before we could detach it properly.. :(")
 
-    def open_device_ctrl(self):
+    def open_device_ctrl(self):  # TODO - kill after app killed
         """
         Open device screen view and control using scrcpy
         :return:None

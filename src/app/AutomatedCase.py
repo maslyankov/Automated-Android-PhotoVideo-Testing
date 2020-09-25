@@ -76,12 +76,14 @@ class AutomatedCase:
             lights.turn_on(temp)
 
             for lux in self.lights_seq[temp]:
-                print('LUX: ', lux)
                 lights.set_lux(luxmeter, lux)
 
+                # Do the thing
                 if self.specific_device is None:
                     for device in self.attached_devices:
                         self.devices_obj[device].take_photo()
+                else:
+                    self.devices_obj[self.specific_device].take_photo()
 
             lights.turn_off(temp)
 
