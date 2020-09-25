@@ -90,6 +90,11 @@ class LightsCtrl:
 
         while abs(curr_lux - target_lux) > threshold:
             print(f"Target lux: {target_lux}, current lux: {curr_lux}")
+
+            if self.current_brightness >= 100:
+                print("Max Brightness reached")
+                break
+
             if curr_lux > target_lux:  # We need to go down
                 self.set_brightness(self.current_brightness - step)
             elif curr_lux < target_lux:  # We need to go up
