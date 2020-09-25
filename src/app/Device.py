@@ -650,6 +650,8 @@ class Device:
         :param sequence: List of actions
         :return:
         """
+        self.open_app(self.camera_app)
+
         for action in sequence:
             act_id = action[0]
             act_data = action[1]

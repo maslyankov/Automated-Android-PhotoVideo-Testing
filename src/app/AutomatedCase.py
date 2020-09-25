@@ -82,7 +82,7 @@ class AutomatedCase:
                 if self.specific_device is None:
                     for device in self.attached_devices:
                         self.devices_obj[device].take_photo()
-                
+
             lights.turn_off(temp)
 
         print(self.lights_seq)
