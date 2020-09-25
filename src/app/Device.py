@@ -240,7 +240,8 @@ class Device:
         :param package: Specify the app package that you want to open
         :return:None
         """
-        if self.get_current_app() != package:
+        if self.get_current_app()[0] != package:
+            print('Currently opened: ', self.get_current_app())
             print("Opening {}...".format(package))
             self.d.shell("monkey -p '{}' -v 1".format(package))
         else:

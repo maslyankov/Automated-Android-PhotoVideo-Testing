@@ -111,6 +111,8 @@ def gui_automated_cases(attached_devices, devices_obj, selected_lights_model, se
             cases = AutomatedCase(attached_devices, devices_obj, selected_lights_model, values['selected_lights_seq'], selected_luxmeter_model)
             cases.execute()
 
+            sg.Popup('Cases done!')
+
             if values['pull_files']:
                 if values['save_location']:
                     # pull_camera_files(device_obj, values['save_location'], values['clear_files'])

@@ -73,6 +73,7 @@ class AutomatedCase:
 
         for temp in list(self.lights_seq.keys()):
             print('Lights Color Temp: ', temp)
+            lights.set_brightness(0)
             lights.turn_on(temp)
 
             for lux in self.lights_seq[temp]:

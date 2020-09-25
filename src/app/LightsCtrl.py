@@ -104,11 +104,17 @@ class LightsCtrl:
             return
 
         print(f"\n\nSetting lux to {target_lux}")
+
         curr_lux = luxmeter_obj.get_lux()
         threshold = 10  # How much can we vary with lux value
+
         luxmeter_resp_time = 0.6
         lights_resp_time = 1
-        step = 4
+        step = 4  # Too big for D75
+
+        was_bigger = False
+        was_smaller = False
+
         print('\n\n\nBefore diff: ', abs(curr_lux - target_lux), '\n\n\n')
 
         while abs(curr_lux - target_lux) > threshold:
@@ -119,8 +125,16 @@ class LightsCtrl:
                 break
 
             if curr_lux > target_lux:  # We need to go down
+                was_bigger = True
+                if was_smaller and step != 1:
+                    step -= 1
+                    was_smaller = False
                 self.set_brightness(self.current_brightness - step)
             elif curr_lux < target_lux:  # We need to go up
+                was_smaller = True
+                if was_bigger and step != 1:
+                    step -= 1
+                    was_bigger = False
                 self.set_brightness(self.current_brightness + step)
             else:  # If we are at the exact luxes (this seems almost impossible, I think)
                 break
