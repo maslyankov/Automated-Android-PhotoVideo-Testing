@@ -108,6 +108,8 @@ def gui_automated_cases(attached_devices, devices_obj, selected_lights_model, se
             #     print(f"Video started! Duration is: {values['duration_spinner']}")
             #     time.sleep(values['duration_spinner'])
             #     device_obj[values['selected_device']].stop_video()
+            sg.Popup('Starting Cases!', non_blocking=True, auto_close=True, auto_close_duration=5)
+
             cases = AutomatedCase(attached_devices, devices_obj, selected_lights_model, values['selected_lights_seq'], selected_luxmeter_model)
             cases.execute()
 
