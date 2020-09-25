@@ -7,6 +7,7 @@ from src.app.Device import Device
 from src.gui.gui_help import gui_help
 from src.gui.gui_camxoverride import gui_camxoverride
 from src.gui.gui_manual_cases import gui_manual_cases
+from src.gui.gui_automated_cases import gui_automated_cases
 from src.gui.gui_push_file import gui_push_file
 from src.gui.gui_reboot_device import gui_reboot_device
 from src.gui.gui_setup_device import gui_setup_device
@@ -16,10 +17,6 @@ import PySimpleGUI as sg
 import src.constants as constants
 
 ROOT_DIR = os.path.abspath(os.curdir + "/../")  # This is Project Root
-
-
-def gui_auto_cases(attached_devices, device_obj):
-    pass
 
 
 def loading(secs):  # Only gives fanciness
@@ -274,7 +271,8 @@ def gui():
                 gui_manual_cases(attached_devices_list, device)
 
             if event == 'capture_auto_btn':
-                gui_auto_cases(attached_devices_list, device)
+                print('Launching GUI')
+                gui_automated_cases(attached_devices_list, device, values['selected_lights_model'], values['selected_luxmeter_model'])
 
         else:
             # print('No attached devices!')

@@ -7,7 +7,6 @@ import xml.etree.cElementTree as ET
 from natsort import natsorted
 
 import src.constants as constants
-from src.temp.coords import *
 
 
 # Static Functions
