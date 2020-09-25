@@ -101,6 +101,8 @@ class LightsCtrl:
             time.sleep(lights_resp_time)
             curr_lux = luxmeter_obj.get_lux()  # Update lux measurement
 
+        print(f"[Set Lux] Target LUX was {target_lux}, we got it to {curr_lux}, because the threshold is {threshold}")
+
     def disconnect(self):
         print("Disconnecting from lights...")
         if self.lights_model == constants.LIGHTS_MODELS['SpectriWave']:

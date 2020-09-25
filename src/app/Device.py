@@ -664,15 +664,17 @@ class Device:
                 time.sleep(int(act_value))
             time.sleep(self.actions_time_gap)
 
-    def shoot_photo(self):
+    def take_photo(self):
+        print("Current mode: ", self.current_camera_app_mode)
         if self.current_camera_app_mode != 'photo':
             self.do(self.goto_photo_seq)
             self.current_camera_app_mode = 'photo'
         self.do(self.shoot_photo_seq)
 
     def start_video(self):
+        print("Current mode: ", self.current_camera_app_mode)
         if self.current_camera_app_mode != 'video':
-            self.do(self.goto_photo_seq)
+            self.do(self.goto_video_seq)
             self.current_camera_app_mode = 'video'
             self.is_recording_video = True
         self.do(self.start_video_seq)
