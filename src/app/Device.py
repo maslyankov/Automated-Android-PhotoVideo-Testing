@@ -115,7 +115,12 @@ class Device:
         self.logs_enabled = False
         self.logs_filter = ''
         self.camera_app = None
-        self.current_camera_app_mode = None
+
+        # States
+        self.current_camera_app_mode = 'photo'
+        self.is_recording_video = False
+
+        # Sequences
         self.shoot_photo_seq = []
         self.start_video_seq = []
         self.stop_video_seq = []
@@ -550,6 +555,9 @@ class Device:
                         setattr(self, constants.act_sequences[seq_type], generate_sequence(subelem))
                         print('Obj Seq List: ', getattr(self, constants.act_sequences[seq_type]))
 
+                if subelem.tag == 'actions_time_gap':
+                    self.actions_time_gap = int(subelem.text)
+
     def save_settings(self):
         root = ET.Element('device')
 
@@ -654,17 +662,24 @@ class Device:
             if act_type == 'delay':
                 print(f"Sleeping {act_value}")
                 time.sleep(int(act_value))
+            time.sleep(self.actions_time_gap)
 
     def shoot_photo(self):
+        if self.current_camera_app_mode != 'photo':
+            self.do(self.goto_photo_seq)
+            self.current_camera_app_mode = 'photo'
         self.do(self.shoot_photo_seq)
 
     def start_video(self):
+        if self.current_camera_app_mode != 'video':
+            self.do(self.goto_photo_seq)
+            self.current_camera_app_mode = 'video'
+            self.is_recording_video = True
         self.do(self.start_video_seq)
 
     def stop_video(self):
-        self.do(self.stop_video_seq)
-
-
+        if self.is_recording_video:
+            self.do(self.stop_video_seq)
 
     def print_attributes(self):
         # For debugging

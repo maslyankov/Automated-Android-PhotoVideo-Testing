@@ -61,12 +61,14 @@ def gui_manual_cases(attached_devices, device_obj):  # TODO
             if values['mode_photos'] or values['mode_both']:
                 # shoot_photo(device_obj, values['logs_bool'], values['logs_filter'],
                  #           "{}/logfile.txt".format(values['save_location']))
+                device_obj.do()
                 pass
 
             # Videos Mode
             if values['mode_videos'] or values['mode_both']:
                 # shoot_video(device_obj, values['duration_spinner'], values['logs_bool'], values['logs_filter'],
                 #            "{}/logfile.txt".format(values['save_location']))
+                device_obj.do()
                 pass
 
             if values['pull_files']:

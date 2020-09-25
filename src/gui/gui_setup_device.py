@@ -108,6 +108,11 @@ def device_data_to_gui(device, window):
                     disabled=False,
                     visible=True)
 
+    # Actions Gap
+    window['actions_gap_spinner'].Update(
+        value=getattr(device, 'actions_time_gap')
+    )
+
 
 def build_seq_gui(obj, prop_key, clickable_elements):  # TODO - Fix list of actions to choose from
     gui_seq = []
@@ -128,7 +133,7 @@ def build_seq_gui(obj, prop_key, clickable_elements):  # TODO - Fix list of acti
                            'Empty' if current_obj_elem is None
                            else current_obj_elem[0],
                            values=clickable_elements,
-                           size=(43, 1),
+                           size=(37, 1),
                            key=f'{prop_key}_selected_action.{num}',
                            disabled=False if num == 0 or num == len(getattr(obj, constants.act_sequences[
                                prop_key])) or current_obj_elem is not None else True,
@@ -149,7 +154,7 @@ def build_seq_gui(obj, prop_key, clickable_elements):  # TODO - Fix list of acti
                        place(sg.Button(
                            'Test!',
                            button_color=(sg.theme_text_element_background_color(), 'silver'),
-                           size=(5, 1),
+                           size=(4, 1),
                            key=f'{prop_key}_selected_action_test_btn.{num}',
                            disabled=False if num == 0 or num == len(getattr(obj, constants.act_sequences[
                                prop_key])) or current_obj_elem is not None else True,
@@ -191,7 +196,7 @@ def build_seq_gui(obj, prop_key, clickable_elements):  # TODO - Fix list of acti
     gui_seq += [
                    sg.Button('Test sequence!',
                              button_color=(sg.theme_text_element_background_color(), 'silver'),
-                             size=(45, 1),
+                             size=(42, 1),
                              key=f'{prop_key}_selected_action_sequence_test_btn',
                              disabled=False)
                ],
@@ -262,26 +267,38 @@ def gui_setup_device(attached_devices, device_obj):
                       key='test_app_btn', disabled=False)
         ], ]
 
+    actions_seq_settings_frame = [
+        [
+            sg.Text('Actions Gap Time:'),
+            sg.Spin([i for i in range(0, 30)],
+                    initial_value=getattr(device_obj[attached_devices[0]], 'actions_time_gap'),
+                    key='actions_gap_spinner',
+                    disabled=False,
+                    enable_events=True)
+        ],
+    ]
+
     # - Sequences -
     clickable_elements = constants.CUSTOM_ACTIONS + list(
         device_obj[attached_devices[0]].get_clickable_window_elements().keys())
 
-    layout = [
-        [sg.Frame('Select device', select_device_frame, font='Any 12', title_color='white')],
-        [sg.Frame('Logs', logs_frame, font='Any 12', title_color='white')],
-        [sg.Frame('Select Camera App', select_app_frame, font='Any 12', title_color='white')]
-    ]
-
-    save_btn = [
-        sg.Button('Save Settings', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 2),
-                  key='save_btn', disabled=False)]
+    seq_column = []
 
     for elem in list(constants.act_sequences.keys()):
         frame = [sg.Frame(f'{constants.act_sequences_desc[elem]} Action Sequence',
                           build_seq_gui(device_obj[attached_devices[0]], elem, clickable_elements), font='Any 12',
                           title_color='white')]
-        layout.append(frame)
-    layout.append(save_btn)
+        seq_column.append(frame)
+
+    layout = [
+        [sg.Frame('Select device', select_device_frame, font='Any 12', title_color='white')],
+        [sg.Frame('Logs', logs_frame, font='Any 12', title_color='white')],
+        [sg.Frame('Select Camera App', select_app_frame, font='Any 12', title_color='white')],
+        [sg.Frame('Actions Sequences Settings', actions_seq_settings_frame, font='Any 12', title_color='white')],
+        [sg.Column(seq_column, size=(370, 170), scrollable=True, vertical_scroll_only=True)],
+        [sg.Button('Save Settings', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 2),
+                   key='save_btn', disabled=False)]
+    ]
 
     # Create the Window
     window = sg.Window('Setup', layout,
@@ -317,8 +334,11 @@ def gui_setup_device(attached_devices, device_obj):
 
             for seq_type in list(constants.act_sequences.keys()):
                 for element in range(constants.MAX_ACTIONS_DISPLAY):
-                    #if values[f'{seq_type}_selected_action.{str(element)}'] == 'Empty':
+                    # if values[f'{seq_type}_selected_action.{str(element)}'] == 'Empty':
                     window[f'{seq_type}_selected_action.{str(element)}'].Update(values=new_ui_elements)
+
+        if event == 'actions_gap_spinner':
+            setattr(device_obj[values['selected_device']], 'actions_time_gap', values['actions_gap_spinner'])
 
         for seq_type in list(constants.act_sequences.keys()):
             if event.split('.')[0] == f'{seq_type}_selected_action':
@@ -347,7 +367,8 @@ def gui_setup_device(attached_devices, device_obj):
                         disabled=False,
                         visible=True)
 
-            if event.split('.')[0] == f"{seq_type}_selected_action_test_btn":
+            if event.split('.')[
+                0] == f"{seq_type}_selected_action_test_btn":  # TODO - Make this use the GUI values not obj values
                 try:
                     data = device_obj[values['selected_device']].get_clickable_window_elements()[
                         values[f"{seq_type}_selected_action.{event.split('.')[1]}"]
@@ -364,7 +385,7 @@ def gui_setup_device(attached_devices, device_obj):
                         window[f"{seq_type}_selected_action.{str(element)}"].Update(values=new_ui_elements)
 
             if event == f"{seq_type}_selected_action_sequence_test_btn":
-                device_obj[values['selected_device']].do(device_obj[values['selected_device']].shoot_photo_seq)
+                device_obj[values['selected_device']].do(getattr(device_obj[values['selected_device']], constants.act_sequences[seq_type]))
 
         if event == 'save_btn':
             device = device_obj[values['selected_device']]
