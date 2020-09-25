@@ -73,6 +73,8 @@ class AutomatedCase:
 
         for temp in list(self.lights_seq.keys()):
             print('Lights Color Temp: ', temp)
+            lights.turn_on(temp)
+
             for lux in self.lights_seq[temp]:
                 print('LUX: ', lux)
                 lights.set_lux(luxmeter, lux)
@@ -80,5 +82,7 @@ class AutomatedCase:
                 if self.specific_device is None:
                     for device in self.attached_devices:
                         self.devices_obj[device].take_photo()
+                
+            lights.turn_off(temp)
 
         print(self.lights_seq)
