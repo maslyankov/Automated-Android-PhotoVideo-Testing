@@ -123,8 +123,10 @@ class AutomatedCase:
                     progress
                 )
 
-            self.output_gui('Cases are done! Turning lights off.')
+            self.output_gui(f'{temp} is done! Turning it off.')
             lights.turn_off(temp)
+
+        lights.disconnect()
 
     def execute(self, gui_event):
         threading.Thread(target=self._execute, args=(gui_event,), daemon=True).start()
