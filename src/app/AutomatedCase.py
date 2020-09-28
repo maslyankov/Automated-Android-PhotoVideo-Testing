@@ -1,4 +1,3 @@
-import subprocess
 import os
 import time
 import xml.etree.cElementTree as ET
@@ -7,6 +6,7 @@ import src.constants as constants
 from src.app.LightsCtrl import LightsCtrl
 from src.konica.ChromaMeterKonica import ChromaMeterKonica
 
+
 class AutomatedCase:
     def __new__(cls, *args, **kwargs):
         if args[2] == '':
@@ -14,7 +14,9 @@ class AutomatedCase:
             raise Exception(ValueError)
         return super(AutomatedCase, cls).__new__(cls)
 
-    def __init__(self, attached_devices, devices_obj, lights_model, lights_seq_xml, luxmeter_model, specific_device=None):
+    def __init__(self, attached_devices, devices_obj,
+                 lights_model, lights_seq_xml, luxmeter_model,
+                 specific_device=None):
         self.attached_devices = attached_devices
         self.devices_obj = devices_obj
         self.lights_model = lights_model
@@ -29,7 +31,6 @@ class AutomatedCase:
         self.parse_lights_xml_seq()
 
     def parse_lights_xml_seq(self):
-        print(f'attached: {self.attached_devices}, devices_obj: {self.devices_obj}, lights_seq: {self.lights_seq_xml}, chosen device: {self.specific_device}')
         try:
             tree = ET.parse(self.lights_seq_xml)
         except FileNotFoundError:
@@ -69,7 +70,7 @@ class AutomatedCase:
         lights = LightsCtrl(self.lights_model)  # Create lights object
         if self.lights_model == 'SpectriWave':  # SpectriWave Specific
             time.sleep(1)
-            lights_status = lights.status()
+            # lights_status = lights.status()
 
         for temp in list(self.lights_seq.keys()):
             print('Lights Color Temp: ', temp)

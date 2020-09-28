@@ -71,6 +71,8 @@ class AdbClient:
         """
         device_obj.set_led_color('FFFFFF', 'RGB1', 'global_rgb')  # Poly
         device_obj.kill_scrcpy()
+
+        # Finally detach device
         try:
             self.attached_devices.remove(device_serial)
         except ValueError:
