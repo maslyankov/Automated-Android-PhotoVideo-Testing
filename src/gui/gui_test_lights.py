@@ -164,7 +164,6 @@ def gui_test_lights(selected_lights_model, selected_luxmeter_model):
 
         if event == 'set_brightness_btn':
             lights.set_brightness(values['selected_brightness'])
-            pass
 
         if event == 'set_target_lux_btn':
             lights.set_lux(luxmeter, int(values['target_lux']))

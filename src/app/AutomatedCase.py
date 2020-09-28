@@ -100,8 +100,8 @@ class AutomatedCase:
 
         for temp in list(self.lights_seq.keys()):
             self.output_gui(f'\nStarting Color Temp: {temp}')
-            lights.set_brightness(1)
             lights.turn_on(temp)
+            lights.set_brightness(1)
 
             for lux in self.lights_seq[temp]:
                 self.output_gui(f'Doing {lux} lux...')
