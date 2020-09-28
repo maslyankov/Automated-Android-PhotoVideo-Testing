@@ -17,12 +17,14 @@ class ChromaMeterKonica(object):
     def __init__(self):
         self.cmd_dict = cl200a_cmd_dict
         self.port = serial_port_luxmeter()
-        self.isAlive = True
+        self.is_alive = True
 
         try:
             self.ser = connect_serial_port(self.port, parity=PARITY_EVEN, bytesize=SEVENBITS)
         except SerialException:
             print('Error: Could not connect to Lux Meter')
+            self.is_alive = False
+            return
         try:
             self.__connection()
             self.__hold_mode()
@@ -105,6 +107,9 @@ class ChromaMeterKonica(object):
         Perform lux level measurement.
         :return: String with lux measured.
         """
+        if not self.is_alive:
+            return
+
         self.ser.reset_input_buffer()
         self.ser.reset_output_buffer()
         # Check if device still here
@@ -118,7 +123,7 @@ class ChromaMeterKonica(object):
         try:
             result = self.ser.readline().decode('ascii')
         except SerialException:
-            self.isAlive = False
+            self.is_alive = False
             print('Connection to Luxmeter was lost.')
             return
 

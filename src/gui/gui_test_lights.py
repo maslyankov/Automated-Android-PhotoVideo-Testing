@@ -138,7 +138,7 @@ def gui_test_lights(selected_lights_model, selected_luxmeter_model):
                 window['selected_light_num'].Update(values=['all', '0', '1', '2'])
 
         if selected_luxmeter_model == 'Konita Minolta CL-200A':  # Konita Minolta CL-200A Selected
-            if luxmeter.isAlive:
+            if luxmeter.is_alive:
                 window['luxmeter_name'].Update('Konita Minolta CL-200A')
                 window['luxmeter_lux_value'].Update(str(luxmeter.get_lux()))
             else:
