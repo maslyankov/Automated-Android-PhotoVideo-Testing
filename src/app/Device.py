@@ -9,7 +9,7 @@ from natsort import natsorted
 import src.constants as constants
 
 
-# Static Functions
+# ---------- Static Functions ---------- 
 def generate_sequence(subelem):
     seq_temp = []
 
@@ -88,19 +88,19 @@ def xml_from_sequence(obj, prop, xml_obj):
             elem_value.text = str(action[1][1])
 
 
-# CLASS Device
+# ---------- CLASS Device ----------
 class Device:
     """
     Class for interacting with devices using adb (ppadb) and AdbClient class
     """
-
+    # ----- INITIALIZER -----
     def __init__(self, adb, device_serial):
         print("Attaching to device...")
 
         self.adb = adb
         self.adb_client = adb.client
         self.d = self.adb_client.device(device_serial)  # Create device client object
-        self.scrcpy = None
+        self.scrcpy = []
 
         # Object Parameters #
         # Info
@@ -145,6 +145,15 @@ class Device:
 
         self.setup_device_settings()
         self.turn_on_and_unlock()
+    
+    # ----- Base methods -----
+    def exec_shell(self, cmd):
+        """
+        Execute a shell command on the device
+        :param cmd:String command to execute
+        :return:None
+        """
+        return self.d.shell(cmd)
 
     def root(self):
         """
@@ -179,32 +188,72 @@ class Device:
         if stdout:
             print("Remonut Output: ".format(stdout.decode()))
         remount.terminate()
+    
+    # ----- Getters/Setters -----
+    def set_logs(self, logs_bool, fltr=None):
+        if not isinstance(logs_bool, bool):
+            print('Logs setter got a non bool type... Defaulting to False.')
+            self.logs_enabled = False
+        else:
+            self.logs_enabled = logs_bool
 
-    def exec_shell(self, cmd):
-        """
-        Execute a shell command on the device
-        :param cmd:String command to execute
-        :return:None
-        """
-        return self.d.shell(cmd)
+        if fltr is not None:
+            self.logs_filter = fltr
 
-    def input_tap(self, *coords):  # Send tap events
-        """
-        Sends tap input to device
-        :param coords: tap coordinates to use
-        :return:None
-        """
-        print("X: ", coords[0][0], "Y: ", coords[0][1])  # Debugging
-        self.d.shell("input tap {} {}".format(coords[0][0], coords[0][1]))
+    def set_shoot_photo_seq(self, seq):
+        self.shoot_photo_seq = seq
 
-    def reboot(self):
-        """
-        Reboots the device.
-        :return:None
-        """
-        self.d.shell("reboot")  # TODO Remove device from connected_devices list after reboot
-        # self.adb.detach_device(self.device_serial, self)
+    def get_shoot_photo_seq(self):
+        return self.shoot_photo_seq
 
+    def set_start_video_seq(self, seq):
+        self.start_video_seq = seq
+
+    def get_start_video_seq(self):
+        return self.start_video_seq
+    
+    def set_stop_video_seq(self, seq):
+        self.stop_video_seq = seq
+
+    def get_stop_video_seq(self):
+        return self.stop_video_seq
+    
+    def set_camera_app_pkg(self, pkg):
+        self.camera_app = pkg
+
+    def get_camera_app_pkg(self):
+        return self.camera_app
+
+    # ----- Getters -----
+    def get_device_model(self):
+        """
+        Get the device model
+        :return: String of device model
+        """
+        return self.exec_shell("getprop ro.product.model").strip()
+
+    def get_device_name(self):
+        """
+        Get the device name
+        :return: String of device name
+        """
+        return self.exec_shell("getprop ro.product.name").strip()
+
+    def get_manufacturer(self):
+        return self.exec_shell("getprop ro.product.manufacturer").strip()
+
+    def get_board(self):
+        return self.exec_shell("getprop ro.product.board").strip()
+
+    def get_android_version(self):
+        return self.exec_shell("getprop ro.build.version.release").strip()
+
+    def get_sdk_version(self):
+        return self.exec_shell("getprop ro.build.version.sdk").strip()
+
+    def get_cpu(self):
+        return self.exec_shell("getprop ro.product.cpu.abi").strip()
+    
     def get_current_app(self):
         """
         Returns currently opened app package and its current activity
@@ -212,17 +261,17 @@ class Device:
         """
         # dumpsys window windows | grep -E 'mFocusedApp' <- had issues with this one, sometimes returns null
         # Alternative -> dumpsys activity | grep top-activity
-        try:   # This works on older Android versions
-            current = self.d.shell("dumpsys activity | grep -E 'mFocusedActivity'").strip().split(' ')[3].split('/')
+        try:  # This works on older Android versions
+            current = self.exec_shell("dumpsys activity | grep -E 'mFocusedActivity'").strip().split(' ')[3].split('/')
             if current is None:
                 print('(Get Current App) Focused Activity is empty, trying top-activity...')
-                current = self.d.shell("dumpsys activity | grep top-activity").strip().split(' ')[9].split(':')
+                current = self.exec_shell("dumpsys activity | grep top-activity").strip().split(' ')[9].split(':')
                 temp = current[1].split('/')
                 temp.append(current[0])  # -> [pkg, activity_id, pid]
                 return temp
         except IndexError:
             print('We had trouble detecting currently opened app! Trying another method!')
-            current = self.d.shell("dumpsys window windows | grep -E 'mFocusedApp'").split(' ')[6].split('/')
+            current = self.exec_shell("dumpsys window windows | grep -E 'mFocusedApp'").split(' ')[6].split('/')
         return current
 
     def get_installed_packages(self):
@@ -232,8 +281,90 @@ class Device:
         'cmd package list packages -e'
         :return:List of strings, each being an app package on the device
         """
-        return sorted(self.d.shell("pm list packages").replace('package:', '').splitlines())
+        return sorted(self.exec_shell("pm list packages").replace('package:', '').splitlines())
+    
+    def get_camera_files_list(self):
+        """
+        Get a list of files in sdcard/DCIM/Camera on the device
+        :return: List of strings, each being a file located in sdcard/DCIM/Camera
+        """
 
+        files_list = self.exec_shell("ls -1 sdcard/DCIM/Camera").splitlines()
+        if files_list[0] == 'ls: sdcard/DCIM/Camera: No such file or directory':  # TODO Fix this shit
+            return
+        else:
+            return files_list
+
+    def get_screen_resolution(self):
+        """
+        Get screen resolution of device
+        :return:List height and width
+        """
+        try:
+            res = self.exec_shell('dumpsys window | grep "mUnrestricted"').strip().split(' ')[1].split('x')
+        except IndexError:
+            res = self.exec_shell('dumpsys window | grep "mUnrestricted"').rstrip().split('][')[1].strip(']').split(',')
+
+        return res
+    
+    def get_wakefulness(self):
+        return self.exec_shell("dumpsys activity | grep -E 'mWakefulness'").split('=')[1]
+
+    def get_device_leds(self):
+        """
+        Get a list of the leds that the device has
+        :return:None
+        """
+        return natsorted(self.exec_shell("ls /sys/class/leds/").strip().replace('\n', '').replace('  ', ' ').split(' '))
+    
+    # ----- Binary getters -----
+    
+    def has_screen(self):  # TODO Make this return a valid boolean (now it sometimes works, sometimes doesn't)
+        """
+        Check if the device has an integrated screen (not working all the time)
+        :return:Bool Should return a Bool
+        """
+        before = self.exec_shell("dumpsys deviceidle | grep mScreenOn").split('=')[1].strip()
+        self.exec_shell('input keyevent 26')
+        time.sleep(0.5)
+        after = self.exec_shell("dumpsys deviceidle | grep mScreenOn").split('=')[1].strip()
+
+        if before == after:
+            print("Device has no integrated screen!")
+
+        self.exec_shell('input keyevent 26')
+
+    def is_sleeping(self):
+        state = self.exec_shell("dumpsys activity | grep -E 'mSleeping'").strip().split(' ')
+        is_sleeping = state[0].split('=')[1]
+        try:
+            lock_screen = state[1].split('=')[1]
+        except IndexError:
+            lock_screen = None
+        return is_sleeping, lock_screen
+
+    def is_adb_enabled(self):
+        # Kind of useless as if this is actually false, we will not be able to connect
+        return True if self.exec_shell('settings get global adb_enabled').strip() == '1' else False
+
+    # ----- Device Actions -----
+    def reboot(self):
+        """
+        Reboots the device.
+        :return:None
+        """
+        self.exec_shell("reboot")  # TODO Remove device from connected_devices list after reboot
+        # self.adb.detach_device(self.device_serial, self)
+
+    def input_tap(self, *coords):  # Send tap events
+        """
+        Sends tap input to device
+        :param coords: tap coordinates to use
+        :return:None
+        """
+        print("X: ", coords[0][0], "Y: ", coords[0][1])  # Debugging
+        self.exec_shell("input tap {} {}".format(coords[0][0], coords[0][1]))
+    
     def open_app(self, package):
         """
         Open an app package
@@ -243,7 +374,7 @@ class Device:
         if self.get_current_app()[0] != package:
             print('Currently opened: ', self.get_current_app())
             print("Opening {}...".format(package))
-            self.d.shell("monkey -p '{}' -v 1".format(package))
+            self.exec_shell("monkey -p '{}' -v 1".format(package))
         else:
             print("{} was already opened! Continuing...".format(package))
 
@@ -265,124 +396,26 @@ class Device:
         """
         self.d.pull(src, dst)
 
-    def get_camera_files_list(self):
-        """
-        Get a list of files in sdcard/DCIM/Camera on the device
-        :return: List of strings, each being a file located in sdcard/DCIM/Camera
-        """
-
-        files_list = self.d.shell("ls -1 sdcard/DCIM/Camera").splitlines()
-        if files_list[0] == 'ls: sdcard/DCIM/Camera: No such file or directory':  # TODO Fix this shit
-            return
-        else:
-            return files_list
-
     def clear_folder(self, folder):
         """
         Deletes a folder
         :return:None
         """
-        self.d.shell(f"rm -rf {folder}")
+        self.exec_shell(f"rm -rf {folder}")
         print(f"Deleting folder {folder} from device!")
-
-    def clear_camera_folder(self):
-        """
-        Deletes camera folder - probably will be deprecated
-        :return:None
-        """
-        self.clear_folder("sdcard/DCIM/Camera/*")
-
-    def has_screen(self):  # TODO Make this return a valid boolean (now it sometimes works, sometimes doesn't)
-        """
-        Check if the device has an integrated screen (not working all the time)
-        :return:Bool Should return a Bool
-        """
-        before = self.d.shell("dumpsys deviceidle | grep mScreenOn").split('=')[1].strip()
-        self.d.shell('input keyevent 26')
-        time.sleep(0.5)
-        after = self.d.shell("dumpsys deviceidle | grep mScreenOn").split('=')[1].strip()
-
-        if before == after:
-            print("Device has no integrated screen!")
-
-        self.d.shell('input keyevent 26')
-
-    def get_screen_resolution(self):
-        """
-        Get screen resolution of device
-        :return:List height and width
-        """
-        try:
-            res = self.d.shell('dumpsys window | grep "mUnrestricted"').strip().split(' ')[1].split('x')
-        except IndexError:
-            res = self.d.shell('dumpsys window | grep "mUnrestricted"').rstrip().split('][')[1].strip(']').split(',')
-
-        return res
-
-    def get_wakefulness(self):
-        return self.d.shell("dumpsys activity | grep -E 'mWakefulness'").split('=')[1]
-
-    def is_sleeping(self):
-        state = self.d.shell("dumpsys activity | grep -E 'mSleeping'").strip().split(' ')
-        is_sleeping = state[0].split('=')[1]
-        try:
-            lock_screen = state[1].split('=')[1]
-        except IndexError:
-            lock_screen = None
-        return is_sleeping, lock_screen
-
-    def get_device_model(self):
-        """
-        Get the device model
-        :return: String of device model
-        """
-        return self.d.shell("getprop ro.product.model").strip()
-
-    def get_device_name(self):
-        """
-        Get the device name
-        :return: String of device name
-        """
-        return self.d.shell("getprop ro.product.name").strip()
-
-    def get_manufacturer(self):
-        return self.d.shell("getprop ro.product.manufacturer").strip()
-
-    def get_board(self):
-        return self.d.shell("getprop ro.product.board").strip()
-
-    def get_android_version(self):
-        return self.d.shell("getprop ro.build.version.release").strip()
-
-    def get_sdk_version(self):
-        return self.d.shell("getprop ro.build.version.sdk").strip()
-
-    def get_cpu(self):
-        return self.d.shell("getprop ro.product.cpu.abi").strip()
-
-    def is_adb_enabled(self):
-        # Kind of useless as if this is actually false, we will not be able to connect
-        return True if self.d.shell('settings get global adb_enabled').strip() == '1' else False
 
     def setup_device_settings(self):
         print('Making the device an insomniac!')
-        self.d.shell('settings put global stay_on_while_plugged_in 1')
-        self.d.shell('settings put system screen_off_timeout 9999999')
+        self.exec_shell('settings put global stay_on_while_plugged_in 1')
+        self.exec_shell('settings put system screen_off_timeout 9999999')
 
     def turn_on_and_unlock(self):
         state = self.is_sleeping()
         # print(f"predicate: {state[0] == 'false'}")
         if state[0] == 'true':
             print('Device should have been already turned on')
-            self.d.shell('input keyevent 26')  # Event Power Button
-            self.d.shell('input keyevent 82')  # Unlock
-
-    def get_device_leds(self):
-        """
-        Get a list of the leds that the device has
-        :return:None
-        """
-        return natsorted(self.d.shell("ls /sys/class/leds/").strip().replace('\n', '').replace('  ', ' ').split(' '))
+            self.exec_shell('input keyevent 26')  # Event Power Button
+            self.exec_shell('input keyevent 82')  # Unlock
 
     def set_led_color(self, value, led, target):
         """
@@ -394,20 +427,20 @@ class Device:
         :return:None
         """
         try:
-            self.d.shell('echo {} > /sys/class/leds/{}/{}'.format(value, led, target))
-            self.d.shell('echo 60 > /sys/class/leds/{}/global_enable'.format(led))  # Poly
+            self.exec_shell('echo {} > /sys/class/leds/{}/{}'.format(value, led, target))
+            self.exec_shell('echo 60 > /sys/class/leds/{}/global_enable'.format(led))  # Poly
         except RuntimeError:
             print("Device was disconnected before we could detach it properly.. :(")
 
-    def open_device_ctrl(self):  # TODO - kill after app killed
+    def open_device_ctrl(self):
         """
         Open device screen view and control using scrcpy
         :return:None
         """
         print("Opening scrcpy for device ", self.device_serial)
-        self.scrcpy = subprocess.Popen([constants.SCRCPY, '--serial', self.device_serial],
-                                       stdout=subprocess.PIPE,
-                                       stderr=subprocess.PIPE)
+        self.scrcpy.append(subprocess.Popen([constants.SCRCPY, '--serial', self.device_serial],
+                                            stdout=subprocess.PIPE,
+                                            stderr=subprocess.PIPE))
 
     def identify(self):
         """
@@ -417,104 +450,27 @@ class Device:
         leds = self.get_device_leds()
         print(leds)  # Debugging
         # Poly
-        self.d.shell('echo 1 > /sys/class/leds/{}/global_onoff'.format(leds[0]))
+        self.exec_shell('echo 1 > /sys/class/leds/{}/global_onoff'.format(leds[0]))
 
         for k in range(1, 60, 5):  # Blink Leds and screen
             # Poly
             if k != 1:
                 time.sleep(0.3)
-            self.d.shell('echo {}{}{} > /sys/class/leds/{}/global_enable'.format(k, k, k, leds[0]))  # Poly
+            self.exec_shell('echo {}{}{} > /sys/class/leds/{}/global_enable'.format(k, k, k, leds[0]))  # Poly
 
             # Devices with screen
             if (k % 11) % 2:
-                self.d.shell('input keyevent 26')  # Event Power Button
+                self.exec_shell('input keyevent 26')  # Event Power Button
 
-        self.d.shell('echo 60 > /sys/class/leds/{}/global_enable'.format(leds[0]))  # Poly
+        self.exec_shell('echo 60 > /sys/class/leds/{}/global_enable'.format(leds[0]))  # Poly
         print('Finished identifying!')
 
-    def dump_window_elements(self):
-        """
-        Dump elements of currently opened app activity window
-        and pull them from device to folder XML
-        :return:None
-        """
-        source = self.d.shell('uiautomator dump').split(': ')[1].rstrip()
-        current_app = self.get_current_app()
-        if source == "null root node returned by UiTestAutomationBridge.":
-            print("UIAutomator error! :( Try dumping UI elements again. (It looks like a known error)")
-            return
+    def kill_scrcpy(self):
+        for process in self.scrcpy:
+            process.terminate()
+        print("Killed scrcpy windows")
 
-        print('Source returned: ', source)  # Debugging
-
-        self.d.pull(
-            source,
-            os.path.join(constants.ROOT_DIR,
-                         'XML', '{}_{}_{}.xml'.format(self.device_serial, current_app[0], current_app[1]))
-        )
-        print('Dumped window elements for current app.')
-
-    def get_clickable_window_elements(self, force_dump=False):
-        """
-        Parse the dumped window elements file and filter only elements that are "clickable"
-        :return:Dict key: element_id or number,
-                value: String of elem description, touch location (a list of x and y)
-        """
-        print('Parsing xml...')
-        current_app = self.get_current_app()
-
-        if current_app is None:
-            print("Current app unknown... We don't know how to name the xml file so we will say NO! :D ")
-            return {}
-
-        print("Serial {} , app: {}".format(self.device_serial, current_app))
-        file = os.path.join(constants.ROOT_DIR,
-                            'XML', '{}_{}_{}.xml'.format(self.device_serial, current_app[0], current_app[1]))
-
-        if force_dump:
-            self.dump_window_elements()
-
-        xml_tree = None
-
-        try:
-            xml_tree = ET.parse(file)
-        except FileNotFoundError:
-            print('XML for this UI not found, dumping a new one...')
-            self.dump_window_elements()
-            xml_tree = ET.parse(file)
-        except ET.ParseError as error:
-            print("XML Parse Error: ", error)
-
-        try:
-            xml_root = xml_tree.getroot()
-        except AttributeError:
-            print("XML wasn't opened correctly!")
-            return
-        except UnboundLocalError:
-            print("UI Elements XML is probably empty... :( Retrying...")
-            self.dump_window_elements()
-            xml_tree = ET.parse(file)
-            xml_root = xml_tree.getroot()
-        elements = {}
-
-        for num, element in enumerate(xml_root.iter("node")):
-            elem_res_id = element.attrib['resource-id'].split('/')
-            elem_desc = element.attrib['content-desc']
-            elem_bounds = re.findall(r'\[([^]]*)]', element.attrib['bounds'])[0].split(',')
-
-            if (elem_res_id or elem_desc) and int(elem_bounds[0]) > 0:
-                elem_bounds[0] = int(elem_bounds[0]) + 1
-                elem_bounds[1] = int(elem_bounds[1]) + 1
-                if elem_res_id[0] != '':
-                    try:
-                        elements[elem_res_id[1]] = elem_desc, elem_bounds
-                    except IndexError:
-                        # For elements that don't have an app id as first element
-                        elements[elem_res_id[0]] = elem_desc, elem_bounds
-                else:
-                    elements[num] = elem_desc, elem_bounds
-
-        return elements
-
+    # ----- Settings Persistence -----
     def load_settings_file(self):
         print(f'Checking for Device settings file at "{self.device_xml}" and possibly loading it..')
 
@@ -616,35 +572,92 @@ class Device:
         tree = ET.ElementTree(root)
         print(f'Writing settings to file {self.device_xml}')
         tree.write(self.device_xml, encoding='UTF8', xml_declaration=True)
+    
+    # ----- Device UI Parsing -----
+    def dump_window_elements(self):
+        """
+        Dump elements of currently opened app activity window
+        and pull them from device to folder XML
+        :return:None
+        """
+        source = self.exec_shell('uiautomator dump').split(': ')[1].rstrip()
+        current_app = self.get_current_app()
+        if source == "null root node returned by UiTestAutomationBridge.":
+            print("UIAutomator error! :( Try dumping UI elements again. (It looks like a known error)")
+            return
 
-    def set_logs(self, logs_bool, fltr=None):
-        if not isinstance(logs_bool, bool):
-            print('Logs setter got a non bool type... Defaulting to False.')
-            self.logs_enabled = False
-        else:
-            self.logs_enabled = logs_bool
+        print('Source returned: ', source)  # Debugging
 
-        if fltr is not None:
-            self.logs_filter = fltr
+        self.d.pull(
+            source,
+            os.path.join(constants.ROOT_DIR,
+                         'XML', '{}_{}_{}.xml'.format(self.device_serial, current_app[0], current_app[1]))
+        )
+        print('Dumped window elements for current app.')
 
-    def set_shoot_photo_seq(self, seq):
-        self.shoot_photo_seq = seq
+    def get_clickable_window_elements(self, force_dump=False):
+        """
+        Parse the dumped window elements file and filter only elements that are "clickable"
+        :return:Dict key: element_id or number,
+                value: String of elem description, touch location (a list of x and y)
+        """
+        print('Parsing xml...')
+        current_app = self.get_current_app()
 
-    def get_shoot_photo_seq(self):
-        return self.shoot_photo_seq
+        if current_app is None:
+            print("Current app unknown... We don't know how to name the xml file so we will say NO! :D ")
+            return {}
 
-    def set_shoot_video_seq(self, seq):
-        self.shoot_video_seq = seq
+        print("Serial {} , app: {}".format(self.device_serial, current_app))
+        file = os.path.join(constants.ROOT_DIR,
+                            'XML', '{}_{}_{}.xml'.format(self.device_serial, current_app[0], current_app[1]))
 
-    def get_shoot_video_seq(self):
-        return self.shoot_video_seq
+        if force_dump:
+            self.dump_window_elements()
 
-    def set_camera_app_pkg(self, pkg):
-        self.camera_app = pkg
+        xml_tree = None
 
-    def get_camera_app_pkg(self):
-        return self.camera_app
+        try:
+            xml_tree = ET.parse(file)
+        except FileNotFoundError:
+            print('XML for this UI not found, dumping a new one...')
+            self.dump_window_elements()
+            xml_tree = ET.parse(file)
+        except ET.ParseError as error:
+            print("XML Parse Error: ", error)
 
+        try:
+            xml_root = xml_tree.getroot()
+        except AttributeError:
+            print("XML wasn't opened correctly!")
+            return
+        except UnboundLocalError:
+            print("UI Elements XML is probably empty... :( Retrying...")
+            self.dump_window_elements()
+            xml_tree = ET.parse(file)
+            xml_root = xml_tree.getroot()
+        elements = {}
+
+        for num, element in enumerate(xml_root.iter("node")):
+            elem_res_id = element.attrib['resource-id'].split('/')
+            elem_desc = element.attrib['content-desc']
+            elem_bounds = re.findall(r'\[([^]]*)]', element.attrib['bounds'])[0].split(',')
+
+            if (elem_res_id or elem_desc) and int(elem_bounds[0]) > 0:
+                elem_bounds[0] = int(elem_bounds[0]) + 1
+                elem_bounds[1] = int(elem_bounds[1]) + 1
+                if elem_res_id[0] != '':
+                    try:
+                        elements[elem_res_id[1]] = elem_desc, elem_bounds
+                    except IndexError:
+                        # For elements that don't have an app id as first element
+                        elements[elem_res_id[0]] = elem_desc, elem_bounds
+                else:
+                    elements[num] = elem_desc, elem_bounds
+
+        return elements
+
+    # ----- Actions Parsing -----
     def do(self, sequence):
         """
         Parses an actions sequence that is passed
@@ -685,6 +698,7 @@ class Device:
         if self.is_recording_video:
             self.do(self.stop_video_seq)
 
+    # ----- Other -----
     def print_attributes(self):
         # For debugging
         print("Object properties:\n")

@@ -4,6 +4,7 @@ import os
 from ppadb.client import Client as AdbPy
 import src.constants as constants
 
+
 class AdbClient:
     """
     AdbClient class takes care of starting ADB, keeping connected devices list and etc.
@@ -25,13 +26,7 @@ class AdbClient:
         self.client = AdbPy(host="127.0.0.1", port=5037)
         self.attached_devices = []  # Store attached devices - devices that are connected and we are attached to
 
-    def kill_adb(self):
-        """
-        Kill opened adb process
-        :return:None
-        """
-        self.adb.terminate()
-
+    # ----- Getters -----
     def list_devices(self):
         """
         Get a list of devices from adb server
@@ -48,6 +43,14 @@ class AdbClient:
         :return:List
         """
         return self.attached_devices
+
+    # ----- Methods -----
+    def kill_adb(self):
+        """
+        Kill opened adb process
+        :return:None
+        """
+        self.adb.terminate()
 
     def attach_device(self, device_serial, device_obj):
         """
@@ -67,6 +70,7 @@ class AdbClient:
         :return: None
         """
         device_obj.set_led_color('FFFFFF', 'RGB1', 'global_rgb')  # Poly
+        device_obj.kill_scrcpy()
         try:
             self.attached_devices.remove(device_serial)
         except ValueError:
