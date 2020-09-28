@@ -38,7 +38,7 @@ def gui_automated_cases(attached_devices, devices_obj, selected_lights_model, se
     post_case_frame_layout = [
         [
             sg.Checkbox('Pull files from device', default=False, size=(16, 1), key='pull_files', enable_events=True),
-            sg.Checkbox('and delete them', default=True, size=(12, 1), key='clear_files')
+            sg.Checkbox('and delete them', default=True, size=(12, 1), key='clear_files', disabled=True)
         ],
         [
             sg.Text('Save Location:', size=(11, 1)),
@@ -59,7 +59,12 @@ def gui_automated_cases(attached_devices, devices_obj, selected_lights_model, se
         [sg.Frame('Test Case', case_frame_layout, font='Any 12', title_color='white')],
         [sg.Frame('After Case', post_case_frame_layout, font='Any 12', title_color='white')],
         [sg.Frame('Lights', lights_frame_layout, font='Any 12', title_color='white')],
-        [sg.Button('Do Case', key='capture_case_btn')]
+
+        [sg.Button('Do Cases', key='capture_case_btn', size=(56, 2))],
+
+        [sg.Multiline(key='-OUT-', size=(62, 10), autoscroll=True)],
+        [sg.ProgressBar(100, orientation='h', size=(35, 5), key='case_progressbar')],
+        [sg.Text('Time remaining: ', key='time_remaining_title'), sg.Text('00:15', key='time_remaining_value')]
     ]
 
     window = sg.Window('Automated Photo/Video Testing', layout,
@@ -67,7 +72,7 @@ def gui_automated_cases(attached_devices, devices_obj, selected_lights_model, se
 
     # Event Loop to process "events" and get the "values" of the inputs
     while True:
-        event, values = window.read(timeout=100)
+        event, values = window.read()
 
         if event == sg.WIN_CLOSED or event == 'Close':  # if user closes window or clicks cancel
             break
@@ -88,32 +93,15 @@ def gui_automated_cases(attached_devices, devices_obj, selected_lights_model, se
             window['clear_files'].Update(disabled=not values['pull_files'])
             window['save_location'].Update(disabled=not values['pull_files'])
             window['save_location_browse_btn'].Update(disabled=not values['pull_files'])
-            if values['save_location'] == '':
-                window['capture_case_btn'].Update(disabled=True)
-            elif values['save_location'] != '':
-                window['capture_case_btn'].Update(disabled=False)
+            window['capture_case_btn'].Update(disabled=(values['save_location'] == ''))
 
         if event == "capture_case_btn":
-            # Photos Mode
-            # if values['mode_photos'] or values['mode_both']:
-            #     # shoot_photo(device_obj, values['logs_bool'], values['logs_filter'],
-            #     #           "{}/logfile.txt".format(values['save_location']))
-            #     device_obj[values['selected_device']].take_photo()
-            #
-            # # Videos Mode
-            # if values['mode_videos'] or values['mode_both']:
-            #     # shoot_video(device_obj, values['duration_spinner'], values['logs_bool'], values['logs_filter'],
-            #     #            "{}/logfile.txt".format(values['save_location']))
-            #     device_obj[values['selected_device']].start_video()
-            #     print(f"Video started! Duration is: {values['duration_spinner']}")
-            #     time.sleep(values['duration_spinner'])
-            #     device_obj[values['selected_device']].stop_video()
-            sg.Popup('Starting Cases!', non_blocking=True, auto_close=True, auto_close_duration=5)
+            cases = AutomatedCase(attached_devices, devices_obj,
+                                  selected_lights_model, values['selected_lights_seq'], selected_luxmeter_model,
+                                  window, '-OUT-')
+            cases.execute('-AUTO-CASES-THREAD-')
 
-            cases = AutomatedCase(attached_devices, devices_obj, selected_lights_model, values['selected_lights_seq'], selected_luxmeter_model)
-            cases.execute()
-
-            sg.Popup('Cases done!')
+            # sg.Popup('Cases done!')
 
             if values['pull_files']:
                 if values['save_location']:
@@ -121,5 +109,8 @@ def gui_automated_cases(attached_devices, devices_obj, selected_lights_model, se
                     pass
                 else:
                     print("Save Location must be set!")
+
+        if event == '-AUTO-CASES-THREAD-':
+            window['case_progressbar'].UpdateBar(values["-AUTO-CASES-THREAD-"])
 
     window.close()
