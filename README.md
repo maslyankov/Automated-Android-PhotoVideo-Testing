@@ -10,3 +10,6 @@
 
 # Lights Control GUI Preview
 ![Lights Control GUI in Beta](https://github.com/maslyankov/Automated-Android-PhotoVideo-Testing/blob/master/README/Beta/lights-test-screenshot.jpg?raw=true "Lights Control GUI in Beta")
+
+# Automated Cases GUI Preview
+![Automated Cases in Beta](https://github.com/maslyankov/Automated-Android-PhotoVideo-Testing/blob/master/README/Beta/Automated-cases-gui.jpg?raw=true "Automated Cases GUI in Beta")
