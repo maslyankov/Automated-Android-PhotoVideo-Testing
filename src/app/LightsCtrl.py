@@ -106,23 +106,29 @@ class LightsCtrl:
         print(f"\n\nSetting lux to {target_lux}")
 
         curr_lux = luxmeter_obj.get_lux()
-        threshold = 10  # How much can we vary with lux value
+        threshold = 5  # How much can we vary with lux value
 
         luxmeter_resp_time = 0.6
         lights_resp_time = 1
-        step = 4  # Too big for D75
+
+        step = 4
+        temp_steps = [15, 30, 50]
 
         was_bigger = False
         was_smaller = False
 
-        print('\n\n\nBefore diff: ', abs(curr_lux - target_lux), '\n\n\n')
+        diff = abs(curr_lux - target_lux)
+        step_before = step
+
+        if diff > 400:
+            step = temp_steps[2]
+        elif diff > 300:
+            step = temp_steps[1]
+        elif diff > 100:
+            step = temp_steps[0]
 
         while abs(curr_lux - target_lux) > threshold:
             print(f"Target lux: {target_lux}, current lux: {curr_lux}")
-
-            if self.current_brightness >= 100:
-                print("Max Brightness reached")
-                break
 
             if curr_lux > target_lux:  # We need to go down
                 was_bigger = True
@@ -141,7 +147,21 @@ class LightsCtrl:
 
             # Wait for lights to adjust
             time.sleep(lights_resp_time)
-            curr_lux = luxmeter_obj.get_lux()  # Update lux measurement
+
+            # Min/Max check
+            if self.current_brightness >= 100:
+                print("Max Brightness reached!")
+                break
+            elif self.current_brightness == 0:
+                print("Minimum brightness reached!")
+                break
+
+            # Set back the step
+            if step in temp_steps:
+                step = 4
+
+            # Update lux measurement
+            curr_lux = luxmeter_obj.get_lux()
 
         print(f"[Set Lux] Target LUX was {target_lux}, we got it to {curr_lux}, because the threshold is {threshold}")
 
