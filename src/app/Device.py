@@ -289,7 +289,7 @@ class Device:
         :return: List of strings, each being a file located in sdcard/DCIM/Camera
         """
 
-        files_list = self.exec_shell("ls -1 sdcard/DCIM/Camera").splitlines()
+        files_list = self.exec_shell("ls -1 $EXTERNAL_STORAGE/DCIM/Camera").splitlines()
 
         try:
             check_for_missing_dir = files_list[0]
