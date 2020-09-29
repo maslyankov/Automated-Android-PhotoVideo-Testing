@@ -135,7 +135,7 @@ def gui():
     # Create the Window
     window = sg.Window('Automated Photo/Video Testing', layout,
                        icon=os.path.join(ROOT_DIR, 'images', 'automated-video-testing-header-icon.ico'))
-    device = {}  # List to store devices objects
+    devices = {}  # List to store devices objects
     devices_list_old = []  # set devices_list_old empty so that se can find devices from first run
 
     # Event Loop to process "events" and get the "values" of the inputs
@@ -195,8 +195,8 @@ def gui():
                             window[f'device_icon.{num}'].Update(visible=False)
                             break
                     try:
-                        adb.detach_device(diff_device, device[diff_device])
-                        del device[diff_device]
+                        adb.detach_device(diff_device, devices[diff_device])
+                        del devices[diff_device]
                     except KeyError:
                         print("Wasn't attached anyway..")
         except UnboundLocalError:
@@ -208,13 +208,13 @@ def gui():
             diff_device = values[f"device_serial.{event.split('.')[1]}"]
 
             if values[f"device_attached.{event.split('.')[1]}"]:  # Attach device
-                device[diff_device] = Device(adb, diff_device)  # Assign device to object
+                devices[diff_device] = Device(adb, diff_device)  # Assign device to object
 
                 for num in range(constants.MAX_DEVICES_AT_ONE_RUN):
                     if values[f'device_serial.{num}'] == diff_device or values[f'device_serial.{num}'] == '':
                         window[f'device_attached.{num}'].Update(background_color='green')
                         window[f'device_friendly.{num}'].Update(background_color='green',
-                                                                value=device[diff_device].friendly_name,
+                                                                value=devices[diff_device].friendly_name,
                                                                 disabled=False)
                         window[f'identify_device_btn.{num}'].Update(disabled=False)
                         window[f'ctrl_device_btn.{num}'].Update(disabled=False)
@@ -222,10 +222,10 @@ def gui():
 
                 print('Added {} to attached devices!'.format(diff_device))
 
-                print('Currently opened app: {}'.format(device[diff_device].get_current_app()))
+                print('Currently opened app: {}'.format(devices[diff_device].get_current_app()))
             else:  # Detach
-                adb.detach_device(diff_device, device[diff_device])
-                del device[diff_device]
+                adb.detach_device(diff_device, devices[diff_device])
+                del devices[diff_device]
 
                 for num in range(constants.MAX_DEVICES_AT_ONE_RUN):
                     if values[f'device_serial.{num}'] == diff_device or values[f'device_serial.{num}'] == '':
@@ -250,36 +250,37 @@ def gui():
             if event.split('.')[0] == 'identify_device_btn':  # Identify Buttons
                 print('Identifying ' + event.split('.')[1])
                 device000 = values[f"device_serial.{event.split('.')[1]}"]
-                device[device000].identify()
+                devices[device000].identify()
             if event.split('.')[0] == 'ctrl_device_btn':  # Device Control
                 print('Opening device control for ' + event.split('.')[1])
                 device000 = values[f"device_serial.{event.split('.')[1]}"]
-                device[device000].open_device_ctrl()
+                devices[device000].open_device_ctrl()
 
             # Buttons callbacks
             if event == "camxoverride_btn":
-                gui_camxoverride(attached_devices_list, device)
+                gui_camxoverride(attached_devices_list, devices)
 
             if event == "push_file_btn":
-                gui_push_file(attached_devices_list, device)
+                gui_push_file(attached_devices_list, devices)
 
             if event == "setup_device_btn":
-                gui_setup_device(attached_devices_list, device)
+                gui_setup_device(attached_devices_list, devices)
 
             if event.split('.')[0] == 'device_friendly':
                 device000 = values[f"device_serial.{event.split('.')[1]}"]
-                device[device000].friendly_name = values[f"device_friendly.{event.split('.')[1]}"]
-                print(f'for {device000} fr name is {device[device000].friendly_name}')
+                devices[device000].friendly_name = values[f"device_friendly.{event.split('.')[1]}"]
+                print(f'for {device000} fr name is {devices[device000].friendly_name}')
 
             if event == 'reboot_device_btn':
-                gui_reboot_device(attached_devices_list, device)
+                gui_reboot_device(attached_devices_list, devices)
 
             if event == 'capture_manual_btn':
-                gui_manual_cases(attached_devices_list, device)
+                # gui_manual_cases(attached_devices_list, devices)
+                print(devices[attached_devices_list[0]].get_camera_files_list())
 
             if event == 'capture_auto_btn':
                 print('Launching GUI')
-                gui_automated_cases(attached_devices_list, device, values['selected_lights_model'],
+                gui_automated_cases(attached_devices_list, devices, values['selected_lights_model'],
                                     values['selected_luxmeter_model'])
 
         else:
@@ -302,6 +303,6 @@ def gui():
     attached = attached_devices_list.copy()
     for dev in attached:
         print(f"Detaching {dev}")
-        adb.detach_device(dev, device[dev])
+        adb.detach_device(dev, devices[dev])
 
     window.close()

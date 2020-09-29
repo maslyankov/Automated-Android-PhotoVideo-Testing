@@ -290,10 +290,16 @@ class Device:
         """
 
         files_list = self.exec_shell("ls -1 sdcard/DCIM/Camera").splitlines()
-        if files_list[0] == 'ls: sdcard/DCIM/Camera: No such file or directory':  # TODO Fix this shit
-            return
+
+        try:
+            check_for_missing_dir = files_list[0]
+        except IndexError:
+            return None
         else:
-            return files_list
+            if check_for_missing_dir.endswith('No such file or directory'):
+                return None
+            else:
+                return files_list
 
     def get_screen_resolution(self):
         """
