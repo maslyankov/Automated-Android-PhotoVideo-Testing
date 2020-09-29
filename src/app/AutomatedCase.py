@@ -10,10 +10,10 @@ from src.app.LightsCtrl import LightsCtrl
 from src.konica.ChromaMeterKonica import ChromaMeterKonica
 
 
-def dict_len(dict):
+def dict_len(dictionary):
     res = 0
-    for item in dict.keys():
-        res += len(dict[item])
+    for item in dictionary.keys():
+        res += len(dictionary[item])
     return res
 
 
@@ -27,7 +27,7 @@ class AutomatedCase:
     def __init__(self, attached_devices, devices_obj,
                  lights_model, lights_seq_xml, luxmeter_model,
                  pull_files_bool, pull_files_location,
-                 gui_window, gui_output,
+                 gui_window, gui_output, gui_event,
                  specific_device=None):
         self.attached_devices = attached_devices
         self.devices_obj = devices_obj
@@ -41,12 +41,17 @@ class AutomatedCase:
 
         self.gui_window = gui_window
         self.gui_output = gui_output
+        self.gui_event = gui_event
 
         self.specific_device = specific_device
 
         self.lights_seq = {}
         self.lights_seq_name = None
         self.lights_seq_desc = None
+
+        self.stop_signal = False
+
+        self.progress = 0
 
         self.parse_lights_xml_seq()
 
@@ -82,6 +87,13 @@ class AutomatedCase:
     def output_gui(self, text, msg_type=None):
         if msg_type == 'error':
             text_color = 'white on red'
+            self.gui_window.write_event_value(
+                self.gui_event,
+                {
+                    'progress': self.progress,
+                    'error': True
+                }
+            )
         else:
             text_color = None
 
@@ -104,15 +116,20 @@ class AutomatedCase:
                 )
                 self.devices_obj[device].clear_folder('sdcard/DCIM/Camera/')
         else:
-            self.output_gui(f'Now pulling from device {self.specific_device} ({self.devices_obj[self.specific_device].friendly_name})')
+            self.output_gui(
+                f'Now pulling from {self.specific_device} ({self.devices_obj[self.specific_device].friendly_name})'
+            )
             self.devices_obj[self.specific_device].pull_and_rename(
-                os.path.join(os.path.normpath(self.pull_files_location), self.devices_obj[self.specific_device].friendly_name, folder),
+                os.path.join(
+                    os.path.normpath(self.pull_files_location),
+                    self.devices_obj[self.specific_device].friendly_name,
+                    folder
+                ),
                 filename
             )
             self.devices_obj[self.specific_device].clear_folder('sdcard/DCIM/Camera/')
 
-    def _execute(self, gui_event):
-        progress = 0
+    def _execute(self):
         progress_step = 100 / dict_len(self.lights_seq)
 
         if self.luxmeter_model == 'Konita Minolta CL-200A':  # Konita Minolta CL-200A Selected
@@ -133,6 +150,9 @@ class AutomatedCase:
             self.pull_new_images('before_cases', 'old_image')
 
         for temp in list(self.lights_seq.keys()):
+            if not self.stop_signal:
+                break
+
             self.output_gui(f'\nStarting Color Temp: {temp}')
             lights.turn_on(temp)
             lights.set_brightness(1)
@@ -144,18 +164,26 @@ class AutomatedCase:
                 # Do the thing
                 if self.specific_device is None:
                     for device in self.attached_devices:
-                        self.output_gui(f'Now executing using device {device} ({self.devices_obj[device].friendly_name})')
+                        self.output_gui(
+                            f'Now executing using device {device} ({self.devices_obj[device].friendly_name})'
+                        )
                         self.devices_obj[device].take_photo()
 
                 else:
-                    self.output_gui(f'Now executing using device {self.specific_device} ({self.devices_obj[self.specific_device].friendly_name})')
+                    self.output_gui(
+                        f'Now executing using {self.specific_device} ' +
+                        f'({self.devices_obj[self.specific_device].friendly_name})'
+                    )
                     self.devices_obj[self.specific_device].take_photo()
 
-                progress += progress_step
+                self.progress += progress_step
                 # send progress to gui thread
                 self.gui_window.write_event_value(
-                    gui_event,
-                    progress
+                    self.gui_event,
+                    {
+                        'progress': self.progress,
+                        'error': False
+                    }
                 )
                 if self.pull_files_bool:
                     time.sleep(1)
@@ -166,6 +194,5 @@ class AutomatedCase:
 
         lights.disconnect()
 
-    def execute(self, gui_event):
-        threading.Thread(target=self._execute, args=(gui_event,), daemon=True).start()
-
+    def execute(self):
+        threading.Thread(target=self._execute, args=(), daemon=True).start()

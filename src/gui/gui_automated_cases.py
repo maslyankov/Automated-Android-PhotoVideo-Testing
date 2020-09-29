@@ -69,7 +69,7 @@ def gui_automated_cases(attached_devices, devices_obj, selected_lights_model, se
         [sg.Frame('After Case', post_case_frame_layout, font='Any 12', title_color='white')],
         [sg.Frame('Lights', lights_frame_layout, font='Any 12', title_color='white')],
 
-        [sg.Button('Do Cases', key='capture_case_btn', size=(54, 2))],
+        [sg.Button('Run', key='capture_case_btn', size=(54, 2))],
 
         [sg.Multiline(key='-OUT-', size=(59, 10), autoscroll=True)],
         [sg.ProgressBar(max_value=100, orientation='h', size=(35, 5), key='progressbar', visible=False)],
@@ -81,7 +81,9 @@ def gui_automated_cases(attached_devices, devices_obj, selected_lights_model, se
 
     window = sg.Window('Automated Photo/Video Testing', layout,
                        icon=os.path.join(constants.ROOT_DIR, 'images', 'automated-video-testing-header-icon.ico'))
+
     automation_is_running = False
+    auto_cases_event = "-AUTO-CASES-THREAD-"
 
     # Event Loop to process "events" and get the "values" of the inputs
     while True:
@@ -114,25 +116,33 @@ def gui_automated_cases(attached_devices, devices_obj, selected_lights_model, se
                 continue
 
         if event == "capture_case_btn":
-            cases = AutomatedCase(attached_devices, devices_obj,
-                                  selected_lights_model, values['selected_lights_seq'], selected_luxmeter_model,
-                                  values['pull_files'], values['save_location'],
-                                  window, '-OUT-',
-                                  specific_device=None if values['use_all_devices_bool'] else values['selected_device'])
-            cases.execute('-AUTO-CASES-THREAD-')
+            if not automation_is_running:
+                window['capture_case_btn'].Update(disabled=True)
+                cases = AutomatedCase(attached_devices, devices_obj,
+                                      selected_lights_model, values['selected_lights_seq'], selected_luxmeter_model,
+                                      values['pull_files'], values['save_location'],
+                                      window, '-OUT-', auto_cases_event,
+                                      specific_device=None if values['use_all_devices_bool'] else values['selected_device'])
+                cases.execute()
+            else:
+                sg.cprint("Finishing up and stopping cases creation!", window=window, key='-OUT-', colors='white on grey')
+                cases.stop_signal = True
+                automation_is_running = False
+                window['capture_case_btn'].Update('Run')
 
-        if event == '-AUTO-CASES-THREAD-':
-            window['progressbar'].UpdateBar(values["-AUTO-CASES-THREAD-"])
-            window['progress_value'].Update(str(values["-AUTO-CASES-THREAD-"]))
+        if event == auto_cases_event:
+            if values[auto_cases_event]['error']:
+                window['capture_case_btn'].Update('Run', disabled=False)
 
-            if values["-AUTO-CASES-THREAD-"] > 0:
-                window['capture_case_btn'].Update(button_text='Stop')
+            if values[auto_cases_event]['progress'] > 0 and not values[auto_cases_event]['error']:
+                automation_is_running = True
+                window['capture_case_btn'].Update('Stop', disabled=False)
 
-                window['progressbar'].Update(visible=True, current_count=0)
-                window['progress_value'].Update(visible=True)
+                window['progressbar'].Update(visible=True, current_count=values[auto_cases_event]['progress'])
+                window['progress_value'].Update(str(values[auto_cases_event]['progress']), visible=True)
                 window['progress_value_symbol'].Update(visible=True)
 
-            if values["-AUTO-CASES-THREAD-"] == 100:
+            if values[auto_cases_event] == 100:
                 sg.Popup('Cases done!')
 
     window.close()
