@@ -144,7 +144,8 @@ class AutomatedCase:
                     gui_event,
                     progress
                 )
-                self.pull_new_images(temp, f'{temp}_{lux}')
+                if self.pull_files_bool:
+                    self.pull_new_images(temp, f'{temp}_{lux}')
 
             self.output_gui(f'{temp} is done! Turning it off.')
             lights.turn_off(temp)
