@@ -410,6 +410,13 @@ class Device:
         self.exec_shell(f"rm -rf {folder}/*")
         print(f"Deleting folder {folder} from device!")
 
+    def pull_and_rename(self, dest, filename):
+        suffix = None
+        for num, file in enumerate(self.get_camera_files_list):
+            if num > 0:
+                suffix = f"_{str(num)}"
+            self.pull_file(file, os.path.join(dest, f"{filename}{suffix if suffix else ''}.{file.split('.')[1]}"))
+
     def setup_device_settings(self):
         print('Making the device an insomniac!')
         self.exec_shell('settings put global stay_on_while_plugged_in 1')

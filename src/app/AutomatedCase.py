@@ -25,21 +25,27 @@ class AutomatedCase:
 
     def __init__(self, attached_devices, devices_obj,
                  lights_model, lights_seq_xml, luxmeter_model,
+                 pull_files_bool, pull_files_location,
                  gui_window, gui_output,
                  specific_device=None):
         self.attached_devices = attached_devices
         self.devices_obj = devices_obj
+
         self.lights_model = lights_model
         self.lights_seq_xml = os.path.join(constants.ROOT_DIR, 'lights_seq', f'{lights_seq_xml}.xml')
         self.luxmeter_model = luxmeter_model
+
+        self.pull_files_bool = pull_files_bool
+        self.pull_files_location = pull_files_location
+
+        self.gui_window = gui_window
+        self.gui_output = gui_output
+
         self.specific_device = specific_device
 
         self.lights_seq = {}
         self.lights_seq_name = None
         self.lights_seq_desc = None
-
-        self.gui_window = gui_window
-        self.gui_output = gui_output
 
         self.parse_lights_xml_seq()
 
@@ -80,6 +86,21 @@ class AutomatedCase:
 
         gui_print(text, window=self.gui_window, key=self.gui_output, colors=text_color)
 
+    def pull_new_images(self, folder, filename):
+        if self.specific_device is None:
+            for device in self.attached_devices:
+                self.output_gui(f'Now pulling from device {device} ({self.devices_obj[device].friendly_name})')
+                self.devices_obj[device].pull_and_rename(
+                    os.path.join(self.pull_files_location, self.devices_obj[device].friendly_name, folder),
+                    filename
+                )
+        else:
+            self.output_gui(f'Now pulling from device {self.specific_device} ({self.devices_obj[self.specific_device].friendly_name})')
+            self.devices_obj[self.specific_device].pull_and_rename(
+                os.path.join(self.pull_files_location, self.devices_obj[self.specific_device].friendly_name, folder),
+                filename
+            )
+
     def _execute(self, gui_event):
         progress = 0
         progress_step = 100 / dict_len(self.lights_seq)
@@ -112,8 +133,9 @@ class AutomatedCase:
                     for device in self.attached_devices:
                         self.output_gui(f'Now executing using device {device} ({self.devices_obj[device].friendly_name})')
                         self.devices_obj[device].take_photo()
+
                 else:
-                    self.output_gui(f'Now executing using device {device} ({self.devices_obj[device].friendly_name})')
+                    self.output_gui(f'Now executing using device {self.specific_device} ({self.devices_obj[self.specific_device].friendly_name})')
                     self.devices_obj[self.specific_device].take_photo()
 
                 progress += progress_step
@@ -122,6 +144,7 @@ class AutomatedCase:
                     gui_event,
                     progress
                 )
+                self.pull_new_images(temp, f'{temp}_{lux}')
 
             self.output_gui(f'{temp} is done! Turning it off.')
             lights.turn_off(temp)
