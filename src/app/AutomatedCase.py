@@ -2,6 +2,7 @@ import os
 import time
 import threading
 import xml.etree.cElementTree as ET
+from pathlib import Path
 
 from PySimpleGUI import cprint as gui_print
 import src.constants as constants
@@ -89,17 +90,26 @@ class AutomatedCase:
     def pull_new_images(self, folder, filename):
         if self.specific_device is None:
             for device in self.attached_devices:
+                dest = os.path.join(
+                    os.path.normpath(self.pull_files_location),
+                    self.devices_obj[device].friendly_name,
+                    folder)
+                Path(dest).mkdir(parents=True, exist_ok=True)
+
+                print("current list of files: ", self.devices_obj[device].get_camera_files_list())
                 self.output_gui(f'Now pulling from device {device} ({self.devices_obj[device].friendly_name})')
                 self.devices_obj[device].pull_and_rename(
-                    os.path.join(self.pull_files_location, self.devices_obj[device].friendly_name, folder),
+                    dest,
                     filename
                 )
+                self.devices_obj[device].clear_folder('sdcard/DCIM/Camera/')
         else:
             self.output_gui(f'Now pulling from device {self.specific_device} ({self.devices_obj[self.specific_device].friendly_name})')
             self.devices_obj[self.specific_device].pull_and_rename(
-                os.path.join(self.pull_files_location, self.devices_obj[self.specific_device].friendly_name, folder),
+                os.path.join(os.path.normpath(self.pull_files_location), self.devices_obj[self.specific_device].friendly_name, folder),
                 filename
             )
+            self.devices_obj[self.specific_device].clear_folder('sdcard/DCIM/Camera/')
 
     def _execute(self, gui_event):
         progress = 0
@@ -118,6 +128,9 @@ class AutomatedCase:
             time.sleep(1)
             lights_status = lights.status()
             self.output_gui(f"Lights Status: \n{lights_status}\n")
+
+        if self.pull_files_bool:
+            self.pull_new_images('before_cases', 'old_image')
 
         for temp in list(self.lights_seq.keys()):
             self.output_gui(f'\nStarting Color Temp: {temp}')
@@ -145,6 +158,7 @@ class AutomatedCase:
                     progress
                 )
                 if self.pull_files_bool:
+                    time.sleep(1)
                     self.pull_new_images(temp, f'{temp}_{lux}')
 
             self.output_gui(f'{temp} is done! Turning it off.')

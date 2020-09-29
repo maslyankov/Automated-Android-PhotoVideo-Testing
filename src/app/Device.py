@@ -307,7 +307,7 @@ class Device:
         :return: List of strings, each being a file located in sdcard/DCIM/Camera
         """
 
-        files_list = self.exec_shell("ls -1 $EXTERNAL_STORAGE/DCIM/Camera").splitlines()
+        files_list = self.exec_shell("ls -1 sdcard/DCIM/Camera").splitlines()
 
         try:
             check_for_missing_dir = files_list[0]
@@ -412,10 +412,10 @@ class Device:
 
     def pull_and_rename(self, dest, filename):
         suffix = None
-        for num, file in enumerate(self.get_camera_files_list):
+        for num, file in enumerate(self.get_camera_files_list()):
             if num > 0:
                 suffix = f"_{str(num)}"
-            self.pull_file(file, os.path.join(dest, f"{filename}{suffix if suffix else ''}.{file.split('.')[1]}"))
+            self.pull_file(f"sdcard/DCIM/Camera/{file}", os.path.join(dest, f"{filename}{suffix if suffix else ''}.{file.split('.')[1]}"))
 
     def setup_device_settings(self):
         print('Making the device an insomniac!')

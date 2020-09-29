@@ -7,6 +7,15 @@ import src.constants as constants
 from src.app.AutomatedCase import AutomatedCase
 
 
+def place(elem):
+    """
+    Places element provided into a Column element so that its placement in the layout is retained.
+    :param elem: the element to put into the layout
+    :return: A column element containing the provided element
+    """
+    return sg.Column([[elem]], pad=(0, 0))
+
+
 def gui_automated_cases(attached_devices, devices_obj, selected_lights_model, selected_luxmeter_model):  # TODO
     select_device_frame = [
         [sg.Checkbox(text='Use all attached devices',
@@ -60,11 +69,14 @@ def gui_automated_cases(attached_devices, devices_obj, selected_lights_model, se
         [sg.Frame('After Case', post_case_frame_layout, font='Any 12', title_color='white')],
         [sg.Frame('Lights', lights_frame_layout, font='Any 12', title_color='white')],
 
-        [sg.Button('Do Cases', key='capture_case_btn', size=(56, 2))],
+        [place(sg.Button('Stop', key='stop_case_btn', size=(13, 2), visible=False)), sg.Button('Do Cases', key='capture_case_btn', size=(40, 2))],
 
-        [sg.Multiline(key='-OUT-', size=(62, 10), autoscroll=True)],
-        [sg.ProgressBar(0, orientation='h', size=(35, 5), key='case_progressbar')],
-        [sg.Text('0', key='percentage_value', size=(3, 1)), sg.Text('%', key='percentage_symbol', pad=(0, 0))]
+        [sg.Multiline(key='-OUT-', size=(61, 10), autoscroll=True)],
+        [sg.ProgressBar(max_value=100, orientation='h', size=(35, 5), key='progressbar', visible=False)],
+        [
+            place(sg.Text('0', key='progress_value', size=(3, 1), visible=False)),
+            place(sg.Text('%', key='progress_value_symbol', pad=(0, 0), visible=False))
+        ]
     ]
 
     window = sg.Window('Automated Photo/Video Testing', layout,
@@ -95,6 +107,11 @@ def gui_automated_cases(attached_devices, devices_obj, selected_lights_model, se
             window['save_location_browse_btn'].Update(disabled=not values['pull_files'])
             window['capture_case_btn'].Update(disabled=(values['save_location'] == ''))
 
+        if values['pull_files']:
+            if values['save_location'] == '':
+                print("Save Location must be set!")
+                continue
+
         if event == "capture_case_btn":
             cases = AutomatedCase(attached_devices, devices_obj,
                                   selected_lights_model, values['selected_lights_seq'], selected_luxmeter_model,
@@ -102,17 +119,16 @@ def gui_automated_cases(attached_devices, devices_obj, selected_lights_model, se
                                   window, '-OUT-',
                                   specific_device=None if values['use_all_devices_bool'] else values['selected_device'])
             cases.execute('-AUTO-CASES-THREAD-')
+            # devices_obj[attached_devices[0]].pull_and_rename(os.path.normpath(values['save_location']), 'gosho')
+            # devices_obj[attached_devices[0]].clear_folder('sdcard/DCIM/Camera/')
 
-            if values['pull_files']:
-                if values['save_location']:
-                    # pull_camera_files(device_obj, values['save_location'], values['clear_files'])
-                    pass
-                else:
-                    print("Save Location must be set!")
+            window['progressbar'].Update(visible=True, current_count=0)
+            window['progress_value'].Update(visible=True)
+            window['progress_value_symbol'].Update(visible=True)
 
         if event == '-AUTO-CASES-THREAD-':
-            window['case_progressbar'].UpdateBar(values["-AUTO-CASES-THREAD-"])
-            window['percentage_value'].UpdateBar(str(values["-AUTO-CASES-THREAD-"]))
+            window['progressbar'].UpdateBar(values["-AUTO-CASES-THREAD-"])
+            window['progress_value'].Update(str(values["-AUTO-CASES-THREAD-"]))
             if values["-AUTO-CASES-THREAD-"] == 100:
                 sg.Popup('Cases done!')
 
