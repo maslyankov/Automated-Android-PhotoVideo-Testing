@@ -98,7 +98,8 @@ def gui_automated_cases(attached_devices, devices_obj, selected_lights_model, se
         if event == "capture_case_btn":
             cases = AutomatedCase(attached_devices, devices_obj,
                                   selected_lights_model, values['selected_lights_seq'], selected_luxmeter_model,
-                                  window, '-OUT-')
+                                  window, '-OUT-',
+                                  specific_device=None if values['use_all_devices_bool'] else values['selected_device'])
             cases.execute('-AUTO-CASES-THREAD-')
 
             # sg.Popup('Cases done!')

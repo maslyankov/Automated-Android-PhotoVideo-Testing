@@ -147,14 +147,6 @@ class Device:
         self.turn_on_and_unlock()
     
     # ----- Base methods -----
-    def exec_shell(self, cmd):
-        """
-        Execute a shell command on the device
-        :param cmd:String command to execute
-        :return:None
-        """
-        return self.d.shell(cmd)
-
     def root(self):
         """
         Root the device
@@ -188,6 +180,32 @@ class Device:
         if stdout:
             print("Remonut Output: ".format(stdout.decode()))
         remount.terminate()
+
+    def exec_shell(self, cmd):
+        """
+        Execute a shell command on the device
+        :param cmd:String command to execute
+        :return:None
+        """
+        return self.d.shell(cmd)
+
+    def push_file(self, src, dst):
+        """
+        Push file to device
+        :param src: Path to file to push
+        :param dst: Destination on device of file
+        :return:None
+        """
+        self.d.push(src, dst)
+
+    def pull_file(self, src, dst):
+        """
+        Pull file to device
+        :param src: Path on device to file to pull
+        :param dst: Destination to save the file to
+        :return:None
+        """
+        self.d.pull(src, dst)
     
     # ----- Getters/Setters -----
     def set_logs(self, logs_bool, fltr=None):
@@ -294,7 +312,7 @@ class Device:
         try:
             check_for_missing_dir = files_list[0]
         except IndexError:
-            return None
+            return []
         else:
             if check_for_missing_dir.endswith('No such file or directory'):
                 return None
@@ -384,30 +402,12 @@ class Device:
         else:
             print("{} was already opened! Continuing...".format(package))
 
-    def push_file(self, src, dst):
-        """
-        Push file to device
-        :param src: Path to file to push
-        :param dst: Destination on device of file
-        :return:None
-        """
-        self.d.push(src, dst)
-
-    def pull_file(self, src, dst):
-        """
-        Pull file to device
-        :param src: Path on device to file to pull
-        :param dst: Destination to save the file to
-        :return:None
-        """
-        self.d.pull(src, dst)
-
     def clear_folder(self, folder):
         """
-        Deletes a folder
+        Deletes a folder's contents
         :return:None
         """
-        self.exec_shell(f"rm -rf {folder}")
+        self.exec_shell(f"rm -rf {folder}/*")
         print(f"Deleting folder {folder} from device!")
 
     def setup_device_settings(self):
@@ -594,7 +594,7 @@ class Device:
 
         print('Source returned: ', source)  # Debugging
 
-        self.d.pull(
+        self.pull_file(
             source,
             os.path.join(constants.ROOT_DIR,
                          'XML', '{}_{}_{}.xml'.format(self.device_serial, current_app[0], current_app[1]))
