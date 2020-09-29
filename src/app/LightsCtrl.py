@@ -106,7 +106,7 @@ class LightsCtrl:
         print(f"\n\nSetting lux to {target_lux}")
 
         curr_lux = luxmeter_obj.get_lux()
-        threshold = 5  # How much can we vary with lux value
+        threshold = 10  # How much can we vary with lux value
 
         luxmeter_resp_time = 0.6
         lights_resp_time = 1
@@ -128,7 +128,7 @@ class LightsCtrl:
             step = temp_steps[0]
 
         while abs(curr_lux - target_lux) > threshold:
-            print(f"Target lux: {target_lux}, current lux: {curr_lux}")
+            print(f"Target lux: {target_lux}, current lux: {curr_lux}, step: {step}")
 
             if curr_lux > target_lux:  # We need to go down
                 was_bigger = True

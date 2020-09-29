@@ -129,6 +129,10 @@ def gui_automated_cases(attached_devices, devices_obj, selected_lights_model, se
         if event == '-AUTO-CASES-THREAD-':
             window['progressbar'].UpdateBar(values["-AUTO-CASES-THREAD-"])
             window['progress_value'].Update(str(values["-AUTO-CASES-THREAD-"]))
+
+            if values["-AUTO-CASES-THREAD-"] > 0:
+                window['stop_case_btn'].Update(visible=True)
+
             if values["-AUTO-CASES-THREAD-"] == 100:
                 sg.Popup('Cases done!')
 
