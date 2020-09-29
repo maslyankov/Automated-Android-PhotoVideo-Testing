@@ -102,8 +102,6 @@ def gui_automated_cases(attached_devices, devices_obj, selected_lights_model, se
                                   specific_device=None if values['use_all_devices_bool'] else values['selected_device'])
             cases.execute('-AUTO-CASES-THREAD-')
 
-            # sg.Popup('Cases done!')
-
             if values['pull_files']:
                 if values['save_location']:
                     # pull_camera_files(device_obj, values['save_location'], values['clear_files'])
@@ -114,5 +112,7 @@ def gui_automated_cases(attached_devices, devices_obj, selected_lights_model, se
         if event == '-AUTO-CASES-THREAD-':
             window['case_progressbar'].UpdateBar(values["-AUTO-CASES-THREAD-"])
             window['percentage_value'].UpdateBar(str(values["-AUTO-CASES-THREAD-"]))
+            if values["-AUTO-CASES-THREAD-"] == 100:
+                sg.Popup('Cases done!')
 
     window.close()
