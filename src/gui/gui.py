@@ -21,7 +21,8 @@ ROOT_DIR = os.path.abspath(os.curdir + "/../")  # This is Project Root
 
 def loading(secs):  # Only gives fanciness
     for i in range(1, 15 * secs):
-        sg.popup_animated(image_source=os.path.join(ROOT_DIR, 'images', 'loading3.gif'), message='Loading...', no_titlebar=True,
+        sg.popup_animated(image_source=os.path.join(ROOT_DIR, 'images', 'loading3.gif'), message='Loading...',
+                          no_titlebar=True,
                           font=('Any', 25), text_color='black',
                           background_color='white',
                           alpha_channel=0.8,
@@ -49,35 +50,37 @@ def gui():
     devices_frame = []
     for num in range(constants.MAX_DEVICES_AT_ONE_RUN):
         print(f"Building row {num}")  # Debugging
-        devices_frame += [place(sg.Checkbox('', key=f'device_attached.{num}',
-                                            text_color="black",
-                                            disabled=True,
-                                            enable_events=True,
-                                            visible=False,
-                                            size=(15, 1))),
-                          place(sg.InputText(key=f'device_serial.{num}',
-                                             background_color="red",
-                                             size=(15, 1),
-                                             readonly=True,
-                                             default_text='',
-                                             visible=False)),
-                          place(sg.InputText(key=f'device_friendly.{num}', enable_events=True, size=(20, 1),
+        devices_frame += [
+                             place(sg.Image(filename='', key=f'device_icon.{num}', visible=False)),
+                             place(sg.Checkbox('', key=f'device_attached.{num}',
+                                               text_color="black",
+                                               disabled=True,
+                                               enable_events=True,
+                                               visible=False,
+                                               size=(15, 1))),
+                             place(sg.InputText(key=f'device_serial.{num}',
+                                                background_color="red",
+                                                size=(15, 1),
+                                                readonly=True,
+                                                default_text='',
+                                                visible=False)),
+                             place(sg.InputText(key=f'device_friendly.{num}', enable_events=True, size=(20, 1),
+                                                disabled=True,
+                                                visible=False)),
+                             place(sg.Button('Identify',
+                                             button_color=(sg.theme_text_element_background_color(), 'silver'),
+                                             key=f'identify_device_btn.{num}',
                                              disabled=True,
+                                             enable_events=True,
                                              visible=False)),
-                          place(sg.Button('Identify',
-                                          button_color=(sg.theme_text_element_background_color(), 'silver'),
-                                          key=f'identify_device_btn.{num}',
-                                          disabled=True,
-                                          enable_events=True,
-                                          visible=False)),
-                          place(sg.Button('Control',
-                                          button_color=(sg.theme_text_element_background_color(), 'silver'),
-                                          key=f'ctrl_device_btn.{num}',
-                                          disabled=True,
-                                          enable_events=True,
-                                          visible=False
-                                          ))
-                          ],
+                             place(sg.Button('Control',
+                                             button_color=(sg.theme_text_element_background_color(), 'silver'),
+                                             key=f'ctrl_device_btn.{num}',
+                                             disabled=True,
+                                             enable_events=True,
+                                             visible=False
+                                             ))
+                         ],
 
     device_settings_frame_layout = [[
         sg.Button('Edit camxoverridesettings', button_color=(sg.theme_text_element_background_color(), 'silver'),
@@ -165,6 +168,9 @@ def gui():
                                                                         disabled=False,
                                                                         visible=True)
                                 window[f'device_serial.{num}'].Update(diff_device)
+                                window[f'device_icon.{num}'].Update(
+                                    filename=os.path.join(ROOT_DIR, 'images', 'device-icons', 'android-flat-32.png'),
+                                    visible=True)
 
                                 window[f'device_friendly.{num}'].Update(visible=True)
                                 window[f'identify_device_btn.{num}'].Update(visible=True)
@@ -186,6 +192,7 @@ def gui():
                             window[f'device_friendly.{num}'].Update(disabled=True, visible=False)
                             window[f'identify_device_btn.{num}'].Update(visible=False)
                             window[f'ctrl_device_btn.{num}'].Update(visible=False)
+                            window[f'device_icon.{num}'].Update(visible=False)
                             break
                     try:
                         adb.detach_device(diff_device, device[diff_device])
@@ -272,7 +279,8 @@ def gui():
 
             if event == 'capture_auto_btn':
                 print('Launching GUI')
-                gui_automated_cases(attached_devices_list, device, values['selected_lights_model'], values['selected_luxmeter_model'])
+                gui_automated_cases(attached_devices_list, device, values['selected_lights_model'],
+                                    values['selected_luxmeter_model'])
 
         else:
             # print('No attached devices!')

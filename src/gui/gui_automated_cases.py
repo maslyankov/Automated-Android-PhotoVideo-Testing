@@ -63,8 +63,8 @@ def gui_automated_cases(attached_devices, devices_obj, selected_lights_model, se
         [sg.Button('Do Cases', key='capture_case_btn', size=(56, 2))],
 
         [sg.Multiline(key='-OUT-', size=(62, 10), autoscroll=True)],
-        [sg.ProgressBar(100, orientation='h', size=(35, 5), key='case_progressbar')],
-        [sg.Text('Time remaining: ', key='time_remaining_title'), sg.Text('00:15', key='time_remaining_value')]
+        [sg.ProgressBar(0, orientation='h', size=(35, 5), key='case_progressbar')],
+        [sg.Text('0', key='percentage_value', size=(3, 1)), sg.Text('%', key='percentage_symbol', pad=(0, 0))]
     ]
 
     window = sg.Window('Automated Photo/Video Testing', layout,
@@ -112,5 +112,6 @@ def gui_automated_cases(attached_devices, devices_obj, selected_lights_model, se
 
         if event == '-AUTO-CASES-THREAD-':
             window['case_progressbar'].UpdateBar(values["-AUTO-CASES-THREAD-"])
+            window['percentage_value'].UpdateBar(str(values["-AUTO-CASES-THREAD-"]))
 
     window.close()
