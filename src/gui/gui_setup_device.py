@@ -295,7 +295,7 @@ def gui_setup_device(attached_devices, device_obj):
         [sg.Frame('Logs', logs_frame, font='Any 12', title_color='white')],
         [sg.Frame('Select Camera App', select_app_frame, font='Any 12', title_color='white')],
         [sg.Frame('Actions Sequences Settings', actions_seq_settings_frame, font='Any 12', title_color='white')],
-        [sg.Column(seq_column, size=(370, 170), scrollable=True, vertical_scroll_only=True)],
+        [sg.Column(seq_column, size=(370, 230), scrollable=True, vertical_scroll_only=True)],
         [sg.Button('Save Settings', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 2),
                    key='save_btn', disabled=False)]
     ]

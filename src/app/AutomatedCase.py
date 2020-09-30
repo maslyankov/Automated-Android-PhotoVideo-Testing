@@ -29,6 +29,7 @@ class AutomatedCase:
                  pull_files_bool, pull_files_location,
                  gui_window, gui_output, gui_event,
                  specific_device=None):
+
         self.attached_devices = attached_devices
         self.devices_obj = devices_obj
 

@@ -19,7 +19,7 @@ def gui_push_file(attached_devices, device_obj):
                      default_value=attached_devices[0]),
             sg.Text(text=device_obj[attached_devices[0]].friendly_name,
                     key='device-friendly',
-                    auto_size_text=True,
+                    size=(13, 1),
                     font="Any 18")
         ],
         [

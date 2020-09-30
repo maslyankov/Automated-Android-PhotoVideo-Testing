@@ -31,8 +31,6 @@ def place(elem):
 def gui():
     sg.theme('DarkGrey5')  # Add a touch of color
 
-    adb = AdbClient.AdbClient()
-
     devices_frame = []
     for num in range(constants.MAX_DEVICES_AT_ONE_RUN):
         print(f"Building row {num}")  # Debugging
@@ -150,14 +148,17 @@ def gui():
     # Create the Window
     window = sg.Window('Automated Photo/Video Testing', layout,
                        icon=os.path.join(ROOT_DIR, 'images', 'automated-video-testing-header-icon.ico'))
+
+    devices_watchdog_event = '-DEVICES-WATCHDOG-'
+    adb = AdbClient.AdbClient(gui_window=window, gui_event=devices_watchdog_event)
+    adb.watchdog()
+
     devices = {}  # List to store devices objects
     devices_list_old = []  # set devices_list_old empty so that se can find devices from first run
 
     # Event Loop to process "events" and get the "values" of the inputs
     while True:
-        event, values = window.read(timeout=100)
-        devices_list = adb.list_devices()
-        attached_devices_list = adb.get_attached_devices()
+        event, values = window.read()
 
         if event == sg.WIN_CLOSED or event == 'Exit':  # if user closes window or clicks cancel
             break
@@ -167,57 +168,51 @@ def gui():
         # print('ADB List Devices', devices_list)  # Debugging
         # print('Devices objects: ', device)
 
-        try:
-            if len(devices_list) > len(devices_list_old):  # If New devices found
-                for count, diff_device in enumerate([str(s) for s in (set(devices_list_old) ^ set(devices_list))]):
-                    print("Found new device!!! -> ", diff_device)
+        # ---- From here
+        if event == devices_watchdog_event:
+            adb_received = values[devices_watchdog_event]
 
-                    for numm in range(constants.MAX_DEVICES_AT_ONE_RUN):
-                        num = numm + count
-                        try:
-                            if values[f'device_serial.{num}'] == '' or values[f'device_serial.{num}'] == diff_device:
-                                print("setting {} to row {}".format(diff_device, num))
-
-                                window[f'device_attached.{num}'].Update(text=diff_device,
-                                                                        background_color='yellow',
-                                                                        disabled=False,
-                                                                        visible=True)
-                                window[f'device_serial.{num}'].Update(diff_device)
-                                window[f'device_icon.{num}'].Update(
-                                    filename=os.path.join(ROOT_DIR, 'images', 'device-icons', 'android-flat-32.png'),
-                                    visible=True)
-
-                                window[f'device_friendly.{num}'].Update(visible=True)
-                                window[f'identify_device_btn.{num}'].Update(visible=True)
-                                window[f'ctrl_device_btn.{num}'].Update(visible=True)
-                                break
-                        except KeyError:
-                            print('Devices limit exceeded!')
-                            print(f'numm: {numm}, num: {num}, count: {count}, max: {constants.MAX_DEVICES_AT_ONE_RUN}')
-            elif len(devices_list) < len(devices_list_old):  # If device is disconnected
-                for count, diff_device in enumerate([str(s) for s in (set(devices_list_old) ^ set(devices_list))]):
-                    print("Device detached :( -> ", diff_device)
-
-                    # window['devices'].update(values=devices_list)
-                    for numm in range(constants.MAX_DEVICES_AT_ONE_RUN):
-                        num = numm + count
-                        if values[f'device_serial.{num}'] == diff_device:
-                            window[f'device_attached.{num}'].Update(value=False, background_color='red', disabled=True,
-                                                                    visible=False)
-                            window[f'device_friendly.{num}'].Update(disabled=True, visible=False)
-                            window[f'identify_device_btn.{num}'].Update(visible=False)
-                            window[f'ctrl_device_btn.{num}'].Update(visible=False)
-                            window[f'device_icon.{num}'].Update(visible=False)
-                            break
+            if adb_received['action'] == 'connected':
+                # Connected
+                for num in range(constants.MAX_DEVICES_AT_ONE_RUN):
                     try:
-                        adb.detach_device(diff_device, devices[diff_device])
-                        del devices[diff_device]
-                    except KeyError:
-                        print("Wasn't attached anyway..")
-        except UnboundLocalError:
-            pass  # devices_list_old not set yet. No worries, will be set on next run of loop.
+                        if values[f'device_serial.{num}'] == '' or values[f'device_serial.{num}'] == adb_received['serial']:
+                            print("setting {} to row {}".format(adb_received['serial'], num))
 
-        devices_list_old = devices_list
+                            window[f'device_attached.{num}'].Update(text=adb_received['serial'],
+                                                                    background_color='yellow',
+                                                                    disabled=False,
+                                                                    visible=True)
+                            window[f'device_serial.{num}'].Update(adb_received['serial'])
+                            window[f'device_icon.{num}'].Update(
+                                filename=os.path.join(ROOT_DIR, 'images', 'device-icons', 'android-flat-32.png'),
+                                visible=True)
+
+                            window[f'device_friendly.{num}'].Update(visible=True)
+                            window[f'identify_device_btn.{num}'].Update(visible=True)
+                            window[f'ctrl_device_btn.{num}'].Update(visible=True)
+                            break
+                    except KeyError:
+                        print('Devices limit exceeded!')
+                        print(f'num: {num}, max: {constants.MAX_DEVICES_AT_ONE_RUN}')
+            elif adb_received['action'] == 'disconnected':
+                # If device is disconnected
+                for num in range(constants.MAX_DEVICES_AT_ONE_RUN):
+                    if values[f'device_serial.{num}'] == adb_received['serial']:
+                        window[f'device_attached.{num}'].Update(value=False, background_color='red', disabled=True,
+                                                                visible=False)
+                        window[f'device_friendly.{num}'].Update(disabled=True, visible=False)
+                        window[f'identify_device_btn.{num}'].Update(visible=False)
+                        window[f'ctrl_device_btn.{num}'].Update(visible=False)
+                        window[f'device_icon.{num}'].Update(visible=False)
+                        break
+                try:
+                    adb.detach_device(adb_received['serial'], devices[adb_received['serial']])
+                    del devices[adb_received['serial']]
+                except KeyError:
+                    print("Wasn't attached anyway..")
+
+        attached_devices_list = adb.get_attached_devices()
 
         if event.split('.')[0] == 'device_attached':
             diff_device = values[f"device_serial.{event.split('.')[1]}"]
@@ -251,6 +246,8 @@ def gui():
                         break
 
                 print('{} was detached!'.format(diff_device))
+
+        # ---- Ends here
 
         if attached_devices_list:
             # print('At least one device is attached!') # Debugging
