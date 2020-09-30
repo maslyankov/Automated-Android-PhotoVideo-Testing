@@ -1,4 +1,5 @@
 import os
+import threading
 
 from src.temp.actions import *
 from src.app import AdbClient
@@ -18,19 +19,6 @@ import src.constants as constants
 
 ROOT_DIR = os.path.abspath(os.curdir + "/../")  # This is Project Root
 
-
-def loading(secs):  # Only gives fanciness
-    for i in range(1, 15 * secs):
-        sg.popup_animated(image_source=os.path.join(ROOT_DIR, 'images', 'loading3.gif'), message='Loading...',
-                          no_titlebar=True,
-                          font=('Any', 25), text_color='black',
-                          background_color='white',
-                          alpha_channel=0.8,
-                          )
-        time.sleep(0.02)
-    sg.popup_animated(image_source=None)
-
-
 def place(elem):
     """
     Places element provided into a Column element so that its placement in the layout is retained.
@@ -44,8 +32,6 @@ def gui():
     sg.theme('DarkGrey5')  # Add a touch of color
 
     adb = AdbClient.AdbClient()
-
-    loading(3)
 
     devices_frame = []
     for num in range(constants.MAX_DEVICES_AT_ONE_RUN):
