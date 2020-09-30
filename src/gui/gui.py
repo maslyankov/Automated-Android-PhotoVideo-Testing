@@ -57,14 +57,14 @@ def gui():
                                                disabled=True,
                                                enable_events=True,
                                                visible=False,
-                                               size=(15, 1))),
+                                               size=(17, 1))),
                              place(sg.InputText(key=f'device_serial.{num}',
                                                 background_color="red",
                                                 size=(15, 1),
                                                 readonly=True,
                                                 default_text='',
                                                 visible=False)),
-                             place(sg.InputText(key=f'device_friendly.{num}', enable_events=True, size=(20, 1),
+                             place(sg.InputText(key=f'device_friendly.{num}', enable_events=True, size=(23, 1),
                                                 disabled=True,
                                                 visible=False)),
                              place(sg.Button('Identify',
@@ -106,30 +106,59 @@ def gui():
     ]
 
     lights_frame_layout = [[
-        sg.OptionMenu(values=list(constants.LIGHTS_MODELS.keys()), key="selected_lights_model"),
-        sg.OptionMenu(values=['None', 'Konita Minolta CL-200A', 'something else'], key="selected_luxmeter_model"),
-        sg.Button('Test Lights', button_color=(sg.theme_text_element_background_color(), 'silver'),
-                  size=(12, 3),
-                  key='test_lights_btn',
-                  disabled=False),
+        sg.OptionMenu(
+            values=list(constants.LIGHTS_MODELS.keys()),
+            key="selected_lights_model",
+            size=(22, 1)
+        ),
+        sg.OptionMenu(
+            values=['None', 'Konita Minolta CL-200A', 'something else'],
+            key="selected_luxmeter_model",
+            size=(22, 1)
+        ),
+        sg.Button(
+            'Test Lights',
+            button_color=(sg.theme_text_element_background_color(), 'silver'),
+            size=(11, 3),
+            key='test_lights_btn',
+            disabled=False
+        ),
     ],
     ]
 
     # All the stuff inside your window.
-    layout = [
+    tab_main = [
         [sg.Image(os.path.join(ROOT_DIR, 'images', 'automated-video-testing-header.png'))],
         [sg.Frame('Devices', devices_frame, font='Any 12', title_color='white')],
         [sg.Frame('Settings', device_settings_frame_layout, font='Any 12', title_color='white')],
         [sg.Frame('Lights', lights_frame_layout, font='Any 12', title_color='white')],
         [
-            sg.Button('Exit', size=(6, 2)),
             sg.Button('Capture Cases (Manual)', size=(25, 2), key='capture_manual_btn', disabled=True),
-            sg.Button('Capture Cases (Automated)', size=(25, 2), key='capture_auto_btn', disabled=True),
+            sg.Button('Capture Cases (Automated)', size=(31, 2), key='capture_auto_btn', disabled=True),
             sg.Button('?', size=(4, 2), key='help_btn', disabled=False)
-        ],
-        [sg.Text('_' * 75)],
-        # [sg.Frame('Output', [[sg.Output(size=(70, 8))]], font='Any 12', title_color='white')],
-        [sg.Text('App Version: {}'.format(constants.APP_VERSION), size=(65, 1), justification="right")]
+        ]
+    ]
+
+    tab2_layout = [
+        [sg.T('Real-Life Reporting')],
+        [sg.T('Objective Reporting')]
+    ]
+
+    tab3_layout = [
+        [sg.T('RAW Converter')],
+        [sg.T('ISP Simulator')],
+    ]
+
+    layout = [
+        [sg.TabGroup([[
+            sg.Tab('Testing', tab_main),
+            sg.Tab('Reporting', tab2_layout),
+            sg.Tab('Tools', tab3_layout),
+        ]])],
+        [
+            sg.Button('Exit', size=(20, 1)),
+            sg.Text('App Version: {}'.format(constants.APP_VERSION), size=(43, 1), justification="right")
+        ]
     ]
 
     # Create the Window
