@@ -168,7 +168,7 @@ def gui():
         # print('ADB List Devices', devices_list)  # Debugging
         # print('Devices objects: ', device)
 
-        # ---- From here
+        # ---- Devices Listing
         if event == devices_watchdog_event:
             adb_received = values[devices_watchdog_event]
 
@@ -247,7 +247,7 @@ def gui():
 
                 print('{} was detached!'.format(diff_device))
 
-        # ---- Ends here
+        # ---- Devices Listing Ends here
 
         if attached_devices_list:
             # print('At least one device is attached!') # Debugging
@@ -309,6 +309,8 @@ def gui():
 
         if event == 'help_btn':
             gui_help()
+
+    # Before exiting...
 
     # Detach attached devices
     print("Detaching attached devices...")
