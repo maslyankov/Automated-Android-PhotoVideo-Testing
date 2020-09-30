@@ -250,7 +250,7 @@ def gui():
         # ---- Devices Listing Ends here
 
         if attached_devices_list:
-            # print('At least one device is attached!') # Debugging
+            # At least one device is attached!
 
             # Disable/Enable buttons
             window['camxoverride_btn'].Update(disabled=False)
