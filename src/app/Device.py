@@ -288,7 +288,6 @@ class Device:
                 temp.append(current[0])  # -> [pkg, activity_id, pid]
                 return temp
         except IndexError:
-            print('We had trouble detecting currently opened app! Trying another method!')
             current = self.exec_shell("dumpsys window windows | grep -E 'mFocusedApp'").split(' ')[6].split('/')
         return current
 
