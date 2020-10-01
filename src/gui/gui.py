@@ -150,7 +150,7 @@ def gui():
     adb = AdbClient.AdbClient(gui_window=window, gui_event=devices_watchdog_event)
     adb.watchdog()
 
-    devices = {}  # List to store devices objects
+    devices = adb.devices_obj  # List to store devices objects
 
     # Event Loop to process "events" and get the "values" of the inputs
     while True:
@@ -214,7 +214,8 @@ def gui():
             diff_device = values[f"device_serial.{event.split('.')[1]}"]
 
             if values[f"device_attached.{event.split('.')[1]}"]:  # Attach device
-                devices[diff_device] = Device(adb, diff_device)  # Assign device to object
+                # Add device to attached devices list
+                adb.attach_device(diff_device)
 
                 for num in range(constants.MAX_DEVICES_AT_ONE_RUN):
                     if values[f'device_serial.{num}'] == diff_device or values[f'device_serial.{num}'] == '':
@@ -230,8 +231,7 @@ def gui():
 
                 print('Currently opened app: {}'.format(devices[diff_device].get_current_app()))
             else:  # Detach
-                adb.detach_device(diff_device, devices[diff_device])
-                del devices[diff_device]
+                adb.detach_device(diff_device)
 
                 for num in range(constants.MAX_DEVICES_AT_ONE_RUN):
                     if values[f'device_serial.{num}'] == diff_device or values[f'device_serial.{num}'] == '':

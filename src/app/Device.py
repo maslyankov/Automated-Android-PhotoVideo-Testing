@@ -129,9 +129,6 @@ class Device:
 
         self.root()  # Make sure we are using root for device
 
-        # Add device to attached devices list
-        adb.attach_device(device_serial, self)
-
         # Persistence
         self.device_xml = os.path.join(constants.ROOT_DIR, 'settings', f'{device_serial}.xml')
 
@@ -158,10 +155,7 @@ class Device:
                                 stderr=subprocess.PIPE)
         stdout, stderr = root.communicate()
         if stderr:
-            print("Rooting Errors: {}".format(stderr.decode()))
-            print("Exiting in 5 seconds.")
-            time.sleep(5)
-            exit(1)
+            raise ValueError(f'Rooting Errors: {stderr.decode()}')
         if stdout:
             print("Rooting Output: {}".format(stdout.decode()))
         root.terminate()
@@ -187,7 +181,10 @@ class Device:
         :param cmd:String command to execute
         :return:None
         """
-        return self.d.shell(cmd)
+        try:
+            return self.d.shell(cmd)
+        except AttributeError:
+            raise ValueError('You tried to reach a device that is already disconnected!')
 
     def push_file(self, src, dst):
         """

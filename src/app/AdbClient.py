@@ -5,6 +5,8 @@ import threading
 import time
 
 from ppadb.client import Client as AdbPy
+
+from src.app.Device import Device
 import src.constants as constants
 
 
@@ -34,8 +36,11 @@ class AdbClient:
             return
 
         self.client = AdbPy(host="127.0.0.1", port=5037)
-        self.attached_devices = []  # Store attached devices - devices that are connected and we are attached to
-        self.connected_devices = []
+
+        self.connected_devices = []  # to store connected devices
+
+        self.attached_devices = []  # to store attached devices - devices that are connected and we are attached to
+        self.devices_obj = {}  # to store attached devices' objects
 
     # ----- Main Stuff -----
     def _watchdog(self):
@@ -97,29 +102,33 @@ class AdbClient:
         """
         self.adb.terminate()
 
-    def attach_device(self, device_serial, device_obj):
+    def attach_device(self, device_serial):
         """
         Add device to attached devices
         :param device_serial: Device serial
         :param device_obj: Device object
         :return: None
         """
-        device_obj.set_led_color('0FFF00', 'RGB1', 'global_rgb')  # Poly
         self.attached_devices.append(device_serial)
+        self.devices_obj[device_serial] = Device(self, device_serial)  # Assign device to object
 
-    def detach_device(self, device_serial, device_obj):
+        self.devices_obj[device_serial].set_led_color('0FFF00', 'RGB1', 'global_rgb')  # Poly
+
+    def detach_device(self, device_serial):
         """
         Remove device from attached devices
         :param device_serial: Device serial
         :param device_obj: Device object
         :return: None
         """
-        device_obj.set_led_color('FFFFFF', 'RGB1', 'global_rgb')  # Poly
-        device_obj.kill_scrcpy()
+        self.devices_obj[device_serial].kill_scrcpy()
+
+        self.devices_obj[device_serial].set_led_color('FFFFFF', 'RGB1', 'global_rgb')  # Poly
 
         # Finally detach device
         try:
             self.attached_devices.remove(device_serial)
+            del self.devices_obj[device_serial]
         except ValueError:
             print("Not found in attached devices list")
             print(self.attached_devices)
