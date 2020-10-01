@@ -1,7 +1,6 @@
 import os
 import threading
 
-from src.temp.actions import *
 from src.app import AdbClient
 from src.app.Device import Device
 
@@ -16,8 +15,6 @@ from src.gui.gui_test_lights import gui_test_lights
 import PySimpleGUI as sg
 
 import src.constants as constants
-
-ROOT_DIR = os.path.abspath(os.curdir + "/../")  # This is Project Root
 
 def place(elem):
     """
@@ -112,7 +109,7 @@ def gui():
 
     # All the stuff inside your window.
     tab_main = [
-        [sg.Image(os.path.join(ROOT_DIR, 'images', 'automated-video-testing-header.png'))],
+        [sg.Image(os.path.join(constants.ROOT_DIR, 'images', 'automated-video-testing-header.png'))],
         [sg.Frame('Devices', devices_frame, font='Any 12', title_color='white')],
         [sg.Frame('Settings', device_settings_frame_layout, font='Any 12', title_color='white')],
         [sg.Frame('Lights', lights_frame_layout, font='Any 12', title_color='white')],
@@ -147,14 +144,13 @@ def gui():
 
     # Create the Window
     window = sg.Window('Automated Photo/Video Testing', layout,
-                       icon=os.path.join(ROOT_DIR, 'images', 'automated-video-testing-header-icon.ico'))
+                       icon=os.path.join(constants.ROOT_DIR, 'images', 'automated-video-testing-header-icon.ico'))
 
     devices_watchdog_event = '-DEVICES-WATCHDOG-'
     adb = AdbClient.AdbClient(gui_window=window, gui_event=devices_watchdog_event)
     adb.watchdog()
 
     devices = {}  # List to store devices objects
-    devices_list_old = []  # set devices_list_old empty so that se can find devices from first run
 
     # Event Loop to process "events" and get the "values" of the inputs
     while True:
@@ -185,7 +181,7 @@ def gui():
                                                                     visible=True)
                             window[f'device_serial.{num}'].Update(adb_received['serial'])
                             window[f'device_icon.{num}'].Update(
-                                filename=os.path.join(ROOT_DIR, 'images', 'device-icons', 'android-flat-32.png'),
+                                filename=os.path.join(constants.ROOT_DIR, 'images', 'device-icons', 'android-flat-32.png'),
                                 visible=True)
 
                             window[f'device_friendly.{num}'].Update(visible=True)
@@ -287,8 +283,7 @@ def gui():
                 gui_reboot_device(attached_devices_list, devices)
 
             if event == 'capture_manual_btn':
-                # gui_manual_cases(attached_devices_list, devices)
-                print(devices[attached_devices_list[0]].get_camera_files_list())
+                gui_manual_cases(attached_devices_list, devices)
 
             if event == 'capture_auto_btn':
                 print('Launching GUI')

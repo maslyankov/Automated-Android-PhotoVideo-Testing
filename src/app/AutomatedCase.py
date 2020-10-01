@@ -27,6 +27,7 @@ class AutomatedCase:
     def __init__(self, attached_devices, devices_obj,
                  lights_model, lights_seq_xml, luxmeter_model,
                  pull_files_bool, pull_files_location,
+                 photo_bool, video_bool, video_duration,
                  gui_window, gui_output, gui_event,
                  specific_device=None):
 
@@ -39,6 +40,10 @@ class AutomatedCase:
 
         self.pull_files_bool = pull_files_bool
         self.pull_files_location = pull_files_location
+
+        self.photo_bool = photo_bool
+        self.video_bool = video_bool
+        self.video_duration = video_duration
 
         self.gui_window = gui_window
         self.gui_output = gui_output
@@ -168,14 +173,28 @@ class AutomatedCase:
                         self.output_gui(
                             f'Now executing using device {device} ({self.devices_obj[device].friendly_name})'
                         )
-                        self.devices_obj[device].take_photo()
-
+                        if self.photo_bool:
+                            self.devices_obj[device].take_photo()
+                        if self.video_bool:
+                            self.devices_obj[device].start_video()
+                    if self.video_bool:
+                        time.sleep(self.video_duration)
+                        for device in self.attached_devices:
+                            self.output_gui(
+                                f'Now stopping video for device {device} ({self.devices_obj[device].friendly_name})'
+                            )
+                            self.devices_obj[device].stop_video()
                 else:
                     self.output_gui(
                         f'Now executing using {self.specific_device} ' +
                         f'({self.devices_obj[self.specific_device].friendly_name})'
                     )
-                    self.devices_obj[self.specific_device].take_photo()
+                    if self.photo_bool:
+                        self.devices_obj[self.specific_device].take_photo()
+                    if self.video_bool:
+                        self.devices_obj[self.specific_device].start_video()
+                        time.sleep(self.video_duration)
+                        self.devices_obj[self.specific_device].stop_video()
 
                 self.progress += progress_step
                 # send progress to gui thread

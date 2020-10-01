@@ -121,6 +121,8 @@ def gui_automated_cases(attached_devices, devices_obj, selected_lights_model, se
                 cases = AutomatedCase(attached_devices, devices_obj,
                                       selected_lights_model, values['selected_lights_seq'], selected_luxmeter_model,
                                       values['pull_files'], values['save_location'],
+                                      values['mode_photos'] or values['mode_both'],
+                                      values['mode_videos'] or values['mode_both'], values['duration_spinner'],
                                       window, '-OUT-', auto_cases_event,
                                       specific_device=None if values['use_all_devices_bool'] else values['selected_device'])
                 cases.execute()
