@@ -16,7 +16,10 @@ def place(elem):
     return sg.Column([[elem]], pad=(0, 0))
 
 
-def gui_automated_cases(attached_devices, devices_obj, selected_lights_model, selected_luxmeter_model):  # TODO
+def gui_automated_cases(adb, selected_lights_model, selected_luxmeter_model):  # TODO
+    attached_devices = adb.attached_devices
+    devices_obj = adb.devices_obj
+
     select_device_frame = [
         [sg.Checkbox(text='Use all attached devices',
                      default=True,
@@ -59,15 +62,19 @@ def gui_automated_cases(attached_devices, devices_obj, selected_lights_model, se
     lights_frame_layout = [
         [
             sg.Text('Sequence to use:'),
-            sg.Combo(values=['demo'], key='selected_lights_seq', default_value='demo', size=(30, 1))
+            sg.Combo(values=['demo'], key='selected_lights_seq', default_value='demo', size=(31, 1)),
+            sg.B('Manage', key='manage_lights_btn')
         ]
     ]
+
+    diff_tuning_layout = []
 
     layout = [
         [sg.Frame('Select Device', select_device_frame, font='Any 12', title_color='white')],
         [sg.Frame('Test Case', case_frame_layout, font='Any 12', title_color='white')],
         [sg.Frame('After Case', post_case_frame_layout, font='Any 12', title_color='white')],
         [sg.Frame('Lights', lights_frame_layout, font='Any 12', title_color='white')],
+        [sg.Frame('Queue sequences with different tunings', diff_tuning_layout, font='Any 12', title_color='white')],
 
         [sg.Button('Run', key='capture_case_btn', size=(54, 2))],
 
@@ -85,6 +92,10 @@ def gui_automated_cases(attached_devices, devices_obj, selected_lights_model, se
     automation_is_running = False
     auto_cases_event = "-AUTO-CASES-THREAD-"
 
+    main_gui_window = adb.gui_window
+    adb.gui_window = window
+    devices_watchdog_event = '-DEVICES-WATCHDOG-'
+
     # Event Loop to process "events" and get the "values" of the inputs
     while True:
         event, values = window.read()
@@ -93,6 +104,9 @@ def gui_automated_cases(attached_devices, devices_obj, selected_lights_model, se
             break
 
         window['duration_spinner'].Update(disabled=values['mode_photos'])
+
+        if event == devices_watchdog_event:
+            print(values[devices_watchdog_event])
 
         if event == 'selected_device':
             window['device-friendly'].Update(devices_obj[values['selected_device']].friendly_name)
@@ -105,7 +119,7 @@ def gui_automated_cases(attached_devices, devices_obj, selected_lights_model, se
                 window['capture_case_btn'].Update(disabled=False)
 
         if event == "pull_files":
-            window['clear_files'].Update(disabled=not values['pull_files'])
+            # window['clear_files'].Update(disabled=not values['pull_files'])  # Does not affect anything yet
             window['save_location'].Update(disabled=not values['pull_files'])
             window['save_location_browse_btn'].Update(disabled=not values['pull_files'])
             window['capture_case_btn'].Update(disabled=(values['save_location'] == ''))
@@ -147,4 +161,5 @@ def gui_automated_cases(attached_devices, devices_obj, selected_lights_model, se
             if values[auto_cases_event] == 100:
                 sg.Popup('Cases done!')
 
+    adb.gui_window = main_gui_window
     window.close()

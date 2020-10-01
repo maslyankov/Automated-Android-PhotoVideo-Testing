@@ -203,7 +203,7 @@ def gui():
                         window[f'device_icon.{num}'].Update(visible=False)
                         break
                 try:
-                    adb.detach_device(adb_received['serial'], devices[adb_received['serial']])
+                    adb.detach_device(adb_received['serial'])
                     del devices[adb_received['serial']]
                 except KeyError:
                     print("Wasn't attached anyway..")
@@ -287,7 +287,7 @@ def gui():
 
             if event == 'capture_auto_btn':
                 print('Launching GUI')
-                gui_automated_cases(attached_devices_list, devices, values['selected_lights_model'],
+                gui_automated_cases(adb, values['selected_lights_model'],
                                     values['selected_luxmeter_model'])
 
         else:
@@ -312,6 +312,6 @@ def gui():
     attached = attached_devices_list.copy()
     for dev in attached:
         print(f"Detaching {dev}")
-        adb.detach_device(dev, devices[dev])
+        adb.detach_device(dev)
 
     window.close()
