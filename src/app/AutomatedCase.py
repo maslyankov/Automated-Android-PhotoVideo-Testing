@@ -100,6 +100,8 @@ class AutomatedCase:
                     'error': True
                 }
             )
+        elif msg_type == 'success':
+            text_color = 'white on green'
         else:
             text_color = None
 
@@ -209,7 +211,7 @@ class AutomatedCase:
                     time.sleep(1)
                     self.pull_new_images(temp, f'{temp}_{lux}')
 
-            self.output_gui(f'{temp} is done! Turning it off.')
+            self.output_gui(f'{temp} is done! Turning it off.', 'success')
             lights.turn_off(temp)
 
         lights.disconnect()
