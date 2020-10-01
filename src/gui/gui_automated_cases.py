@@ -5,7 +5,7 @@ import PySimpleGUI as sg
 
 import src.constants as constants
 from src.app.AutomatedCase import AutomatedCase
-
+from src.gui.gui_automated_cases_lights_xml_gui import lights_xml_gui
 
 def place(elem):
     """
@@ -128,6 +128,9 @@ def gui_automated_cases(adb, selected_lights_model, selected_luxmeter_model):  #
             if values['save_location'] == '':
                 print("Save Location must be set!")
                 continue
+
+        if event == 'manage_lights_btn':
+            lights_xml_gui(values['selected_lights_seq'])
 
         if event == "capture_case_btn":
             if not automation_is_running:

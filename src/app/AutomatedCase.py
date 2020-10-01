@@ -17,6 +17,42 @@ def dict_len(dictionary):
     return res
 
 
+def parse_lights_xml_seq(seq_xml):
+    seq_name = None
+    seq_desc = None
+    seq = {}
+
+    try:
+        tree = ET.parse(seq_xml)
+    except FileNotFoundError:
+        print("Lights sequence file nonexistent!")
+        return
+    except ET.ParseError:
+        print("Failed to load Lights sequence file! :( XML Error!")
+        return
+
+    root = tree.getroot()
+    counter = 0
+    for elem in root:
+        for subelem in elem:
+            if subelem.tag == 'sequence':
+                # Each color temp
+                seq[subelem.attrib["color_temp"]] = []  # New dict key for light temp
+                for data in subelem:
+                    # Each LUX value
+                    seq[subelem.attrib["color_temp"]].append(int(data.text.strip()))  # Add lux to list for light temp
+
+                counter += 1
+            elif subelem.tag == 'name':
+                seq_name = subelem.text  # Seq Name
+            elif subelem.tag == 'description':
+                seq_desc = subelem.text  # Seq Description
+            else:
+                print(f"{subelem.tag}: ", subelem.text)  # Print if there is sth else
+
+    return seq_name, seq_desc, seq
+
+
 class AutomatedCase:
     def __new__(cls, *args, **kwargs):
         if args[2] == '':
@@ -58,37 +94,6 @@ class AutomatedCase:
         self.stop_signal = False
 
         self.progress = 0
-
-        self.parse_lights_xml_seq()
-
-    def parse_lights_xml_seq(self):
-        try:
-            tree = ET.parse(self.lights_seq_xml)
-        except FileNotFoundError:
-            print("Lights sequence file nonexistent!")
-            return
-        except ET.ParseError:
-            print("Failed to load Lights sequence file! :( XML Error!")
-            return
-
-        root = tree.getroot()
-        counter = 0
-        for elem in root:
-            for subelem in elem:
-                if subelem.tag == 'sequence':
-                    # Each color temp
-                    self.lights_seq[subelem.attrib["color_temp"]] = []
-                    for data in subelem:
-                        # Each LUX value
-                        self.lights_seq[subelem.attrib["color_temp"]].append(int(data.text.strip()))
-
-                    counter += 1
-                elif subelem.tag == 'name':
-                    self.lights_seq_name = subelem.text
-                elif subelem.tag == 'description':
-                    self.lights_seq_desc = subelem.text
-                else:
-                    print(f"{subelem.tag}: ", subelem.text)
 
     def output_gui(self, text, msg_type=None):
         if msg_type == 'error':
@@ -138,6 +143,11 @@ class AutomatedCase:
             self.devices_obj[self.specific_device].clear_folder('sdcard/DCIM/Camera/')
 
     def _execute(self):
+        lights_seq = parse_lights_xml_seq(self.lights_seq_xml)
+        self.lights_seq_name = lights_seq[0]
+        self.lights_seq_desc = lights_seq[1]
+        self.lights_seq = lights_seq[2]
+
         progress_step = 100 / dict_len(self.lights_seq)
 
         if self.luxmeter_model == 'Konita Minolta CL-200A':  # Konita Minolta CL-200A Selected
