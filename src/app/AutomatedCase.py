@@ -147,6 +147,7 @@ class AutomatedCase:
         self.lights_seq_name = lights_seq[0]
         self.lights_seq_desc = lights_seq[1]
         self.lights_seq = lights_seq[2]
+        self.output_gui(f"name: {self.lights_seq_name}\ndesc: {self.lights_seq_desc}")
 
         progress_step = 100 / dict_len(self.lights_seq)
 
@@ -168,14 +169,16 @@ class AutomatedCase:
             self.pull_new_images('before_cases', 'old_image')
 
         for temp in list(self.lights_seq.keys()):
-            if not self.stop_signal:
-                break
-
             self.output_gui(f'\nStarting Color Temp: {temp}')
             lights.turn_on(temp)
             lights.set_brightness(1)
 
             for lux in self.lights_seq[temp]:
+                self.output_gui('Stop signal is ' + str(self.stop_signal))
+                if self.stop_signal:
+                    print('Received stop command! Stopping...')
+                    break
+
                 self.output_gui(f'Doing {lux} lux...')
                 lights.set_lux(luxmeter, lux)
 
@@ -223,6 +226,9 @@ class AutomatedCase:
 
             self.output_gui(f'{temp} is done! Turning it off.', 'success')
             lights.turn_off(temp)
+            if self.stop_signal:
+                self.output_gui('Received stop command! Stopping...')
+                break
 
         lights.disconnect()
 

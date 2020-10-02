@@ -146,8 +146,10 @@ def gui_automated_cases(adb, selected_lights_model, selected_luxmeter_model):  #
             else:
                 sg.cprint("Finishing up and stopping cases creation!", window=window, key='-OUT-', colors='white on grey')
                 cases.stop_signal = True
-                automation_is_running = False
-                window['capture_case_btn'].Update('Run')
+                automation_is_running = False  # TODO: Move to autocases class
+
+        if not automation_is_running:
+            window['capture_case_btn'].Update('Run', disabled=False)
 
         if event == auto_cases_event:
             if values[auto_cases_event]['error']:

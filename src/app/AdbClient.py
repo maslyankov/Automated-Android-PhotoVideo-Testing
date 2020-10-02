@@ -46,7 +46,10 @@ class AdbClient:
     def _watchdog(self):
         time.sleep(1)  # Let's give the GUI time to load
         while True:
-            devices_list = self.list_devices()
+            try:
+                devices_list = self.list_devices()
+            except ConnectionResetError:
+                print('ADB Server connection lost.')
 
             if len(devices_list) > len(self.connected_devices):  # If New devices found
                 for count, diff_device in enumerate(compare_lists(self.connected_devices, devices_list)):
