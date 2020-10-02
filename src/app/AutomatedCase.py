@@ -91,6 +91,7 @@ class AutomatedCase:
         self.lights_seq_name = None
         self.lights_seq_desc = None
 
+        self.is_running = False
         self.stop_signal = False
 
         self.progress = 0
@@ -143,6 +144,8 @@ class AutomatedCase:
             self.devices_obj[self.specific_device].clear_folder('sdcard/DCIM/Camera/')
 
     def _execute(self):
+        self.is_running = True
+
         lights_seq = parse_lights_xml_seq(self.lights_seq_xml)
         self.lights_seq_name = lights_seq[0]
         self.lights_seq_desc = lights_seq[1]
@@ -231,6 +234,7 @@ class AutomatedCase:
                 break
 
         lights.disconnect()
+        self.is_running = False
 
     def execute(self):
         threading.Thread(target=self._execute, args=(), daemon=True).start()

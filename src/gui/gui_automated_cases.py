@@ -89,7 +89,7 @@ def gui_automated_cases(adb, selected_lights_model, selected_luxmeter_model):  #
     window = sg.Window('Automated Photo/Video Testing', layout,
                        icon=os.path.join(constants.ROOT_DIR, 'images', 'automated-video-testing-header-icon.ico'))
 
-    automation_is_running = False
+    automation_is_running = None
     auto_cases_event = "-AUTO-CASES-THREAD-"
 
     main_gui_window = adb.gui_window
@@ -135,7 +135,7 @@ def gui_automated_cases(adb, selected_lights_model, selected_luxmeter_model):  #
         if event == "capture_case_btn":
             if not automation_is_running:
                 window['capture_case_btn'].Update(disabled=True)
-                cases = AutomatedCase(attached_devices, devices_obj,
+                cases = AutomatedCase(attached_devices, devices_obj,  # TODO: Move some params to exec method
                                       selected_lights_model, values['selected_lights_seq'], selected_luxmeter_model,
                                       values['pull_files'], values['save_location'],
                                       values['mode_photos'] or values['mode_both'],
@@ -146,7 +146,6 @@ def gui_automated_cases(adb, selected_lights_model, selected_luxmeter_model):  #
             else:
                 sg.cprint("Finishing up and stopping cases creation!", window=window, key='-OUT-', colors='white on grey')
                 cases.stop_signal = True
-                automation_is_running = False  # TODO: Move to autocases class
 
         if not automation_is_running:
             window['capture_case_btn'].Update('Run', disabled=False)
@@ -156,7 +155,6 @@ def gui_automated_cases(adb, selected_lights_model, selected_luxmeter_model):  #
                 window['capture_case_btn'].Update('Run', disabled=False)
 
             if values[auto_cases_event]['progress'] > 0 and not values[auto_cases_event]['error']:
-                automation_is_running = True
                 window['capture_case_btn'].Update('Stop', disabled=False)
 
                 window['progressbar'].Update(visible=True, current_count=values[auto_cases_event]['progress'])
