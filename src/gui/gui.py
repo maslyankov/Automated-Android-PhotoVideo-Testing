@@ -12,6 +12,7 @@ from src.gui.gui_push_file import gui_push_file
 from src.gui.gui_reboot_device import gui_reboot_device
 from src.gui.gui_setup_device import gui_setup_device
 from src.gui.gui_test_lights import gui_test_lights
+from src.gui.gui_project_req_file import gui_project_req_file
 import PySimpleGUI as sg
 
 import src.constants as constants
@@ -26,7 +27,7 @@ def place(elem):
 
 
 def gui():
-    sg.theme('DarkGrey5')  # Add a touch of color
+    sg.theme('DarkGrey1')  # Add a touch of color
 
     devices_frame = []
     for num in range(constants.MAX_DEVICES_AT_ONE_RUN):
@@ -161,7 +162,7 @@ def gui():
             break
 
         # print('Data: ', values)  # Debugging
-        # print('Event: ', event)  # Debugging
+        print('Event: ', event)  # Debugging
         # print('ADB List Devices', devices_list)  # Debugging
         # print('Devices objects: ', device)
 
@@ -291,8 +292,6 @@ def gui():
                 gui_automated_cases(adb, values['selected_lights_model'],
                                     values['selected_luxmeter_model'])
 
-            if event == 'project_req_tool_btn':
-                gui_project_req_file()
 
         else:
             # print('No attached devices!')
@@ -308,6 +307,10 @@ def gui():
 
         if event == 'help_btn':
             gui_help()
+
+        if event == 'project_req_tool_btn':
+            print('asddasdsa')
+            gui_project_req_file()
 
     # Before exiting...
 

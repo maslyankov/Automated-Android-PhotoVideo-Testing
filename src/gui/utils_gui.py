@@ -329,6 +329,7 @@ class Tree(sg.Tree):
             self.treedata.Insert(parent, key, name, [text])
             if update:
                 self.tree.update(values=self.treedata)
+        return key
 
     def load_tree(self, dictionary):
         """
