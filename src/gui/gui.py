@@ -113,6 +113,7 @@ def gui():
         [sg.Frame('Devices', devices_frame, font='Any 12', title_color='white')],
         [sg.Frame('Settings', device_settings_frame_layout, font='Any 12', title_color='white')],
         [sg.Frame('Lights', lights_frame_layout, font='Any 12', title_color='white')],
+        [sg.Button('Generate Project Requirements File', size=(30, 2), key='project_req_tool_btn', disabled=False)],
         [
             sg.Button('Capture Cases (Manual)', size=(25, 2), key='capture_manual_btn', disabled=True),
             sg.Button('Capture Cases (Automated)', size=(31, 2), key='capture_auto_btn', disabled=True),
@@ -289,6 +290,9 @@ def gui():
                 print('Launching GUI')
                 gui_automated_cases(adb, values['selected_lights_model'],
                                     values['selected_luxmeter_model'])
+
+            if event == 'project_req_tool_btn':
+                gui_project_req_file()
 
         else:
             # print('No attached devices!')

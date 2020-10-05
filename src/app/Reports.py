@@ -3,12 +3,12 @@ from imatest.it import ImatestLibrary, ImatestException
 
 
 class Report:
-    def __init__(self, report_type, image):
-       self.type = type
-       self.image = image
+    def __init__(self, report_type, images):
+       self.report_type = report_type
+       self.images = images
 
     @staticmethod
-    def analyze_image():
+    def analyze_images():
         imatest = ImatestLibrary()
         result = None
 
@@ -74,5 +74,3 @@ class Report:
         imatest.terminate_library()
 
         return result
-
-Report.analyze_image()

@@ -31,7 +31,6 @@ class LightsCtrl:
                    self.api.cbox_right.get_connection_status()
 
     def turn_on(self, color_temp, selected_target_light='all'):
-        # TODO add check if color_temp is in self.available_lights
         if color_temp not in self.available_lights:
             raise ValueError(f'Cannot turn on a color temp that is not available for his lights model.')
 
