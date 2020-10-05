@@ -32,6 +32,9 @@ class LightsCtrl:
 
     def turn_on(self, color_temp, selected_target_light='all'):
         # TODO add check if color_temp is in self.available_lights
+        if color_temp not in self.available_lights:
+            raise ValueError(f'Cannot turn on a color temp that is not available for his lights model.')
+
         if self.lights_model == constants.LIGHTS_MODELS['SpectriWave']:
             if color_temp != 'INCA' and selected_target_light != 'all' and int(selected_target_light) > 2:
                 selected_target_light = 'all'

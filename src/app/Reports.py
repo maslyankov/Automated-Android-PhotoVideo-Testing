@@ -12,12 +12,24 @@ class Report:
         imatest = ImatestLibrary()
         result = None
 
-        root_dir = os.path.normpath(r'C:\Program Files\Imatest\v2020.2\IT\samples\python\esfriso')
-        images_dir = os.path.join(root_dir, os.pardir, os.pardir, 'images')
-        input_file = os.path.join(images_dir, r'esfriso_example.jpg')
+        # root_dir = os.path.normpath(r'C:\Program Files\Imatest\v2020.2\IT\samples\python\esfriso')
+
+        root_dir = os.path.normpath(r'C:\Users\mms00519\Desktop\test_batch')
+        images_dir = os.path.join(root_dir, 'Images')
+        # input_file = os.path.join(images_dir, r'ESFR_50.jpg')
+        images = ['ESFR_50.jpg', 'ESFR_50.jpg']
 
         op_mode = ImatestLibrary.OP_MODE_SEPARATE
-        ini_file = os.path.join(root_dir, os.pardir, 'ini_file', r'imatest-v2.ini')
+        ini_file = os.path.join(root_dir, r'settings-p30.ini')
+
+        input_file = []
+
+        for image in images:
+            input_file.append(os.path.join(images_dir, image))
+
+        print('Input list: ', input_file)
+
+        op_mode = ImatestLibrary.OP_MODE_SEPARATE
 
         try:
             result = imatest.esfriso(input_file=input_file,
@@ -40,14 +52,6 @@ class Report:
         # with multiple files.
         # input_file argument is a list containing the full paths to several images.
         # Output is a JSON string containing the result of the last image
-
-        input_file = [os.path.join(images_dir, r'esfriso_example.jpg'),
-                      os.path.join(images_dir, r'esfriso_example.jpg'),
-                      os.path.join(images_dir, r'esfriso_example.jpg'),
-                      os.path.join(images_dir, r'esfriso_example.jpg'),
-                      os.path.join(images_dir, r'esfriso_example.jpg')]
-        op_mode = ImatestLibrary.OP_MODE_SEPARATE
-        ini_file = os.path.join(root_dir, os.pardir, 'ini_file', r'imatest-v2.ini')
 
         try:
             result = imatest.esfriso(input_file=input_file,
