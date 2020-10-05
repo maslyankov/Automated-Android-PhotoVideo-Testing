@@ -54,38 +54,17 @@ def parse_lights_xml_seq(seq_xml):
 
 
 class AutomatedCase:
-    def __new__(cls, *args, **kwargs):
-        if args[2] == '':
-            print("AutomatedCases received an empty lights xml...")
-            raise Exception(ValueError)
-        return super(AutomatedCase, cls).__new__(cls)
+    def __init__(self, adb,
+                 gui_window, gui_output, gui_event):
 
-    def __init__(self, attached_devices, devices_obj,
-                 lights_model, lights_seq_xml, luxmeter_model,
-                 pull_files_bool, pull_files_location,
-                 photo_bool, video_bool, video_duration,
-                 gui_window, gui_output, gui_event,
-                 specific_device=None):
+        self.attached_devices = adb.attached_devices
+        self.devices_obj = adb.devices_obj
 
-        self.attached_devices = attached_devices
-        self.devices_obj = devices_obj
-
-        self.lights_model = lights_model
-        self.lights_seq_xml = os.path.join(constants.ROOT_DIR, 'lights_seq', f'{lights_seq_xml}.xml')
-        self.luxmeter_model = luxmeter_model
-
-        self.pull_files_bool = pull_files_bool
-        self.pull_files_location = pull_files_location
-
-        self.photo_bool = photo_bool
-        self.video_bool = video_bool
-        self.video_duration = video_duration
+        self.pull_files_location = None
 
         self.gui_window = gui_window
         self.gui_output = gui_output
         self.gui_event = gui_event
-
-        self.specific_device = specific_device
 
         self.lights_seq = {}
         self.lights_seq_name = None
@@ -113,8 +92,11 @@ class AutomatedCase:
 
         gui_print(text, window=self.gui_window, key=self.gui_output, colors=text_color)
 
-    def pull_new_images(self, folder, filename):
-        if self.specific_device is None:
+    def pull_new_images(self, folder, filename, specific_device=None):
+        if self.pull_files_location is None:
+            return
+
+        if specific_device is None:
             for device in self.attached_devices:
                 dest = os.path.join(
                     os.path.normpath(self.pull_files_location),
@@ -131,22 +113,28 @@ class AutomatedCase:
                 self.devices_obj[device].clear_folder('sdcard/DCIM/Camera/')
         else:
             self.output_gui(
-                f'Now pulling from {self.specific_device} ({self.devices_obj[self.specific_device].friendly_name})'
+                f'Now pulling from {specific_device} ({self.devices_obj[specific_device].friendly_name})'
             )
-            self.devices_obj[self.specific_device].pull_and_rename(
+            self.devices_obj[specific_device].pull_and_rename(
                 os.path.join(
                     os.path.normpath(self.pull_files_location),
-                    self.devices_obj[self.specific_device].friendly_name,
+                    self.devices_obj[specific_device].friendly_name,
                     folder
                 ),
                 filename
             )
-            self.devices_obj[self.specific_device].clear_folder('sdcard/DCIM/Camera/')
+            self.devices_obj[specific_device].clear_folder('sdcard/DCIM/Camera/')
 
-    def _execute(self):
+    def _execute(self, lights_model, lights_seq_xml, luxmeter_model,
+                 pull_files_bool, pull_files_location,
+                 photo_bool, video_bool, video_duration,
+                 specific_device=None):
         self.is_running = True
 
-        lights_seq = parse_lights_xml_seq(self.lights_seq_xml)
+        self.pull_files_location = pull_files_location
+        lights_seq_xml = os.path.join(constants.ROOT_DIR, 'lights_seq', f'{lights_seq_xml}.xml')
+
+        lights_seq = parse_lights_xml_seq(lights_seq_xml)
         self.lights_seq_name = lights_seq[0]
         self.lights_seq_desc = lights_seq[1]
         self.lights_seq = lights_seq[2]
@@ -154,7 +142,7 @@ class AutomatedCase:
 
         progress_step = 100 / dict_len(self.lights_seq)
 
-        if self.luxmeter_model == 'Konita Minolta CL-200A':  # Konita Minolta CL-200A Selected
+        if luxmeter_model == 'Konita Minolta CL-200A':  # Konita Minolta CL-200A Selected
             self.output_gui("Initializing Luxmeter...")
             luxmeter = ChromaMeterKonica()
         else:
@@ -162,14 +150,14 @@ class AutomatedCase:
             return
 
         self.output_gui('Initializing lights...')
-        lights = LightsCtrl(self.lights_model)  # Create lights object
-        if self.lights_model == 'SpectriWave':  # SpectriWave Specific
+        lights = LightsCtrl(lights_model)  # Create lights object
+        if lights_model == 'SpectriWave':  # SpectriWave Specific
             time.sleep(1)
             lights_status = lights.status()
             self.output_gui(f"Lights Status: \n{lights_status}\n")
 
-        if self.pull_files_bool:
-            self.pull_new_images('before_cases', 'old_image')
+        if pull_files_bool:
+            self.pull_new_images('before_cases', 'old_image', specific_device)
 
         for temp in list(self.lights_seq.keys()):
             self.output_gui(f'\nStarting Color Temp: {temp}')
@@ -186,17 +174,18 @@ class AutomatedCase:
                 lights.set_lux(luxmeter, lux)
 
                 # Do the thing
-                if self.specific_device is None:
+                if specific_device is None:
                     for device in self.attached_devices:
                         self.output_gui(
                             f'Now executing using device {device} ({self.devices_obj[device].friendly_name})'
                         )
-                        if self.photo_bool:
+                        if photo_bool:
                             self.devices_obj[device].take_photo()
-                        if self.video_bool:
+                        if video_bool:
                             self.devices_obj[device].start_video()
-                    if self.video_bool:
-                        time.sleep(self.video_duration)
+                    if video_bool:
+                        self.output_gui(f"Waiting {video_duration} seconds for video to finish")
+                        time.sleep(video_duration)
                         for device in self.attached_devices:
                             self.output_gui(
                                 f'Now stopping video for device {device} ({self.devices_obj[device].friendly_name})'
@@ -204,15 +193,15 @@ class AutomatedCase:
                             self.devices_obj[device].stop_video()
                 else:
                     self.output_gui(
-                        f'Now executing using {self.specific_device} ' +
-                        f'({self.devices_obj[self.specific_device].friendly_name})'
+                        f'Now executing using {specific_device} ' +
+                        f'({self.devices_obj[specific_device].friendly_name})'
                     )
-                    if self.photo_bool:
-                        self.devices_obj[self.specific_device].take_photo()
-                    if self.video_bool:
-                        self.devices_obj[self.specific_device].start_video()
-                        time.sleep(self.video_duration)
-                        self.devices_obj[self.specific_device].stop_video()
+                    if photo_bool:
+                        self.devices_obj[specific_device].take_photo()
+                    if video_bool:
+                        self.devices_obj[specific_device].start_video()
+                        time.sleep(video_duration)
+                        self.devices_obj[specific_device].stop_video()
 
                 self.progress += progress_step
                 # send progress to gui thread
@@ -223,9 +212,9 @@ class AutomatedCase:
                         'error': False
                     }
                 )
-                if self.pull_files_bool:
+                if pull_files_bool:
                     time.sleep(1)
-                    self.pull_new_images(temp, f'{temp}_{lux}')
+                    self.pull_new_images(temp, f'{temp}_{lux}', specific_device)
 
             self.output_gui(f'{temp} is done! Turning it off.', 'success')
             lights.turn_off(temp)
@@ -236,5 +225,12 @@ class AutomatedCase:
         lights.disconnect()
         self.is_running = False
 
-    def execute(self):
-        threading.Thread(target=self._execute, args=(), daemon=True).start()
+    def execute(self, lights_model, lights_seq_xml, luxmeter_model,
+                pull_files_bool, pull_files_location,
+                photo_bool, video_bool, video_duration,
+                specific_device=None):
+        threading.Thread(target=self._execute, args=(lights_model, lights_seq_xml, luxmeter_model,
+                                                     pull_files_bool, pull_files_location,
+                                                     photo_bool, video_bool, video_duration,
+                                                     specific_device,),
+                         daemon=True).start()

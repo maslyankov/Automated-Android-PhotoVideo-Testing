@@ -1,11 +1,11 @@
 import os
-import time
 
 import PySimpleGUI as sg
 
 import src.constants as constants
 from src.app.AutomatedCase import AutomatedCase
 from src.gui.gui_automated_cases_lights_xml_gui import lights_xml_gui
+
 
 def place(elem):
     """
@@ -96,6 +96,9 @@ def gui_automated_cases(adb, selected_lights_model, selected_luxmeter_model):  #
     adb.gui_window = window
     devices_watchdog_event = '-DEVICES-WATCHDOG-'
 
+    cases = AutomatedCase(adb,
+                          window, '-OUT-', auto_cases_event)
+
     # Event Loop to process "events" and get the "values" of the inputs
     while True:
         event, values = window.read()
@@ -133,22 +136,18 @@ def gui_automated_cases(adb, selected_lights_model, selected_luxmeter_model):  #
             lights_xml_gui(values['selected_lights_seq'])
 
         if event == "capture_case_btn":
-            if not automation_is_running:
+            if not cases.is_running:
                 window['capture_case_btn'].Update(disabled=True)
-                cases = AutomatedCase(attached_devices, devices_obj,  # TODO: Move some params to exec method
-                                      selected_lights_model, values['selected_lights_seq'], selected_luxmeter_model,
-                                      values['pull_files'], values['save_location'],
-                                      values['mode_photos'] or values['mode_both'],
-                                      values['mode_videos'] or values['mode_both'], values['duration_spinner'],
-                                      window, '-OUT-', auto_cases_event,
-                                      specific_device=None if values['use_all_devices_bool'] else values['selected_device'])
-                cases.execute()
+                cases.execute(selected_lights_model, values['selected_lights_seq'], selected_luxmeter_model,
+                              values['pull_files'], values['save_location'],
+                              values['mode_photos'] or values['mode_both'],
+                              values['mode_videos'] or values['mode_both'], values['duration_spinner'],
+                              specific_device=None if values['use_all_devices_bool'] else values['selected_device'])
             else:
-                sg.cprint("Finishing up and stopping cases creation!", window=window, key='-OUT-', colors='white on grey')
+                sg.cprint("Finishing up and stopping cases creation!", window=window, key='-OUT-',
+                          colors='white on grey')
                 cases.stop_signal = True
-
-        if not automation_is_running:
-            window['capture_case_btn'].Update('Run', disabled=False)
+                window['capture_case_btn'].Update(disabled=True)
 
         if event == auto_cases_event:
             if values[auto_cases_event]['error']:
@@ -163,6 +162,11 @@ def gui_automated_cases(adb, selected_lights_model, selected_luxmeter_model):  #
 
             if values[auto_cases_event] == 100:
                 sg.Popup('Cases done!')
+
+        if cases.is_running:
+            window['capture_case_btn'].Update('Stop')
+        else:
+            window['capture_case_btn'].Update('Run')
 
     adb.gui_window = main_gui_window
     window.close()
