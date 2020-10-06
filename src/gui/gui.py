@@ -16,12 +16,11 @@ from src.gui.gui_test_lights import gui_test_lights
 from src.gui.gui_project_req_file import gui_project_req_file
 from src.gui.utils_gui import place
 
-
 import src.constants as constants
 
 
 def gui():
-    sg.theme('DarkGrey1')  # Add a touch of color
+    sg.theme('DarkBlack')  # Add a touch of color
 
     devices_frame = []
     for num in range(constants.MAX_DEVICES_AT_ONE_RUN):
@@ -139,8 +138,13 @@ def gui():
     ]
 
     # Create the Window
-    window = sg.Window('Automated Photo/Video Testing', layout,
-                       icon=os.path.join(constants.ROOT_DIR, 'images', 'automated-video-testing-header-icon.ico'))
+    window = sg.Window(
+        'Automated Photo/Video Testing',
+        layout,
+        icon=os.path.join(constants.ROOT_DIR, 'images', 'automated-video-testing-header-icon.ico'),
+        no_titlebar=False,
+        grab_anywhere=True
+    )
 
     devices_watchdog_event = '-DEVICES-WATCHDOG-'
     adb = AdbClient.AdbClient(gui_window=window, gui_event=devices_watchdog_event)
@@ -168,7 +172,8 @@ def gui():
                 # Connected
                 for num in range(constants.MAX_DEVICES_AT_ONE_RUN):
                     try:
-                        if values[f'device_serial.{num}'] == '' or values[f'device_serial.{num}'] == adb_received['serial']:
+                        if values[f'device_serial.{num}'] == '' or values[f'device_serial.{num}'] == adb_received[
+                            'serial']:
                             print("setting {} to row {}".format(adb_received['serial'], num))
 
                             window[f'device_attached.{num}'].Update(text=adb_received['serial'],
@@ -177,7 +182,8 @@ def gui():
                                                                     visible=True)
                             window[f'device_serial.{num}'].Update(adb_received['serial'])
                             window[f'device_icon.{num}'].Update(
-                                filename=os.path.join(constants.ROOT_DIR, 'images', 'device-icons', 'android-flat-32.png'),
+                                filename=os.path.join(constants.ROOT_DIR, 'images', 'device-icons',
+                                                      'android-flat-32.png'),
                                 visible=True)
 
                             window[f'device_friendly.{num}'].Update(visible=True)
