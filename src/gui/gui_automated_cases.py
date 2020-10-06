@@ -5,18 +5,9 @@ import PySimpleGUI as sg
 import src.constants as constants
 from src.app.AutomatedCase import AutomatedCase
 from src.gui.gui_automated_cases_lights_xml_gui import lights_xml_gui
+from src.gui.utils_gui import place
 
-
-def place(elem):
-    """
-    Places element provided into a Column element so that its placement in the layout is retained.
-    :param elem: the element to put into the layout
-    :return: A column element containing the provided element
-    """
-    return sg.Column([[elem]], pad=(0, 0))
-
-
-def gui_automated_cases(adb, selected_lights_model, selected_luxmeter_model):  # TODO
+def gui_automated_cases(adb, selected_lights_model, selected_luxmeter_model):
     attached_devices = adb.attached_devices
     devices_obj = adb.devices_obj
 

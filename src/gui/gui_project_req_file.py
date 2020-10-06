@@ -13,29 +13,19 @@ def gui_project_req_file():
         num_rows=20,
         key='-TREE-', )
 
+    # Lists Data
+    test_modules_list = ['SFR', 'SFR Plus', 'eSFR', 'Gamma']
     light_types_list = ['D65', 'D75', 'TL84', 'INCA']
+    params_list = ['R_pixel_mean', 'G_pixel_mean', 'B_pixel_mean']
+
 
     left_col = [[tree]]
 
     right_col = [
         [
-            sg.Combo(['SFR', 'SFR Plus', 'eSFR', 'Gamma'], key='add_type_value', size=(15,1)),
+            sg.Combo(test_modules_list, key='add_type_value', size=(15,1)),
             sg.B('Add Type', key='add_type_btn', size=(10, 1)),
         ],
-        [
-            sg.Combo(['R_pixel_mean', 'G_pixel_mean', 'B_pixel_mean'], key='add_param_value', size=(15,1)),
-            sg.B('Add Param', key='add_param_btn', size=(10, 1)),
-        ],
-        [sg.HorizontalSeparator()],
-        [
-            sg.Text('Min: ', size=(12, 1)),
-            sg.InputText(key='param_min_value', size=(15, 1))
-        ],
-        [
-            sg.Text('Max: ', size=(12, 1)),
-            sg.InputText(key='param_max_value', size=(15, 1))
-        ],
-        [sg.B('Add Min,Max', key='add_min_max_btn', size=(27, 2))],
         [sg.HorizontalSeparator()],
         [
             sg.Combo(light_types_list, key='add_light_temp_value', size=(15, 1)),
@@ -45,6 +35,23 @@ def gui_project_req_file():
             sg.Spin([i for i in range(10, 1000)], initial_value=20, key='add_lux_value', size=(15, 1)),
             sg.B('Add LUX', key='add_lux_btn', size=(10, 1)),
         ],
+        [sg.HorizontalSeparator()],
+        [
+
+        ],
+        [
+            sg.Combo(params_list, key='add_param_value', size=(15,1)),
+            sg.B('Add Param', key='add_param_btn', size=(10, 1)),
+        ],
+        [
+            sg.Text('Min: ', size=(12, 1)),
+            sg.InputText(key='param_min_value', size=(15, 1))
+        ],
+        [
+            sg.Text('Max: ', size=(12, 1)),
+            sg.InputText(key='param_max_value', size=(15, 1))
+        ],
+        [sg.B('Add Min,Max', key='add_min_max_btn', size=(27, 2))],
         [sg.HorizontalSeparator()],
         [
             sg.B('/\\', key='mv_up_btn', size=(4, 2)),
@@ -80,10 +87,7 @@ def gui_project_req_file():
         print('event', event)  # Debugging
 
         if event == 'add_type_btn':
-            new_type = tree.insert_node('', f"{values['add_type_value']}", values['add_type_value'])
-
-            tree.insert_node(new_type, 'params', values['add_type_value'])
-            tree.insert_node(new_type, 'lights', values['add_type_value'])
+            tree.insert_node('', f"{values['add_type_value']}", values['add_type_value'])
 
         if event == 'add_param_btn':
             current = tree.where()
@@ -95,16 +99,17 @@ def gui_project_req_file():
 
         if event == 'add_light_temp_btn':
             current = tree.where()
-            if tree.get_text(values['-TREE-'][0]) == 'lights':
+            if tree.get_text(values['-TREE-'][0]) in test_modules_list:
                 tree.insert_node(current, f"{values['add_light_temp_value']}", values['add_light_temp_value'])
                 tree.select(current)
             else:
-                print('You can only add light temps to "light" elements')
+                print('You can only add light temps test type elements')
 
         if event == 'add_lux_btn':
             current = tree.where()
             if tree.get_text(values['-TREE-'][0]) in light_types_list:
-                tree.insert_node(current, values['add_lux_value'], values['add_lux_value'])
+                new_elem = tree.insert_node(current, values['add_lux_value'], values['add_lux_value'])
+                tree.insert_node(new_elem, 'params', 'params')
                 tree.select(current)
             else:
                 print('Select temp first')

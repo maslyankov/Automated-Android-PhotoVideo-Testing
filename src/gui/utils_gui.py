@@ -18,152 +18,16 @@ History
   - Revised len of button_text to check halfwidth and fullwidth if character.
 """
 
-from io import BytesIO
-from unicodedata import east_asian_width
-
 import PySimpleGUI as sg
-from PIL import Image, ImageDraw
 
 
-class Button(sg.Button):
+def place(elem):
     """
-    New Button class of PySimpleGUI with stadium shape background.
-    Disabled state not shown well.
+    Places element provided into a Column element so that its placement in the layout is retained.
+    :param elem: the element to put into the layout
+    :return: A column element containing the provided element
     """
-
-    def __init__(
-            self, button_text='', button_type=sg.BUTTON_TYPE_READ_FORM,
-            target=(None, None), tooltip=None, file_types=(("ALL Files", "*.*"),),
-            initial_folder=None, disabled=False, enable_events=False, font=None,
-            size=(None, None), auto_size_button=True, button_color=None, pad=None,
-            disabled_button_color=None, focus=False, key=None, visible=True,
-            bind_return_key=False, metadata=None, min_size=False):
-        """
-        Initial Button class, remove options
-        - image_file, image_data, image_size
-        - use_ttk_buttons
-        - change_submits (also removed in all related functions)
-        - border_width
-
-        : Parameters - Please refer to sg.Button
-          min_size - Bool, True to set size to width of button_text.
-        : Return Instance of new Button class
-        """
-        data = self._image(
-            button_text, font, button_color, size, auto_size_button)
-        if button_color:
-            color = [button_color[0], sg.theme_background_color()]
-        else:
-            color = [sg.DEFAULT_BUTTON_COLOR[0], sg.theme_background_color()]
-        super().__init__(
-            button_text=button_text, button_type=button_type, image_data=data,
-            target=target, tooltip=tooltip, file_types=file_types, pad=pad,
-            initial_folder=initial_folder, disabled=disabled, size=size,
-            enable_events=enable_events, font=font, button_color=color,
-            auto_size_button=auto_size_button, focus=focus, key=key,
-            disabled_button_color=disabled_button_color, visible=visible,
-            bind_return_key=bind_return_key, border_width=0, metadata=metadata)
-
-    def _font(self, font):
-        """
-        Convert string or sequence of font to family, size and style.
-        : Parameters
-          font - str, list or tupple, tkinter font
-        : Return
-          family (str), size (int), style (str)
-        """
-        if isinstance(font, str):
-            lst = list(font)
-            family, size = lst[0], int(lst[1])
-        else:
-            lst = font
-            family, size = lst[:2]
-        style = lst[2] if len(lst) > 2 else ''
-        return (family, size, style)
-
-    def _image(self, button_text, font, button_color, size, auto_size_button):
-        """
-        Create image data for PySimpleGUI.
-        : Parameter
-          font - None, str, list or tuple, tkinter font
-          button_color - None, tuple(text_color, background_color)
-          size - None, (int, int), size (width, height) in chars
-        : Return
-          data - image data for PySimpleGUI.
-        """
-        color = button_color if button_color else ('white', 'blue')
-        s1 = size[0] if size[0] != None else sg.DEFAULT_BUTTON_ELEMENT_SIZE[0]
-        if auto_size_button:
-            s1 = self._len(button_text)
-        text, background = color
-        font = font if font else sg.DEFAULT_FONT
-        family, s2, style = self._font(font)
-        width, height = int(s1 * s2 * 0.7), s2 * 3
-        radius = height // 2
-        im = Image.new(
-            mode='RGBA', size=(width + height, height), color=(255, 255, 255, 0))
-        image = ImageDraw.Draw(im, mode='RGBA')
-        image.ellipse((0, 0, height, height), fill=background)
-        image.ellipse((width, 0, width + height, height), fill=background)
-        image.rectangle((radius, 0, radius + width, height), fill=background)
-        with BytesIO() as output:
-            im.save(output, format="PNG")
-            data = output.getvalue()
-        return data
-
-    def _len(self, text):
-        length = 0
-        for char in text:
-            length += 2 if east_asian_width(char) in 'AFW' else 1
-        return length
-
-
-def FileBrowse(
-        button_text='Browse', target=(sg.ThisRow, -1), pad=None, key=None,
-        file_types=(("ALL Files", "*.*"),), initial_folder=None, tooltip=None,
-        size=(None, None), auto_size_button=None, button_color=None,
-        enable_events=False, font=None, disabled=False, metadata=None):
-    """
-    Select File for read, refer to PySimpleGUI FileBrowse
-    """
-    return Button(
-        button_text=button_text, button_type=sg.BUTTON_TYPE_BROWSE_FILE,
-        target=target, file_types=file_types, initial_folder=initial_folder,
-        tooltip=tooltip, size=size, auto_size_button=auto_size_button,
-        enable_events=enable_events, disabled=disabled, pad=pad, key=key,
-        button_color=button_color, font=font, metadata=metadata)
-
-
-def FileSaveAs(
-        button_text='Save As...', target=(sg.ThisRow, -1), enable_events=False,
-        file_types=(("ALL Files", "*.*"),), initial_folder=None, font=None,
-        disabled=False, tooltip=None, size=(None, None), auto_size_button=None,
-        button_color=None, pad=None, key=None, metadata=None):
-    """
-    Select File for Save, refer to PySimpleGUI FileSaveAs
-    """
-    return Button(
-        button_text=button_text, button_type=sg.BUTTON_TYPE_SAVEAS_FILE,
-        target=target, file_types=file_types, initial_folder=initial_folder,
-        tooltip=tooltip, size=size, disabled=disabled, font=font, pad=pad,
-        auto_size_button=auto_size_button, button_color=button_color,
-        enable_events=enable_events, key=key, metadata=metadata)
-
-
-def FolderBrowse(
-        button_text='Browse', target=(sg.ThisRow, -1), initial_folder=None,
-        tooltip=None, size=(None, None), auto_size_button=None,
-        button_color=None, disabled=False, enable_events=False, font=None,
-        pad=None, key=None, metadata=None):
-    """
-    Select Folder, refer to PySimpleGUI FolderBrowse
-    """
-    return Button(
-        button_text=button_text, button_type=sg.BUTTON_TYPE_BROWSE_FOLDER,
-        target=target, initial_folder=initial_folder, tooltip=tooltip,
-        size=size, auto_size_button=auto_size_button, disabled=disabled,
-        button_color=button_color, enable_events=enable_events, font=font,
-        pad=pad, key=key, metadata=metadata)
+    return sg.Column([[elem]], pad=(0, 0))
 
 
 class Tree(sg.Tree):

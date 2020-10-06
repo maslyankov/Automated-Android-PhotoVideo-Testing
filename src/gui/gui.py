@@ -2,7 +2,8 @@ import os
 import threading
 
 from src.app import AdbClient
-from src.app.Device import Device
+
+import PySimpleGUI as sg
 
 from src.gui.gui_help import gui_help
 from src.gui.gui_camxoverride import gui_camxoverride
@@ -13,17 +14,10 @@ from src.gui.gui_reboot_device import gui_reboot_device
 from src.gui.gui_setup_device import gui_setup_device
 from src.gui.gui_test_lights import gui_test_lights
 from src.gui.gui_project_req_file import gui_project_req_file
-import PySimpleGUI as sg
+from src.gui.utils_gui import place
+
 
 import src.constants as constants
-
-def place(elem):
-    """
-    Places element provided into a Column element so that its placement in the layout is retained.
-    :param elem: the element to put into the layout
-    :return: A column element containing the provided element
-    """
-    return sg.Column([[elem]], pad=(0, 0))
 
 
 def gui():
