@@ -20,30 +20,30 @@ def gui_project_req_file():
     right_col = [
         [
             sg.Combo(['SFR', 'SFR Plus', 'eSFR', 'Gamma'], key='add_type_value', size=(15,1)),
-            sg.B('Add Type', key='add_type_btn'),
+            sg.B('Add Type', key='add_type_btn', size=(10, 1)),
         ],
         [
             sg.Combo(['R_pixel_mean', 'G_pixel_mean', 'B_pixel_mean'], key='add_param_value', size=(15,1)),
-            sg.B('Add Param', key='add_param_btn'),
+            sg.B('Add Param', key='add_param_btn', size=(10, 1)),
         ],
         [sg.HorizontalSeparator()],
         [
-            sg.Text('Min: '),
+            sg.Text('Min: ', size=(12, 1)),
             sg.InputText(key='param_min_value', size=(15, 1))
         ],
         [
-            sg.Text('Max: '),
+            sg.Text('Max: ', size=(12, 1)),
             sg.InputText(key='param_max_value', size=(15, 1))
         ],
-        [sg.B('Add Min,Max', key='add_min_max_btn')],
+        [sg.B('Add Min,Max', key='add_min_max_btn', size=(27, 2))],
         [sg.HorizontalSeparator()],
         [
-            sg.Combo(light_types_list, key='add_light_temp_value', size=(15,1)),
-            sg.B('Add Temp', key='add_light_temp_btn'),
+            sg.Combo(light_types_list, key='add_light_temp_value', size=(15, 1)),
+            sg.B('Add Temp', key='add_light_temp_btn', size=(10, 1)),
         ],
         [
-            sg.Spin([i for i in range(10, 1000)], initial_value=20, key='add_lux_value', size=(15,1)),
-            sg.B('Add LUX', key='add_lux_btn'),
+            sg.Spin([i for i in range(10, 1000)], initial_value=20, key='add_lux_value', size=(15, 1)),
+            sg.B('Add LUX', key='add_lux_btn', size=(10, 1)),
         ],
         [sg.HorizontalSeparator()],
         [
@@ -53,8 +53,8 @@ def gui_project_req_file():
         ],
         [sg.HorizontalSeparator()],
         [
-            sg.B('Expand', key='expand_btn'),
-            sg.B('Collapse', key='collapse_btn'),
+            sg.B('Expand', key='expand_btn', size=(12, 1)),
+            sg.B('Collapse', key='collapse_btn', size=(12, 1)),
         ]
     ]
 
@@ -137,7 +137,11 @@ def gui_project_req_file():
             print("Action was successful: ", tree.delete_node(values["-TREE-"][0]))
 
         if event == 'expand_btn':
-            #tree.open_nodes()
+            tree.expand_all()
+            print('expanding nodes')
+
+        if event == 'collapse_btn':
+            tree.collapse_all()
             print('expanding nodes')
 
     window.close()

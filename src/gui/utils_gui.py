@@ -659,3 +659,11 @@ class Tree(sg.Tree):
             if self.text in self.treedata.tree_dict[key].text.lower():
                 return key
         return None
+
+    def expand_all(self):
+        for key in self.treedata.tree_dict:
+            self.tree.Widget.item(self._key_to_id(key), open=True)
+
+    def collapse_all(self):
+        for key in self.treedata.tree_dict:
+            self.tree.Widget.item(self._key_to_id(key), open=False)
