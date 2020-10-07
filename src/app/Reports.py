@@ -8,7 +8,7 @@ import win32com.client as win32
 
 import src.constants as constants
 from src.app.utils import kelvin_to_illumenant, only_digits, only_chars
-from src.app.AutomatedCase import parse_lights_xml_seq
+
 
 def xls_to_xlsx(xls_file) -> str:
     excel = win32.gencache.EnsureDispatch('Excel.Application')
@@ -62,7 +62,7 @@ def parse_excel_template(excel_file) -> dict:
     }
     conf_min_col = 1
     conf_min_row = 4
-    conf_max_row = 76
+    conf_max_row = 58
     filter_str = 'functional'
     # Config end
 
@@ -301,12 +301,3 @@ class Report:
         print("Terminating Imatest Library")
         # When finished terminate the library
         self.imatest.terminate_library()
-
-
-ret = parse_excel_template(r"C:\Users\mms00519\Downloads\Criteria-poly.xlsx")
-print(ret, '\n\n')
-
-print(parse_lights_xml_seq(os.path.join(constants.ROOT_DIR, os.path.pardir, 'lights_seq', 'demo.xml'))[2], '\n\n')
-
-for seq in generate_lights_seqs(ret):
-    print(seq)

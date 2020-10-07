@@ -5,9 +5,11 @@ import xml.etree.cElementTree as ET
 from pathlib import Path
 
 from PySimpleGUI import cprint as gui_print
+
 import src.constants as constants
 from src.app.LightsCtrl import LightsCtrl
 from src.konica.ChromaMeterKonica import ChromaMeterKonica
+from src.app.Reports import Report, parse_excel_template, generate_lights_seqs
 
 
 def dict_len(dictionary):
@@ -53,10 +55,10 @@ def parse_lights_xml_seq(seq_xml):
     return seq_name, seq_desc, seq
 
 
-class AutomatedCase:
-    def __init__(self, adb,
-                 gui_window, gui_output, gui_event):
+class AutomatedCase(threading.Thread):
+    def __init__(self, adb, lights_model, luxmeter_model, gui_window, gui_output, gui_event):
 
+        super().__init__()
         self.attached_devices = adb.attached_devices
         self.devices_obj = adb.devices_obj
 
@@ -75,6 +77,19 @@ class AutomatedCase:
 
         self.progress = 0
 
+        # Initialize Luxmeter
+        if luxmeter_model == 'Konita Minolta CL-200A':  # Konita Minolta CL-200A Selected
+            self.output_gui("Initializing Luxmeter...")
+            self.luxmeter = ChromaMeterKonica()
+        else:
+            self.output_gui("Unsupported luxmeter selected!", msg_type='error')
+            self.luxmeter = None
+
+        # Initialize Lights
+        self.lights_model = lights_model
+        self.output_gui('Initializing lights...')
+        self.lights = LightsCtrl(lights_model)  # Create lights object
+
     def output_gui(self, text, msg_type=None):
         if msg_type == 'error':
             text_color = 'white on red'
@@ -92,7 +107,7 @@ class AutomatedCase:
 
         gui_print(text, window=self.gui_window, key=self.gui_output, colors=text_color)
 
-    def pull_new_images(self, folder, filename, specific_device=None):
+    def pull_new_images(self, folders: list, filename, specific_device=None):
         if self.pull_files_location is None:
             return
 
@@ -101,7 +116,7 @@ class AutomatedCase:
                 dest = os.path.join(
                     os.path.normpath(self.pull_files_location),
                     self.devices_obj[device].friendly_name,
-                    folder)
+                    *folders)
                 Path(dest).mkdir(parents=True, exist_ok=True)
 
                 print("current list of files: ", self.devices_obj[device].get_camera_files_list())
@@ -119,50 +134,60 @@ class AutomatedCase:
                 os.path.join(
                     os.path.normpath(self.pull_files_location),
                     self.devices_obj[specific_device].friendly_name,
-                    folder
+                    *folders
                 ),
                 filename
             )
             self.devices_obj[specific_device].clear_folder('sdcard/DCIM/Camera/')
 
-    def _execute(self, lights_model, lights_seq_xml, luxmeter_model,
-                 pull_files_bool, pull_files_location,
-                 photo_bool, video_bool, video_duration,
-                 specific_device=None):
+    def execute(self, lights_seq_xml,
+                pull_files_bool: bool, pull_files_location: str,
+                photo_bool: bool, video_bool: bool,
+                specific_device=None, folders: list = None, filename_prefix: str = None,
+                lights_seq_in=None,
+                video_duration: int = None):
+        if lights_seq_xml == '':
+            self.output_gui('Lights sequence XML is mandatory!', msg_type='error')
+            return
+        elif pull_files_location == '':
+            self.output_gui('Files destination is mandatory!', msg_type='error')
+            return
+
         self.is_running = True
 
         self.pull_files_location = pull_files_location
-        lights_seq_xml = os.path.join(constants.ROOT_DIR, 'lights_seq', f'{lights_seq_xml}.xml')
 
-        lights_seq = parse_lights_xml_seq(lights_seq_xml)
-        self.lights_seq_name = lights_seq[0]
-        self.lights_seq_desc = lights_seq[1]
-        self.lights_seq = lights_seq[2]
-        self.output_gui(f"name: {self.lights_seq_name}\ndesc: {self.lights_seq_desc}")
+        if lights_seq_in is None:
+            lights_seq_xml = os.path.join(constants.ROOT_DIR, 'lights_seq', f'{lights_seq_xml}.xml')
 
-        progress_step = 100 / dict_len(self.lights_seq)
-
-        if luxmeter_model == 'Konita Minolta CL-200A':  # Konita Minolta CL-200A Selected
-            self.output_gui("Initializing Luxmeter...")
-            luxmeter = ChromaMeterKonica()
+            lights_seq = parse_lights_xml_seq(lights_seq_xml)
+            self.lights_seq_name = lights_seq[0]
+            self.lights_seq_desc = lights_seq[1]
+            self.lights_seq = lights_seq[2]
+            self.output_gui(f"name: {self.lights_seq_name}\ndesc: {self.lights_seq_desc}")
         else:
-            self.output_gui("Unsupported luxmeter selected!", msg_type='error')
-            return
+            self.lights_seq = lights_seq_in
 
-        self.output_gui('Initializing lights...')
-        lights = LightsCtrl(lights_model)  # Create lights object
-        if lights_model == 'SpectriWave':  # SpectriWave Specific
+        d_len = dict_len(self.lights_seq)
+        if d_len == 0:
+            return
+        progress_step = 100 / d_len
+
+        if self.lights_model == 'SpectriWave':  # SpectriWave Specific
             time.sleep(1)
-            lights_status = lights.status()
+            lights_status = self.lights.status()
             self.output_gui(f"Lights Status: \n{lights_status}\n")
 
         if pull_files_bool:
-            self.pull_new_images('before_cases', 'old_image', specific_device)
+            self.pull_new_images(
+                ['before_cases'] if folders is None else folders + ['before_cases'],
+                'old_images',
+                specific_device)
 
         for temp in list(self.lights_seq.keys()):
             self.output_gui(f'\nStarting Color Temp: {temp}')
-            lights.turn_on(temp)
-            lights.set_brightness(1)
+            self.lights.turn_on(temp)
+            self.lights.set_brightness(1)
 
             for lux in self.lights_seq[temp]:
                 self.output_gui('Stop signal is ' + str(self.stop_signal))
@@ -171,7 +196,7 @@ class AutomatedCase:
                     break
 
                 self.output_gui(f'Doing {lux} lux...')
-                lights.set_lux(luxmeter, lux)
+                self.lights.set_lux(self.luxmeter, lux)
 
                 # Do the thing
                 if specific_device is None:
@@ -214,23 +239,74 @@ class AutomatedCase:
                 )
                 if pull_files_bool:
                     time.sleep(1)
-                    self.pull_new_images(temp, f'{temp}_{lux}', specific_device)
+                    prefix = '' if filename_prefix is None else f"{filename_prefix}_"
+
+                    self.pull_new_images(
+                        [temp] if folders is None else folders + [temp],
+                        f'{prefix}{temp}_{lux}',
+                        specific_device)
 
             self.output_gui(f'{temp} is done! Turning it off.', 'success')
-            lights.turn_off(temp)
+            self.lights.turn_off(temp)
             if self.stop_signal:
                 self.output_gui('Received stop command! Stopping...')
                 break
 
-        lights.disconnect()
         self.is_running = False
 
-    def execute(self, lights_model, lights_seq_xml, luxmeter_model,
-                pull_files_bool, pull_files_location,
-                photo_bool, video_bool, video_duration,
-                specific_device=None):
-        threading.Thread(target=self._execute, args=(lights_model, lights_seq_xml, luxmeter_model,
-                                                     pull_files_bool, pull_files_location,
-                                                     photo_bool, video_bool, video_duration,
-                                                     specific_device,),
-                         daemon=True).start()
+    # def execute(self, lights_seq_xml,
+    #             pull_files_bool: bool, pull_files_location,
+    #             photo_bool: bool, video_bool: bool,
+    #             specific_device=None, video_duration: int = None, ):
+    #     threading.Thread(target=self._execute,
+    #                      args=(lights_seq_xml,
+    #                            pull_files_bool, pull_files_location,
+    #                            photo_bool, video_bool,
+    #                            specific_device, video_duration,),
+    #                      daemon=True).start()
+
+    def execute_req_template(self,
+                             requirements_file, files_destination,
+                             reports_bool: bool, reports_pdf_bool: bool, specific_device=None):
+        if requirements_file == '':
+            self.output_gui('Requirements file is mandatory!', msg_type='error')
+            return
+        elif files_destination == '':
+            self.output_gui('Files destination is mandatory!', msg_type='error')
+            return
+
+        excel_data = parse_excel_template(requirements_file)
+        lights_seqs = generate_lights_seqs(excel_data)
+
+        for lights_seq in lights_seqs:
+            self.execute(None,
+                         True, files_destination,
+                         photo_bool=True, video_bool=False, specific_device=specific_device,
+                         folders=[lights_seq['test_type']],
+                         filename_prefix=lights_seq['test_type'],
+                         lights_seq_in=lights_seq['lights_seq'])
+            self.output_gui(f'Test cases for {lights_seq["test_type"]} finished.', 'success')
+
+        # -- Report (Analyze) --
+        if reports_bool:
+            print('Analyzing images...')
+            # report_obj = Report()
+            # Figure out stuff with ini file
+            print('Generating report...')
+            if reports_pdf_bool:
+                # Convert report to pdf
+                print('Converting report to pdf...')
+                pass
+
+    # def execute_req_template(self,
+    #                          requirements_file, files_destination,
+    #                          reports_bool: bool, reports_pdf_bool: bool, specific_device=None):
+    #     print(requirements_file, files_destination, reports_bool, reports_pdf_bool, specific_device)
+    #     threading.Thread(target=self._execute_req_template,
+    #                      args=(requirements_file, files_destination,
+    #                            reports_bool, reports_pdf_bool,
+    #                            specific_device,),
+    #                      daemon=True).start()
+
+    def __del__(self):
+        self.lights.disconnect()

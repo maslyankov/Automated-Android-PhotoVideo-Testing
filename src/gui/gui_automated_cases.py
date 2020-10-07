@@ -4,14 +4,12 @@ import PySimpleGUI as sg
 
 import src.constants as constants
 from src.app.AutomatedCase import AutomatedCase
-from src.app.Reports import Report, parse_excel_template
 
 from src.gui.gui_automated_cases_lights_xml_gui import lights_xml_gui
 from src.gui.utils_gui import place
 
 
 def configurable_tab_logic(window, values, event,
-                           selected_lights_model, selected_luxmeter_model,
                            cases, auto_cases_event):
     window['duration_spinner'].Update(disabled=values['mode_photos'])
     if event == 'save_location':
@@ -33,10 +31,10 @@ def configurable_tab_logic(window, values, event,
         else:
             if not cases.is_running:
                 window['capture_cases_btn'].Update(disabled=True)
-                cases.execute(selected_lights_model, values['selected_lights_seq'], selected_luxmeter_model,
+                cases.execute(values['selected_lights_seq'],
                               values['pull_files'], values['save_location'],
                               values['mode_photos'] or values['mode_both'],
-                              values['mode_videos'] or values['mode_both'], values['duration_spinner'],
+                              values['mode_videos'] or values['mode_both'], video_duration=values['duration_spinner'],
                               specific_device=None if values['use_all_devices_bool'] else values['selected_device'])
             else:
                 sg.cprint("Finishing up and stopping cases creation!", window=window, key='-OUT-',
@@ -65,11 +63,12 @@ def configurable_tab_logic(window, values, event,
 
 
 def template_tab_logic(window, values, event,
-                       selected_lights_model, selected_luxmeter_model,
                        cases, auto_cases_event):
     window['generate_reports_pdf_bool'].Update(disabled=not values['generate_reports_bool'])
     if event == 'run_template_automation_btn':
-        parse_excel_template(values['template_location'])
+        cases.execute_req_template(values['template_location'], values['save_location_output'],
+                                   values['generate_reports_bool'], values['generate_reports_pdf_bool'],
+                                   specific_device=None if values['use_all_devices_bool'] else values['selected_device'])
 
 
 def gui_automated_cases(adb, selected_lights_model, selected_luxmeter_model):
@@ -170,9 +169,9 @@ def gui_automated_cases(adb, selected_lights_model, selected_luxmeter_model):
     layout = [
         [sg.Frame('Select Device', select_device_frame, font='Any 12', title_color='white')],
         [sg.TabGroup([[
-            sg.Tab('Configurable', configurable_tab),
-            sg.Tab('Template Testing', template_tab)
-        ]])],
+            sg.Tab('Configurable', configurable_tab, key='configurable_cases_tab'),
+            sg.Tab('Template Testing', template_tab, key='template_cases_tab')
+        ]], key='auto_cases_tabs_group', enable_events=True)],
 
         [sg.Multiline(key='-OUT-', size=(59, 10), autoscroll=True)],
         [sg.ProgressBar(max_value=100, orientation='h', size=(35, 5), key='progressbar', visible=False)],
@@ -191,17 +190,20 @@ def gui_automated_cases(adb, selected_lights_model, selected_luxmeter_model):
     adb.gui_window = window
     devices_watchdog_event = '-DEVICES-WATCHDOG-'
 
-    cases = AutomatedCase(adb,
-                          window, '-OUT-', auto_cases_event)
-
+    cases = None
     # Event Loop to process "events" and get the "values" of the inputs
     while True:
         event, values = window.read()
 
-        print('values: ', values)
+        # print('values: ', values)  # debugging
 
         if event == sg.WIN_CLOSED or event == 'Close':  # if user closes window or clicks cancel
             break
+
+        if cases is None:
+            cases = AutomatedCase(adb, selected_lights_model, selected_luxmeter_model,
+                                  window, '-OUT-', auto_cases_event)
+            cases.start()
 
         if event == devices_watchdog_event:
             print(values[devices_watchdog_event])
@@ -212,17 +214,19 @@ def gui_automated_cases(adb, selected_lights_model, selected_luxmeter_model):
         if event == 'use_all_devices_bool':
             window['selected_device'].Update(disabled=values['use_all_devices_bool'])
 
-        configurable_tab_logic(
-            window, values, event,
-            selected_lights_model, selected_luxmeter_model,
-            cases, auto_cases_event
-        )
+        if values['auto_cases_tabs_group'] == 'configurable_cases_tab':
+            print('tab is at configurable cases')
+            configurable_tab_logic(
+                window, values, event,
+                cases, auto_cases_event
+            )
 
-        template_tab_logic(
-            window, values, event,
-            selected_lights_model, selected_luxmeter_model,
-            cases, auto_cases_event
-        )
+        if values['auto_cases_tabs_group'] == 'template_cases_tab':
+            print('tab is at template cases')
+            template_tab_logic(
+                window, values, event,
+                cases, auto_cases_event
+            )
 
     adb.gui_window = main_gui_window
     window.close()

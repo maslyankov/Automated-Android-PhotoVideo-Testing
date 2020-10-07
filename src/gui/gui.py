@@ -130,7 +130,7 @@ def gui():
             sg.Tab('Testing', tab_main),
             sg.Tab('Reporting', tab2_layout),
             sg.Tab('Tools', tab3_layout),
-        ]])],
+        ]], key='main_tabs_group', enable_events=True)],
         [
             sg.Button('Exit', size=(20, 1)),
             sg.Text('App Version: {}'.format(constants.APP_VERSION), size=(43, 1), justification="right")
@@ -161,6 +161,7 @@ def gui():
 
         # print('Data: ', values)  # Debugging
         print('Event: ', event)  # Debugging
+        print('selected tab: ', values['main_tabs_group'])
         # print('ADB List Devices', devices_list)  # Debugging
         # print('Devices objects: ', device)
 
