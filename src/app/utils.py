@@ -2,7 +2,12 @@
 
 def kelvin_to_illumenant(kelvins):
     if isinstance(kelvins, str):
-        kelvins = int(''.join(filter(lambda x: x.isdigit(), kelvins)))
+        if kelvins == '':
+            return
+        try:
+            kelvins = int(''.join(filter(lambda x: x.isdigit(), kelvins)))
+        except ValueError:
+            print('Error is because of: ', kelvins)
 
     if isinstance(kelvins, int):
         if abs(kelvins-2700) < 20:
@@ -36,9 +41,16 @@ def kelvin_to_illumenant(kelvins):
         else:
             return f"{kelvins}K"
     else:
-        raise ValueError('Wrong input!')
+        raise ValueError('Wrong input!', str(kelvins), str(type(kelvins)))
 
 
 def only_digits(val) -> int:
     if isinstance(val, str):
         return int(''.join(filter(lambda x: x.isdigit(), val)))
+    elif isinstance(val, int):
+        return val
+
+
+def only_chars(val: str) -> int:
+    if isinstance(val, str):
+        return ''.join(filter(lambda x: x.isalpha(), val))
