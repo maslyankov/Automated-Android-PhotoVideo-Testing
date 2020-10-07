@@ -51,7 +51,7 @@ def device_data_to_gui(device, window):
     )
 
     # List
-    for seq_type in list(constants.act_sequences.keys()):
+    for seq_type in list(constants.ACT_SEQUENCES.keys()):
         # Cleanup before populating
         for row in range(constants.MAX_ACTIONS_DISPLAY):
             print('Clearing row ', row)  # Debugging
@@ -65,7 +65,7 @@ def device_data_to_gui(device, window):
             window[f'{seq_type}_selected_action_y.' + str(row)].Update('Empty')
             window[f'{seq_type}_selected_action_type.' + str(row)].Update('Empty')
 
-        for act_num, action in enumerate(getattr(device, constants.act_sequences[seq_type])):
+        for act_num, action in enumerate(getattr(device, constants.ACT_SEQUENCES[seq_type])):
             print('Populating row ', act_num)
             if act_num > constants.MAX_ACTIONS_DISPLAY:
                 print("Max displayable actions reached!")
@@ -119,9 +119,9 @@ def build_seq_gui(obj, prop_key, clickable_elements):  # TODO - Fix list of acti
     print("GUI Builder got: ", obj, prop_key, clickable_elements)
 
     for num in range(constants.MAX_ACTIONS_DISPLAY):
-        if getattr(obj, constants.act_sequences[prop_key]) != [] and len(
-                getattr(obj, constants.act_sequences[prop_key])) > num:
-            current_obj_elem = getattr(obj, constants.act_sequences[prop_key])[num]
+        if getattr(obj, constants.ACT_SEQUENCES[prop_key]) != [] and len(
+                getattr(obj, constants.ACT_SEQUENCES[prop_key])) > num:
+            current_obj_elem = getattr(obj, constants.ACT_SEQUENCES[prop_key])[num]
         else:
             current_obj_elem = None
 
@@ -135,9 +135,9 @@ def build_seq_gui(obj, prop_key, clickable_elements):  # TODO - Fix list of acti
                            values=clickable_elements,
                            size=(37, 1),
                            key=f'{prop_key}_selected_action.{num}',
-                           disabled=False if num == 0 or num == len(getattr(obj, constants.act_sequences[
+                           disabled=False if num == 0 or num == len(getattr(obj, constants.ACT_SEQUENCES[
                                prop_key])) or current_obj_elem is not None else True,
-                           visible=True if num == 0 or num == len(getattr(obj, constants.act_sequences[
+                           visible=True if num == 0 or num == len(getattr(obj, constants.ACT_SEQUENCES[
                                prop_key])) or current_obj_elem is not None else False,
                            enable_events=True
                        )),
@@ -156,9 +156,9 @@ def build_seq_gui(obj, prop_key, clickable_elements):  # TODO - Fix list of acti
                            button_color=(sg.theme_text_element_background_color(), 'silver'),
                            size=(4, 1),
                            key=f'{prop_key}_selected_action_test_btn.{num}',
-                           disabled=False if num == 0 or num == len(getattr(obj, constants.act_sequences[
+                           disabled=False if num == 0 or num == len(getattr(obj, constants.ACT_SEQUENCES[
                                prop_key])) or current_obj_elem is not None else True,
-                           visible=True if num == 0 or num == len(getattr(obj, constants.act_sequences[
+                           visible=True if num == 0 or num == len(getattr(obj, constants.ACT_SEQUENCES[
                                prop_key])) or current_obj_elem is not None else False
                        )),
 
@@ -284,8 +284,8 @@ def gui_setup_device(attached_devices, device_obj):
 
     seq_column = []
 
-    for elem in list(constants.act_sequences.keys()):
-        frame = [sg.Frame(f'{constants.act_sequences_desc[elem]} Action Sequence',
+    for elem in list(constants.ACT_SEQUENCES.keys()):
+        frame = [sg.Frame(f'{constants.ACT_SEQUENCES_DESC[elem]} Action Sequence',
                           build_seq_gui(device_obj[attached_devices[0]], elem, clickable_elements), font='Any 12',
                           title_color='white')]
         seq_column.append(frame)
@@ -332,7 +332,7 @@ def gui_setup_device(attached_devices, device_obj):
             new_ui_elements = constants.CUSTOM_ACTIONS + list(
                 device_obj[values['selected_device']].get_clickable_window_elements().keys())
 
-            for seq_type in list(constants.act_sequences.keys()):
+            for seq_type in list(constants.ACT_SEQUENCES.keys()):
                 for element in range(constants.MAX_ACTIONS_DISPLAY):
                     # if values[f'{seq_type}_selected_action.{str(element)}'] == 'Empty':
                     window[f'{seq_type}_selected_action.{str(element)}'].Update(values=new_ui_elements)
@@ -340,7 +340,7 @@ def gui_setup_device(attached_devices, device_obj):
         if event == 'actions_gap_spinner':
             setattr(device_obj[values['selected_device']], 'actions_time_gap', values['actions_gap_spinner'])
 
-        for seq_type in list(constants.act_sequences.keys()):
+        for seq_type in list(constants.ACT_SEQUENCES.keys()):
             if event.split('.')[0] == f'{seq_type}_selected_action':
                 if values[f"{seq_type}_selected_action.{event.split('.')[1]}"] == 'delay':
                     window[f"{seq_type}_selected_action_type.{event.split('.')[1]}"].Update('delay')
@@ -385,16 +385,16 @@ def gui_setup_device(attached_devices, device_obj):
                         window[f"{seq_type}_selected_action.{str(element)}"].Update(values=new_ui_elements)
 
             if event == f"{seq_type}_selected_action_sequence_test_btn":
-                device_obj[values['selected_device']].do(getattr(device_obj[values['selected_device']], constants.act_sequences[seq_type]))
+                device_obj[values['selected_device']].do(getattr(device_obj[values['selected_device']], constants.ACT_SEQUENCES[seq_type]))
 
         if event == 'save_btn':
             device = device_obj[values['selected_device']]
             # Save to object
             device.set_logs(values['logs_bool'], values['logs_filter'])
             device.set_camera_app_pkg(values['selected_app_package'])
-            for seq_type in list(constants.act_sequences.keys()):
+            for seq_type in list(constants.ACT_SEQUENCES.keys()):
                 val = list_from_data(values, f'{seq_type}_selected_action')
-                setattr(device, constants.act_sequences[seq_type], val)
+                setattr(device, constants.ACT_SEQUENCES[seq_type], val)
 
             # Save to file
             device.save_settings()
