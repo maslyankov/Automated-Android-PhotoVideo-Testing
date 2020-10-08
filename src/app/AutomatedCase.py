@@ -117,6 +117,8 @@ class AutomatedCase(threading.Thread):
         if self.pull_files_location is None:
             return
 
+        pulled_files = {}
+
         if specific_device is None:
             for device in self.attached_devices:
                 dest = os.path.join(
@@ -127,7 +129,7 @@ class AutomatedCase(threading.Thread):
 
                 print("current list of files: ", self.devices_obj[device].get_camera_files_list())
                 self.output_gui(f'Now pulling from device {device} ({self.devices_obj[device].friendly_name})')
-                self.devices_obj[device].pull_and_rename(
+                pulled_files[device] = self.devices_obj[device].pull_and_rename(
                     dest,
                     filename
                 )
@@ -136,7 +138,7 @@ class AutomatedCase(threading.Thread):
             self.output_gui(
                 f'Now pulling from {specific_device} ({self.devices_obj[specific_device].friendly_name})'
             )
-            self.devices_obj[specific_device].pull_and_rename(
+            pulled_files[specific_device] = self.devices_obj[specific_device].pull_and_rename(
                 os.path.join(
                     os.path.normpath(self.pull_files_location),
                     self.devices_obj[specific_device].friendly_name,
@@ -145,6 +147,8 @@ class AutomatedCase(threading.Thread):
                 filename
             )
             self.devices_obj[specific_device].clear_folder('sdcard/DCIM/Camera/')
+
+        return pulled_files
 
     def execute(self, lights_seq_xml,
                 pull_files_bool: bool, pull_files_location: str,
@@ -175,22 +179,26 @@ class AutomatedCase(threading.Thread):
             self.lights_seq = lights_seq_in
             current_action = seq_name
 
+        # Check if passed sequence is not empty...
         d_len = dict_len(self.lights_seq)
         if d_len == 0:
             return
         progress_step = 100 / d_len
 
+        # Get lights status
         if self.lights_model == 'SpectriWave':  # SpectriWave Specific
             time.sleep(1)
             lights_status = self.lights.status()
             self.output_gui(f"Lights Status: \n{lights_status}\n")
 
+        # Prior to testing, pull files from device and clear it up
         if pull_files_bool:
             self.pull_new_images(
                 ['before_cases'] if folders is None else folders + ['before_cases'],
                 'old_images',
                 specific_device)
 
+        # Begin sequence
         for temp in list(self.lights_seq.keys()):
             self.output_gui(f'\nStarting Color Temp: {temp}')
             self.lights.turn_on(temp)
@@ -249,14 +257,15 @@ class AutomatedCase(threading.Thread):
 
                 self.progress += progress_step
 
+                # Pull new files and delete them from device
                 if pull_files_bool:
                     time.sleep(1)
                     prefix = '' if filename_prefix is None else f"{filename_prefix}_"
 
-                    self.pull_new_images(
-                        [temp] if folders is None else folders + [temp],
-                        f'{prefix}{temp}_{lux}',
-                        specific_device)
+                    new_files = self.pull_new_images(  # TODO: Finish up new images persistence
+                                    [temp] if folders is None else folders + [temp],
+                                    f'{prefix}{temp}_{lux}',
+                                    specific_device)
 
             self.output_gui(f'{temp} is done! Turning it off.', 'success')
             self.lights.turn_off(temp)
@@ -304,7 +313,9 @@ class AutomatedCase(threading.Thread):
         if reports_bool:
             self.current_action = 'Analyzing Images'
             self.output_gui('Analyzing images...')
-            # report_obj = Report()
+            # report = Report()
+            # report.analyze_images_parallel(images, ini_file, num_processes=4)
+
             # Figure out stuff with ini file
 
             self.current_action = 'Generating Report'

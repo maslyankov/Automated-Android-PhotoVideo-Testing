@@ -1,7 +1,26 @@
 import os
+import sys
+from pathlib import Path
 
 # Directories
-ROOT_DIR = os.path.abspath(os.curdir + "/../")  # This is Project Root
+# determine if application is a script file or frozen exe
+if getattr(sys, 'frozen', False):
+    EXE_PATH = os.path.dirname(sys.executable)
+    SETTINGS_DIR = os.path.join(EXE_PATH, 'settings')
+
+    ROOT_DIR = sys._MEIPASS
+else:
+    print('App not build to an exe')
+    ROOT_DIR = os.path.abspath(os.curdir + "/../")  # This is Project Root
+    SETTINGS_DIR = os.path.join(ROOT_DIR, 'settings')
+
+DEVICES_SETTINGS_DIR = os.path.join(SETTINGS_DIR, 'devices')
+TMP_DIR = os.path.join(ROOT_DIR)
+XML_DIR = os.path.join(TMP_DIR, 'XML')
+# Create dirs if not exist
+Path(DEVICES_SETTINGS_DIR).mkdir(parents=True, exist_ok=True)
+Path(XML_DIR).mkdir(parents=True, exist_ok=True)
+
 ADB = os.path.join(ROOT_DIR, 'vendor', 'scrcpy-win64-v1.16', 'adb.exe')
 SCRCPY = os.path.join(ROOT_DIR, 'vendor', 'scrcpy-win64-v1.16', 'scrcpy.exe')
 

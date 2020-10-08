@@ -21,5 +21,5 @@ setup(
     author_email='m.maslyankov@me.com',
     description='Tool for automating the creation of test cases for image recording devices',
     options = {"build_exe": build_exe_options},
-    executables = [Executable("src/main.py", base=base)]
+    executables = [Executable("src/run_app.py", base=base)]
 )

@@ -130,7 +130,7 @@ class Device:
         self.root()  # Make sure we are using root for device
 
         # Persistence
-        self.device_xml = os.path.join(constants.ROOT_DIR, 'settings', f'{device_serial}.xml')
+        self.device_xml = os.path.join(constants.DEVICES_SETTINGS_DIR, f'{device_serial}.xml')
 
         print("Conn devs: ", adb.attached_devices)  # Debugging
         print("Device Serial: ", device_serial)  # Debugging
@@ -151,8 +151,10 @@ class Device:
         """
         print("Rooting device " + self.device_serial)
         root = subprocess.Popen([constants.ADB, '-s', self.device_serial, 'root'],
+                                stdin=subprocess.PIPE,
                                 stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE)
+        root.stdin.close()
         stdout, stderr = root.communicate()
         if stderr:
             raise ValueError(f'Rooting Errors: {stderr.decode()}')
@@ -166,8 +168,11 @@ class Device:
         :return:None
         """
         print("Remount device serial: " + self.device_serial)
-        remount = subprocess.Popen([constants.ADB, '-s', self.device_serial, 'remount'], stdout=subprocess.PIPE,
+        remount = subprocess.Popen([constants.ADB, '-s', self.device_serial, 'remount'],
+                                   stdin=subprocess.PIPE,
+                                   stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE)
+        remount.stdin.close()
         stdout, stderr = remount.communicate()
         if stderr:
             print("Remonut Errors: ".format(stderr.decode()))
@@ -407,11 +412,15 @@ class Device:
         print(f"Deleting folder {folder} from device!")
 
     def pull_and_rename(self, dest, filename):
+        pulled_files = []
         suffix = None
         for num, file in enumerate(self.get_camera_files_list()):
             if num > 0:
                 suffix = f"_{str(num)}"
-            self.pull_file(f"sdcard/DCIM/Camera/{file}", os.path.join(dest, f"{filename}{suffix if suffix else ''}.{file.split('.')[1]}"))
+            new_filename = os.path.join(dest, f"{filename}{suffix if suffix else ''}.{file.split('.')[1]}")
+            self.pull_file(f"sdcard/DCIM/Camera/{file}", new_filename)
+            pulled_files.append(new_filename)
+        return pulled_files
 
     def setup_device_settings(self):
         print('Making the device an insomniac!')
@@ -447,9 +456,13 @@ class Device:
         :return:None
         """
         print("Opening scrcpy for device ", self.device_serial)
+        CREATE_NO_WINDOW = 0x08000000
         self.scrcpy.append(subprocess.Popen([constants.SCRCPY, '--serial', self.device_serial],
+                                            stdin=subprocess.PIPE,
                                             stdout=subprocess.PIPE,
-                                            stderr=subprocess.PIPE))
+                                            stderr=subprocess.PIPE,
+                                            creationflags=CREATE_NO_WINDOW))
+        self.scrcpy[len(self.scrcpy)-1].stdin.close()
 
     def identify(self):
         """
