@@ -160,7 +160,6 @@ class AutomatedCase(threading.Thread):
             return
 
         self.is_running = True
-
         self.pull_files_location = pull_files_location
 
         if lights_seq_in is None:
@@ -168,11 +167,13 @@ class AutomatedCase(threading.Thread):
 
             lights_seq = parse_lights_xml_seq(lights_seq_xml)
             self.lights_seq_name = lights_seq[0]
+            current_action = lights_seq[0]
             self.lights_seq_desc = lights_seq[1]
             self.lights_seq = lights_seq[2]
             self.output_gui(f"name: {self.lights_seq_name}\ndesc: {self.lights_seq_desc}")
         else:
             self.lights_seq = lights_seq_in
+            current_action = seq_name
 
         d_len = dict_len(self.lights_seq)
         if d_len == 0:
@@ -196,13 +197,25 @@ class AutomatedCase(threading.Thread):
             self.lights.set_brightness(1)
 
             for lux in self.lights_seq[temp]:
-                self.output_gui('Stop signal is ' + str(self.stop_signal))
+                # self.output_gui('Stop signal is ' + str(self.stop_signal))
                 if self.stop_signal:
-                    print('Received stop command! Stopping...')
+                    self.output_gui('Received stop command! Stopping...')
                     break
 
+                self.current_action = current_action
+                # send progress to gui thread
+                self.gui_window.write_event_value(
+                    self.gui_event,
+                    {
+                        'progress': self.progress,
+                        'error': self.error,
+                        'current_action': self.current_action
+                    }
+                )
+
                 self.output_gui(f'Doing {lux} lux...')
-                self.lights.set_lux(self.luxmeter, lux)
+                current_lux = self.lights.set_lux(self.luxmeter, lux)
+                self.output_gui(f'Lux is at {current_lux} lux')
 
                 # Do the thing
                 if specific_device is None:
@@ -235,16 +248,7 @@ class AutomatedCase(threading.Thread):
                         self.devices_obj[specific_device].stop_video()
 
                 self.progress += progress_step
-                self.current_action = seq_name
-                # send progress to gui thread
-                self.gui_window.write_event_value(
-                    self.gui_event,
-                    {
-                        'progress': self.progress,
-                        'error': self.error,
-                        'current_action': self.current_action
-                    }
-                )
+
                 if pull_files_bool:
                     time.sleep(1)
                     prefix = '' if filename_prefix is None else f"{filename_prefix}_"

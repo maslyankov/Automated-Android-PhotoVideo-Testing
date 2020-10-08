@@ -166,6 +166,7 @@ class LightsCtrl:
             curr_lux = luxmeter_obj.get_lux()
 
         print(f"[Set Lux] Target LUX was {target_lux}, we got it to {curr_lux}, because the threshold is {threshold}")
+        return curr_lux
 
     def disconnect(self):
         print("Disconnecting from lights...")
