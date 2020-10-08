@@ -1,0 +1,1 @@
+python -m PyInstaller --add-data "vendor;vendor" --add-data "images;images" --noupx --noconsole --onefile -i ./images/automated-video-testing-header-icon.ico ./automated_cases.py
