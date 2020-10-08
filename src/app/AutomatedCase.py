@@ -75,12 +75,15 @@ class AutomatedCase(threading.Thread):
         self.is_running = False
         self.stop_signal = False
 
+        self.current_action = None
         self.progress = 0
+        self.error = False
 
         # Initialize Luxmeter
         if luxmeter_model == 'Konita Minolta CL-200A':  # Konita Minolta CL-200A Selected
             self.output_gui("Initializing Luxmeter...")
             self.luxmeter = ChromaMeterKonica()
+            self.output_gui("Luxmeter Initialized!", msg_type='success')
         else:
             self.output_gui("Unsupported luxmeter selected!", msg_type='error')
             self.luxmeter = None
@@ -89,22 +92,25 @@ class AutomatedCase(threading.Thread):
         self.lights_model = lights_model
         self.output_gui('Initializing lights...')
         self.lights = LightsCtrl(lights_model)  # Create lights object
+        self.output_gui("Lights Initialized!", msg_type='success')
 
     def output_gui(self, text, msg_type=None):
         if msg_type == 'error':
             text_color = 'white on red'
-            self.gui_window.write_event_value(
-                self.gui_event,
-                {
-                    'progress': self.progress,
-                    'error': True
-                }
-            )
+            self.error = True
         elif msg_type == 'success':
             text_color = 'white on green'
         else:
             text_color = None
 
+        self.gui_window.write_event_value(
+            self.gui_event,
+            {
+                'progress': self.progress,
+                'error': self.error,
+                'current_action': self.current_action
+            }
+        )
         gui_print(text, window=self.gui_window, key=self.gui_output, colors=text_color)
 
     def pull_new_images(self, folders: list, filename, specific_device=None):
@@ -144,7 +150,7 @@ class AutomatedCase(threading.Thread):
                 pull_files_bool: bool, pull_files_location: str,
                 photo_bool: bool, video_bool: bool,
                 specific_device=None, folders: list = None, filename_prefix: str = None,
-                lights_seq_in=None,
+                lights_seq_in=None, seq_name=None,
                 video_duration: int = None):
         if lights_seq_xml == '':
             self.output_gui('Lights sequence XML is mandatory!', msg_type='error')
@@ -229,12 +235,14 @@ class AutomatedCase(threading.Thread):
                         self.devices_obj[specific_device].stop_video()
 
                 self.progress += progress_step
+                self.current_action = seq_name
                 # send progress to gui thread
                 self.gui_window.write_event_value(
                     self.gui_event,
                     {
                         'progress': self.progress,
-                        'error': False
+                        'error': self.error,
+                        'current_action': self.current_action
                     }
                 )
                 if pull_files_bool:
@@ -284,19 +292,24 @@ class AutomatedCase(threading.Thread):
                          photo_bool=True, video_bool=False, specific_device=specific_device,
                          folders=[lights_seq['test_type']],
                          filename_prefix=lights_seq['test_type'],
-                         lights_seq_in=lights_seq['lights_seq'])
+                         lights_seq_in=lights_seq['lights_seq'],
+                         seq_name=lights_seq['test_type'])
             self.output_gui(f'Test cases for {lights_seq["test_type"]} finished.', 'success')
 
         # -- Report (Analyze) --
         if reports_bool:
-            print('Analyzing images...')
+            self.current_action = 'Analyzing Images'
+            self.output_gui('Analyzing images...')
             # report_obj = Report()
             # Figure out stuff with ini file
-            print('Generating report...')
+
+            self.current_action = 'Generating Report'
+            self.output_gui('Generating report...')
+
             if reports_pdf_bool:
                 # Convert report to pdf
-                print('Converting report to pdf...')
-                pass
+                self.current_action = 'Converting Report to PDF'
+                self.output_gui('Converting report to PDF...')
 
     # def execute_req_template(self,
     #                          requirements_file, files_destination,

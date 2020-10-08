@@ -42,6 +42,11 @@ LIGHTS_MODELS = {
     'lightStudio': 1
 }
 
+AVAILABLE_LIGHTS = {
+    'SpectriWave': ['D65', 'D75', 'TL84', 'INCA'],
+    'lightStudio': []
+}
+
 # Light Temperatures
 KELVINS_TABLE = {
     "WW":       (2700, 'Warm White'),

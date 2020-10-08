@@ -49,11 +49,7 @@ def configurable_tab_logic(window, values, event,
         if values[auto_cases_event]['progress'] > 0 and not values[auto_cases_event]['error']:
             window['capture_cases_btn'].Update('Stop', disabled=False)
 
-            window['progressbar'].Update(visible=True, current_count=values[auto_cases_event]['progress'])
-            window['progress_value'].Update(str(values[auto_cases_event]['progress']), visible=True)
-            window['progress_value_symbol'].Update(visible=True)
-
-        if values[auto_cases_event] == 100:
+        if values[auto_cases_event]['progress'] == 100:
             sg.Popup('Cases done!')
 
     if cases.is_running:
@@ -65,10 +61,26 @@ def configurable_tab_logic(window, values, event,
 def template_tab_logic(window, values, event,
                        cases, auto_cases_event):
     window['generate_reports_pdf_bool'].Update(disabled=not values['generate_reports_bool'])
+
     if event == 'run_template_automation_btn':
         cases.execute_req_template(values['template_location'], values['save_location_output'],
                                    values['generate_reports_bool'], values['generate_reports_pdf_bool'],
                                    specific_device=None if values['use_all_devices_bool'] else values['selected_device'])
+
+    if event == auto_cases_event:
+        if values[auto_cases_event]['error']:
+            window['run_template_automation_btn'].Update(disabled=False)
+
+        if values[auto_cases_event]['progress'] > 0 and not values[auto_cases_event]['error']:
+            window['run_template_automation_btn'].Update('Stop', disabled=False)
+
+        if values[auto_cases_event]['current_action'] == 'finished':
+            sg.Popup('Cases done!')
+
+    if cases.is_running:
+        window['run_template_automation_btn'].Update('Stop')
+    else:
+        window['run_template_automation_btn'].Update('Run')
 
 
 def gui_automated_cases(adb, selected_lights_model, selected_luxmeter_model):
@@ -163,7 +175,7 @@ def gui_automated_cases(adb, selected_lights_model, selected_luxmeter_model):
         [sg.Frame('Template', template_frame, font='Any 12', title_color='white')],
         [sg.Frame('Checklist', checklist_frame, font='Any 12', title_color='white')],
         [sg.Frame('Save to...', destination_frame, font='Any 12', title_color='white')],
-        [sg.Button('GO GO GO', key='run_template_automation_btn')]
+        [sg.Button('DO THE MAGIC', key='run_template_automation_btn', size=(54, 2))]
     ]
 
     layout = [
@@ -177,7 +189,9 @@ def gui_automated_cases(adb, selected_lights_model, selected_luxmeter_model):
         [sg.ProgressBar(max_value=100, orientation='h', size=(35, 5), key='progressbar', visible=False)],
         [
             place(sg.Text('0', key='progress_value', size=(3, 1), visible=False)),
-            place(sg.Text('%', key='progress_value_symbol', pad=(0, 0), visible=False))
+            place(sg.Text('%', key='progress_value_symbol', pad=(0, 0), visible=False)),
+
+            place(sg.Text('', key='progress_curr_module', pad=(5, 0), visible=False))
         ]
     ]
 
@@ -213,6 +227,13 @@ def gui_automated_cases(adb, selected_lights_model, selected_luxmeter_model):
 
         if event == 'use_all_devices_bool':
             window['selected_device'].Update(disabled=values['use_all_devices_bool'])
+
+        if event == auto_cases_event:
+            if values[auto_cases_event]['progress'] > 0 and not values[auto_cases_event]['error']:
+                window['progressbar'].Update(visible=True, current_count=values[auto_cases_event]['progress'])
+                window['progress_value'].Update(str(values[auto_cases_event]['progress']), visible=True)
+                window['progress_value_symbol'].Update(visible=True)
+                window['progress_curr_module'].Update(str(values[auto_cases_event]['current_action']), visible=True)
 
         if values['auto_cases_tabs_group'] == 'configurable_cases_tab':
             print('tab is at configurable cases')

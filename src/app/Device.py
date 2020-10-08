@@ -515,10 +515,10 @@ class Device:
                         if data.tag == 'filter':
                             self.logs_filter = data.text if data.text is not None else ''
 
-                for seq_type in list(constants.act_sequences.keys()):
-                    if subelem.tag == constants.act_sequences[seq_type]:
-                        setattr(self, constants.act_sequences[seq_type], generate_sequence(subelem))
-                        print('Obj Seq List: ', getattr(self, constants.act_sequences[seq_type]))
+                for seq_type in list(constants.ACT_SEQUENCES.keys()):
+                    if subelem.tag == constants.ACT_SEQUENCES[seq_type]:
+                        setattr(self, constants.ACT_SEQUENCES[seq_type], generate_sequence(subelem))
+                        print('Obj Seq List: ', getattr(self, constants.ACT_SEQUENCES[seq_type]))
 
                 if subelem.tag == 'actions_time_gap':
                     self.actions_time_gap = int(subelem.text)
@@ -571,9 +571,9 @@ class Device:
         logs_filter = ET.SubElement(logs, "filter")
         logs_filter.text = self.logs_filter
 
-        for seq_type in list(constants.act_sequences.keys()):
-            curr_seq = ET.SubElement(settings, constants.act_sequences[seq_type])
-            xml_from_sequence(self, constants.act_sequences[seq_type], curr_seq)
+        for seq_type in list(constants.ACT_SEQUENCES.keys()):
+            curr_seq = ET.SubElement(settings, constants.ACT_SEQUENCES[seq_type])
+            xml_from_sequence(self, constants.ACT_SEQUENCES[seq_type], curr_seq)
 
         actions_time_gap = ET.SubElement(settings, "actions_time_gap")
         actions_time_gap.text = str(self.actions_time_gap)
