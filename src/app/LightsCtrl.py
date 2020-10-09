@@ -1,12 +1,16 @@
-import os
+import contextlib
+import io
+import sys
 import time
+from contextlib import redirect_stdout, contextmanager, redirect_stderr
+from os import devnull
 from vendor.wireless_lighting.wireless_lighting_api import IQL_Dual_WiFi_Wireless_Lighting_API
 
 import src.constants as constants
 
 
 class LightsCtrl:
-    def __init__(self, model):
+    def __init__(self, model):  # TODO make multithreaded with a watchdog for lights status
         self.current_color_temp = None
         self.current_brightness = 1
         self.anything_on = False
@@ -17,10 +21,11 @@ class LightsCtrl:
 
         if self.lights_model == constants.LIGHTS_MODELS['SpectriWave']:
             self.available_lights = constants.AVAILABLE_LIGHTS['SpectriWave']
+
             # Instance API object
             self.api = IQL_Dual_WiFi_Wireless_Lighting_API()
 
-            # Connect to Light box
+            # Connect to Light box, redirecting its stdout, because its hell
             self.api.connect()
         else:
             self.available_lights = []
