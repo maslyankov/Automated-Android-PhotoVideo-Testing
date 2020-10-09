@@ -65,7 +65,7 @@ def gui_camxoverride(attached_devices, device_obj):
 
             print("Generating new camxoverridesettings.txt...")
             file_new_content = open(file_new, "w")
-            file_new_content.write(values['camxoverride_input'])
+            file_new_content.write(values['file_input'])
             file_new_content.close()
 
             device_obj[values['selected_device']].remount()

@@ -150,10 +150,12 @@ class Device:
         :return:None
         """
         print("Rooting device " + self.device_serial)
+        CREATE_NO_WINDOW = 0x08000000
         root = subprocess.Popen([constants.ADB, '-s', self.device_serial, 'root'],
                                 stdin=subprocess.PIPE,
                                 stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE)
+                                stderr=subprocess.PIPE,
+                                creationflags=CREATE_NO_WINDOW)
         root.stdin.close()
         stdout, stderr = root.communicate()
         if stderr:
@@ -168,10 +170,12 @@ class Device:
         :return:None
         """
         print("Remount device serial: " + self.device_serial)
+        CREATE_NO_WINDOW = 0x08000000
         remount = subprocess.Popen([constants.ADB, '-s', self.device_serial, 'remount'],
                                    stdin=subprocess.PIPE,
                                    stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE)
+                                   stderr=subprocess.PIPE,
+                                   creationflags=CREATE_NO_WINDOW)
         remount.stdin.close()
         stdout, stderr = remount.communicate()
         if stderr:
