@@ -155,7 +155,7 @@ class AutomatedCase(threading.Thread):
                 photo_bool: bool, video_bool: bool,
                 specific_device=None, folders: list = None, filename_prefix: str = None,
                 lights_seq_in=None, seq_name=None,
-                video_duration: int = None):
+                video_duration: int = None) -> dict:
         if lights_seq_xml == '':
             self.output_gui('Lights sequence XML is mandatory!', msg_type='error')
             return
@@ -163,6 +163,7 @@ class AutomatedCase(threading.Thread):
             self.output_gui('Files destination is mandatory!', msg_type='error')
             return
 
+        results = {}
         self.is_running = True
         self.pull_files_location = pull_files_location
 
@@ -262,10 +263,16 @@ class AutomatedCase(threading.Thread):
                     time.sleep(1)
                     prefix = '' if filename_prefix is None else f"{filename_prefix}_"
 
-                    new_files = self.pull_new_images(  # TODO: Finish up new images persistence
+                    new_files = self.pull_new_images(
+                        # returns a dict with keys being serial nums and each having a value - list of pulled images
                                     [temp] if folders is None else folders + [temp],
                                     f'{prefix}{temp}_{lux}',
                                     specific_device)
+                    for serial_num in new_files.keys():
+                        try:
+                            results[serial_num] += new_files[serial_num]
+                        except KeyError:
+                            results[serial_num] = new_files[serial_num]
 
             self.output_gui(f'{temp} is done! Turning it off.', 'success')
             self.lights.turn_off(temp)
@@ -274,6 +281,7 @@ class AutomatedCase(threading.Thread):
                 break
 
         self.is_running = False
+        return results
 
     # def execute(self, lights_seq_xml,
     #             pull_files_bool: bool, pull_files_location,
@@ -298,16 +306,35 @@ class AutomatedCase(threading.Thread):
 
         excel_data = parse_excel_template(requirements_file)
         lights_seqs = generate_lights_seqs(excel_data)
+        new_files = {}
 
+        # Allocate lists for devices' results data
+        if specific_device:
+            new_files[specific_device] = []
+        else:
+            for device_serial in self.attached_devices:
+                new_files[device_serial] = []
+
+        # Add data from cases to lists
         for lights_seq in lights_seqs:
-            self.execute(None,
-                         True, files_destination,
-                         photo_bool=True, video_bool=False, specific_device=specific_device,
-                         folders=[lights_seq['test_type']],
-                         filename_prefix=lights_seq['test_type'],
-                         lights_seq_in=lights_seq['lights_seq'],
-                         seq_name=lights_seq['test_type'])
+            seq_files_dict = self.execute(
+                 None,
+                 True, files_destination,
+                 photo_bool=True, video_bool=False, specific_device=specific_device,
+                 folders=[lights_seq['test_type']],
+                 filename_prefix=lights_seq['test_type'],
+                 lights_seq_in=lights_seq['lights_seq'],
+                 seq_name=lights_seq['test_type'])
+            for device_serial in seq_files_dict:
+                new_files[device_serial].append(
+                    {
+                        'analysis_type': lights_seq['test_type'],
+                        'image_files': seq_files_dict[device_serial]
+                    }
+                )
+
             self.output_gui(f'Test cases for {lights_seq["test_type"]} finished.', 'success')
+            self.output_gui(new_files)
 
         # -- Report (Analyze) --
         if reports_bool:

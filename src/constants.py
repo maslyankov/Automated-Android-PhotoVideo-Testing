@@ -80,3 +80,6 @@ KELVINS_TABLE = {
     "C":        (6770, 'Overcast sky'),
     "D75":      (7500, 'North sky Daylight')
 }
+
+# Imatest
+
