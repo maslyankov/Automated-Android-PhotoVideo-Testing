@@ -1,6 +1,7 @@
 import os
 import time
 import threading
+from multiprocessing import Process
 import xml.etree.cElementTree as ET
 from pathlib import Path
 
@@ -57,8 +58,10 @@ def parse_lights_xml_seq(seq_xml):
 
 class AutomatedCase(threading.Thread):
     def __init__(self, adb, lights_model, luxmeter_model, gui_window, gui_output, gui_event):
+        # super(AutomatedCase, self).__init__()
+        threading.Thread.__init__(self)
 
-        super().__init__()
+        # Class initialization
         self.attached_devices = adb.attached_devices
         self.devices_obj = adb.devices_obj
 
@@ -79,20 +82,43 @@ class AutomatedCase(threading.Thread):
         self.progress = 0
         self.error = False
 
+        self.luxmeter_model = luxmeter_model
+        self.luxmeter = None
+
+        self.lights_model = lights_model
+        self.lights = None
+
+        #self._run_prereq()
+        # # Run prereq in separate thread
+        # self.prereq_thread = threading.Thread(
+        #     target=self._run_prereq,
+        #     args=(),
+        #     daemon=True)
+        # self.prereq_thread.start()
+
+    def _run_prereq(self):
         # Initialize Luxmeter
-        if luxmeter_model == 'Konita Minolta CL-200A':  # Konita Minolta CL-200A Selected
+        if self.luxmeter_model == 'Konita Minolta CL-200A':  # Konita Minolta CL-200A Selected
             self.output_gui("Initializing Luxmeter...")
             self.luxmeter = ChromaMeterKonica()
             self.output_gui("Luxmeter Initialized!", msg_type='success')
         else:
             self.output_gui("Unsupported luxmeter selected!", msg_type='error')
-            self.luxmeter = None
 
         # Initialize Lights
-        self.lights_model = lights_model
         self.output_gui('Initializing lights...')
-        self.lights = LightsCtrl(lights_model)  # Create lights object
+        self.lights = LightsCtrl(self.lights_model)  # Create lights object
         self.output_gui("Lights Initialized!", msg_type='success')
+
+    def run(self):
+        self._run_prereq()
+
+    # def run_prereq(self):
+    #     prereq_thread = threading.Thread(
+    #         target=self._run_prereq,
+    #         args=(),
+    #         daemon=True)
+    #     prereq_thread.start()
 
     def output_gui(self, text, msg_type=None):
         if msg_type == 'error':
@@ -159,10 +185,10 @@ class AutomatedCase(threading.Thread):
         if lights_seq_xml == '':
             self.output_gui('Lights sequence XML is mandatory!', msg_type='error')
             return
-        elif pull_files_location == '':
+        elif pull_files_bool and pull_files_location == '':
             self.output_gui('Files destination is mandatory!', msg_type='error')
             return
-
+        # TODO add checks for luxmeter and lights
         results = {}
         self.is_running = True
         self.pull_files_location = pull_files_location
@@ -206,12 +232,10 @@ class AutomatedCase(threading.Thread):
             self.lights.set_brightness(1)
 
             for lux in self.lights_seq[temp]:
-                # self.output_gui('Stop signal is ' + str(self.stop_signal))
-                if self.stop_signal:
-                    self.output_gui('Received stop command! Stopping...')
-                    break
-
                 self.current_action = current_action
+
+                current_lux = self.lights.set_lux(self.luxmeter, lux)
+
                 # send progress to gui thread
                 self.gui_window.write_event_value(
                     self.gui_event,
@@ -221,9 +245,10 @@ class AutomatedCase(threading.Thread):
                         'current_action': self.current_action
                     }
                 )
-
+                if self.stop_signal:
+                    self.output_gui('Received stop command! Stopping...')
+                    break
                 self.output_gui(f'Doing {lux} lux...')
-                current_lux = self.lights.set_lux(self.luxmeter, lux)
                 self.output_gui(f'Lux is at {current_lux} lux')
 
                 # Do the thing

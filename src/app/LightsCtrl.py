@@ -55,7 +55,9 @@ class LightsCtrl:
         print('Lights on: ', self.lights_on)
 
     def turn_off(self, color_temp, selected_target_light='all'):
-        # TODO add check if color_temp is in self.available_lights
+        if color_temp not in self.available_lights:
+            raise ValueError(f'Cannot turn on a color temp that is not available for his lights model.')
+
         if color_temp in self.lights_on:
             if self.lights_model == constants.LIGHTS_MODELS['SpectriWave']:
                 if color_temp != 'INCA' and selected_target_light != 'all' and int(selected_target_light) > 2:
@@ -108,6 +110,9 @@ class LightsCtrl:
         print(f"\n\nSetting lux to {target_lux}")
 
         curr_lux = luxmeter_obj.get_lux()
+        if curr_lux is None:
+            raise ValueError("LuxMeter not connected!")
+
         threshold = 10  # How much can we vary with lux value
 
         luxmeter_resp_time = 0.6

@@ -98,8 +98,7 @@ class Device:
         print("Attaching to device...")
 
         self.adb = adb
-        self.adb_client = adb.client
-        self.d = self.adb_client.device(device_serial)  # Create device client object
+        self.d = self.adb.client.device(device_serial)  # Create device client object
         self.scrcpy = []
 
         # Object Parameters #

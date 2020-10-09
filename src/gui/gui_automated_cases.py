@@ -7,7 +7,7 @@ from src.app.AutomatedCase import AutomatedCase
 
 from src.gui.gui_automated_cases_lights_xml_gui import lights_xml_gui
 from src.gui.utils_gui import place
-
+import threading
 
 def configurable_tab_logic(window, values, event,
                            cases, auto_cases_event):
@@ -29,18 +29,25 @@ def configurable_tab_logic(window, values, event,
         if values['pull_files'] and values['save_location'] == '':
             print("Save Location must be set!")
         else:
-            if not cases.is_running:
-                window['capture_cases_btn'].Update(disabled=True)
-                cases.execute(values['selected_lights_seq'],
-                              values['pull_files'], values['save_location'],
-                              values['mode_photos'] or values['mode_both'],
-                              values['mode_videos'] or values['mode_both'], video_duration=values['duration_spinner'],
-                              specific_device=None if values['use_all_devices_bool'] else values['selected_device'])
-            else:
-                sg.cprint("Finishing up and stopping cases creation!", window=window, key='-OUT-',
-                          colors='white on grey')
-                cases.stop_signal = True
-                window['capture_cases_btn'].Update(disabled=True)
+            try:
+                if not cases.is_running:
+                    window['capture_cases_btn'].Update(disabled=True)
+                    try:
+                        cases.execute(values['selected_lights_seq'],
+                                  values['pull_files'], values['save_location'],
+                                  values['mode_photos'] or values['mode_both'],
+                                  values['mode_videos'] or values['mode_both'], video_duration=values['duration_spinner'],
+                                  specific_device=None if values['use_all_devices_bool'] else values['selected_device'])
+                    except ValueError as e:
+                        cases.stop_signal = True
+                        sg.popup_error(e)
+                else:
+                    sg.cprint("Finishing up and stopping cases creation!", window=window, key='-OUT-',
+                              colors='white on grey')
+                    cases.stop_signal = True
+                    window['capture_cases_btn'].Update(disabled=True)
+            except AttributeError:
+                pass
 
     if event == auto_cases_event:
         if values[auto_cases_event]['error']:
@@ -52,10 +59,13 @@ def configurable_tab_logic(window, values, event,
         if values[auto_cases_event]['progress'] == 100:
             sg.Popup('Cases done!')
 
-    if cases.is_running:
-        window['capture_cases_btn'].Update('Stop')
-    else:
-        window['capture_cases_btn'].Update('Run')
+    try:
+        if cases.is_running:
+            window['capture_cases_btn'].Update('Stop')
+        else:
+            window['capture_cases_btn'].Update('Run')
+    except AttributeError:
+        pass
 
 
 def template_tab_logic(window, values, event,
@@ -77,10 +87,13 @@ def template_tab_logic(window, values, event,
         if values[auto_cases_event]['current_action'] == 'finished':
             sg.Popup('Cases done!')
 
-    if cases.is_running:
-        window['run_template_automation_btn'].Update('Stop')
-    else:
-        window['run_template_automation_btn'].Update('Run')
+    try:
+        if cases.is_running:
+            window['run_template_automation_btn'].Update('Stop')
+        else:
+            window['run_template_automation_btn'].Update('Run')
+    except AttributeError:
+        pass
 
 
 def gui_automated_cases(adb, selected_lights_model, selected_luxmeter_model):
@@ -214,11 +227,6 @@ def gui_automated_cases(adb, selected_lights_model, selected_luxmeter_model):
         if event == sg.WIN_CLOSED or event == 'Close':  # if user closes window or clicks cancel
             break
 
-        if cases is None:
-            cases = AutomatedCase(adb, selected_lights_model, selected_luxmeter_model,
-                                  window, '-OUT-', auto_cases_event)
-            cases.start()
-
         if event == devices_watchdog_event:
             print(values[devices_watchdog_event])
 
@@ -248,6 +256,15 @@ def gui_automated_cases(adb, selected_lights_model, selected_luxmeter_model):
                 window, values, event,
                 cases, auto_cases_event
             )
+
+
+        if cases is None:
+            cases = AutomatedCase(adb, selected_lights_model, selected_luxmeter_model,
+                                  window, '-OUT-', auto_cases_event)
+            cases.start()
+            #cases.prep()
+            #cases.run_prereq()
+
 
     adb.gui_window = main_gui_window
     window.close()

@@ -58,15 +58,18 @@ class AdbClient:
 
             if len(devices_list) > len(self.connected_devices):  # If New devices found
                 for count, diff_device in enumerate(compare_lists(self.connected_devices, devices_list)):
-                    self.gui_window.write_event_value(
-                        self.gui_event,
-                        {
-                            'action': 'connected',
-                            'serial': diff_device,
-                            'type': 'android',
-                            'error': False,
-                        }
-                    )
+                    try:
+                        self.gui_window.write_event_value(
+                            self.gui_event,
+                            {
+                                'action': 'connected',
+                                'serial': diff_device,
+                                'type': 'android',
+                                'error': False,
+                            }
+                        )
+                    except RuntimeError:
+                        print('Device not ready!')
             elif len(devices_list) < len(self.connected_devices):  # If a device has disconnected
                 for count, diff_device in enumerate(compare_lists(self.connected_devices, devices_list)):
                     try:

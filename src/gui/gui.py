@@ -216,11 +216,9 @@ def gui():
 
         if event.split('.')[0] == 'device_attached':
             diff_device = values[f"device_serial.{event.split('.')[1]}"]
-
             if values[f"device_attached.{event.split('.')[1]}"]:  # Attach device
                 # Add device to attached devices list
                 adb.attach_device(diff_device)
-
                 for num in range(constants.MAX_DEVICES_AT_ONE_RUN):
                     if values[f'device_serial.{num}'] == diff_device or values[f'device_serial.{num}'] == '':
                         window[f'device_attached.{num}'].Update(background_color='green')
