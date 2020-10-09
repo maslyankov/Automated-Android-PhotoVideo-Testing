@@ -1,10 +1,13 @@
 import os
 
-from imatest.it import ImatestLibrary, ImatestException
-
 from openpyxl import Workbook, load_workbook
 from openpyxl import cell as xlcell, worksheet
 import win32com.client as win32
+
+try:
+    from imatest.it import ImatestLibrary, ImatestException
+except RuntimeError as e:
+    print('Fatal Reports Error: ', e)
 
 import src.constants as constants
 from src.app.utils import kelvin_to_illumenant, only_digits, only_chars

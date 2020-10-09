@@ -15,7 +15,7 @@ else:
     SETTINGS_DIR = os.path.join(ROOT_DIR, 'settings')
 
 DEVICES_SETTINGS_DIR = os.path.join(SETTINGS_DIR, 'devices')
-TMP_DIR = os.path.join(ROOT_DIR)
+TMP_DIR = os.path.join(ROOT_DIR, 'temp')
 XML_DIR = os.path.join(TMP_DIR, 'XML')
 # Create dirs if not exist
 Path(DEVICES_SETTINGS_DIR).mkdir(parents=True, exist_ok=True)

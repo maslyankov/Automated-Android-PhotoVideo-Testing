@@ -5,8 +5,8 @@ import src.constants as constants
 
 
 def gui_camxoverride(attached_devices, device_obj):
-    file = os.path.join(constants.ROOT_DIR, 'tmp', 'camxoverridesettings.txt')
-    file_new = os.path.join(constants.ROOT_DIR, 'tmp', 'camxoverridesettings_new.txt')
+    file = os.path.join(constants.TMP_DIR, 'camxoverridesettings.txt')
+    file_new = os.path.join(constants.TMP_DIR, 'camxoverridesettings_new.txt')
     print(file)
     print("Pulling camxoverridesettings.txt from device...")
     device_obj[attached_devices[0]].pull_file('/vendor/etc/camera/camxoverridesettings.txt',
