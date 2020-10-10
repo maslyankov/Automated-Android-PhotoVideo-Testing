@@ -336,6 +336,7 @@ class Device:
         return res
     
     def get_wakefulness(self):
+        print(self.exec_shell("dumpsys activity | grep -E 'mWakefulness'"))
         return self.exec_shell("dumpsys activity | grep -E 'mWakefulness'").split('=')[1]
 
     def get_device_leds(self):
@@ -615,8 +616,8 @@ class Device:
 
         self.pull_file(
             source,
-            os.path.join(constants.ROOT_DIR,
-                         'XML', '{}_{}_{}.xml'.format(self.device_serial, current_app[0], current_app[1]))
+            os.path.join(constants.XML_DIR,
+                         '{}_{}_{}.xml'.format(self.device_serial, current_app[0], current_app[1]))
         )
         print('Dumped window elements for current app.')
 
