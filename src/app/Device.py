@@ -635,8 +635,8 @@ class Device:
             return {}
 
         print("Serial {} , app: {}".format(self.device_serial, current_app))
-        file = os.path.join(constants.ROOT_DIR,
-                            'XML', '{}_{}_{}.xml'.format(self.device_serial, current_app[0], current_app[1]))
+        file = os.path.join(constants.XML_DIR,
+                            '{}_{}_{}.xml'.format(self.device_serial, current_app[0], current_app[1]))
 
         if force_dump:
             self.dump_window_elements()
