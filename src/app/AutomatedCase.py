@@ -295,11 +295,12 @@ class AutomatedCase(threading.Thread):
             self.lights.turn_off(temp)
             if self.stop_signal:
                 self.output_gui('Received stop command! Stopping...')
+                self.progress = 0
                 break
 
         self.is_running = False
         self.stop_signal = False
-        self.output_gui('Small Exec Results: \n' + str(results), 'success')
+        print('Small Exec Results: \n' + str(results))
         return results
 
     def execute(self, lights_seq_xml,

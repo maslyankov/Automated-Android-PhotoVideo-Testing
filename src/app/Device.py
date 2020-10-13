@@ -215,6 +215,7 @@ class Device:
         :param dst: Destination to save the file to
         :return:None
         """
+        print(f'pulling {src} into {dst}')  # Debugging
         self.d.pull(src, dst)
     
     # ----- Getters/Setters -----
@@ -429,8 +430,10 @@ class Device:
     def pull_and_rename(self, dest, filename):
         pulled_files = []
         suffix = None
-        print('Files list \n', self.get_camera_files_list())
-        for num, file in enumerate(self.get_camera_files_list()):
+        files_list = self.get_camera_files_list()
+        if not files_list:
+            return []
+        for num, file in enumerate(files_list):
             if num > 0:
                 suffix = f"_{str(num)}"
             new_filename = os.path.join(dest, f"{filename}{suffix if suffix else ''}.{file.split('.')[1]}")
