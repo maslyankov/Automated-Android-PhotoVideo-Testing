@@ -222,7 +222,7 @@ def gui():
                 try:
                     adb.attach_device(diff_device)
                 except ValueError as e:
-                    sg.popup_error(e)
+                    sg.popup_error("Error while attaching to device...\n", e)
                     print(adb.attached_devices)
                     # This next line fixes an issue that it tries to attach device after fail if you try again
                     window[f"device_attached.{event.split('.')[1]}"].Update(False)

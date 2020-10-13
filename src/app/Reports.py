@@ -287,8 +287,9 @@ class Report:
 
         return result
 
-    def analyze_images_parallel(self, images, ini_file, num_processes: int):
+    def analyze_images_parallel(self, images, ini_file, num_processes: int = 4):
         tasks = []
+
         tasks.append(self.imatest.new_parallel_task(image_files=r'C:\images\sfrplus_0123.jpg',
                                                     analysis_type=self.imatest.SFRPLUS_ANALYSIS))
         tasks.append(self.imatest.new_parallel_task(

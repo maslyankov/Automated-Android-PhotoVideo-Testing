@@ -54,7 +54,7 @@ ACT_SEQUENCES_DESC = {
 }
 
 # Custom actions
-CUSTOM_ACTIONS = [
+CUSTOM_ACTIONS = [  # TODO: Add swipe left, right, etc
     'Empty',
     'delay'
 ]

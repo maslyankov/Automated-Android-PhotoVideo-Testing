@@ -131,6 +131,7 @@ class Device:
 
         try:
             self.friendly_name = self.get_device_model()
+            self.android_ver = int(self.get_android_version().split('.')[0])
         except RuntimeError:
             print("Device went offline!")
 
@@ -315,7 +316,7 @@ class Device:
         :return: List of strings, each being a file located in sdcard/DCIM/Camera
         """
 
-        files_list = self.exec_shell("ls -1 sdcard/DCIM/Camera").splitlines()
+        files_list = self.exec_shell("ls -d $PWD/* sdcard/DCIM/Camera").splitlines()
 
         try:
             check_for_missing_dir = files_list[0]
@@ -399,7 +400,10 @@ class Device:
         :return:None
         """
         print("X: ", coords[0][0], "Y: ", coords[0][1])  # Debugging
-        self.exec_shell("input tap {} {}".format(coords[0][0], coords[0][1]))
+        if self.android_ver <= 5:
+            return self.exec_shell("input touchscreen tap {} {}".format(coords[0][0], coords[0][1]))
+        else:
+            self.exec_shell("input tap {} {}".format(coords[0][0], coords[0][1]))
     
     def open_app(self, package):
         """
@@ -698,6 +702,8 @@ class Device:
         :return:
         """
         self.open_app(self.camera_app)
+
+        print('Doing sequence using device ', self.device_serial)  # DEBUG PRINT
 
         for action in sequence:
             act_id = action[0]

@@ -299,6 +299,7 @@ class AutomatedCase(threading.Thread):
 
         self.is_running = False
         self.stop_signal = False
+        self.output_gui('Small Exec Results: \n' + str(results), 'success')
         return results
 
     def execute(self, lights_seq_xml,
