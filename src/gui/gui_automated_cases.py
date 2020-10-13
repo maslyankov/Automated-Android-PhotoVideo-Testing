@@ -70,6 +70,9 @@ def configurable_tab_logic(window, values, event,
     except AttributeError:
         pass
 
+    if hasattr(cases, 'is_running') and not cases.is_running:
+        window['capture_cases_btn'].Update('Run')
+
 
 def template_tab_logic(window, values, event,
                        cases, auto_cases_event):
