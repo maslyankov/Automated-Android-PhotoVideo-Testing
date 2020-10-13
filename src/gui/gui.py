@@ -329,6 +329,5 @@ def gui():
     for dev in attached:
         print(f"Detaching {dev}")
         adb.detach_device(dev)
-        adb.detach_device(dev)
 
     window.close()

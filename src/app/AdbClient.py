@@ -140,6 +140,7 @@ class AdbClient:
         :param device_obj: Device object
         :return: None
         """
+        print('Detaching device ', device_serial)
         self.devices_obj[device_serial].kill_scrcpy()
 
         self.devices_obj[device_serial].set_led_color('FFFFFF', 'RGB1', 'global_rgb')  # Poly
