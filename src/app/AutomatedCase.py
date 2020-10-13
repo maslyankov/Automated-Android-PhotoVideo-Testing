@@ -89,26 +89,21 @@ class AutomatedCase(threading.Thread):
         self.lights_model = lights_model
         self.lights = None
 
-        #self._run_prereq()
-        # # Run prereq in separate thread
-        # self.prereq_thread = threading.Thread(
-        #     target=self._run_prereq,
-        #     args=(),
-        #     daemon=True)
-        # self.prereq_thread.start()
+    def run(self):
+        self._run_prereq()
 
     def _run_prereq(self):
         # Initialize Luxmeter
         self.output_gui("Initializing Luxmeter...")
         self.luxmeter = Sensor(constants.LUXMETERS_MODELS[self.luxmeter_model])
         self.output_gui("Luxmeter Initialized!", msg_type='success')
-        #self.output_gui("Unsupported luxmeter selected!", msg_type='error')
+        # self.output_gui("Unsupported luxmeter selected!", msg_type='error')
 
         # Initialize Lights
         self.output_gui('Initializing lights...')
         self.lights = LightsCtrl(self.lights_model)  # Create lights object
         self.output_gui("Lights Initialized!", msg_type='success')
-        #self.output_gui("Unsupported lights selected!", msg_type='error')
+        # self.output_gui("Unsupported lights selected!", msg_type='error')
 
     # def run_prereq(self):
     #     prereq_thread = threading.Thread(
@@ -173,12 +168,12 @@ class AutomatedCase(threading.Thread):
 
         return pulled_files
 
-    def execute(self, lights_seq_xml,
-                pull_files_bool: bool, pull_files_location: str,
-                photo_bool: bool, video_bool: bool,
-                specific_device=None, folders: list = None, filename_prefix: str = None,
-                lights_seq_in=None, seq_name=None,
-                video_duration: int = None) -> dict:
+    def _execute(self, lights_seq_xml,
+                 pull_files_bool: bool, pull_files_location: str,
+                 photo_bool: bool, video_bool: bool,
+                 specific_device=None, folders: list = None, filename_prefix: str = None,
+                 lights_seq_in=None, seq_name=None,
+                 video_duration: int = None) -> dict:
         if lights_seq_xml == '':
             self.output_gui('Lights sequence XML is mandatory!', msg_type='error')
             return
@@ -287,9 +282,9 @@ class AutomatedCase(threading.Thread):
 
                     new_files = self.pull_new_images(
                         # returns a dict with keys being serial nums and each having a value - list of pulled images
-                                    [temp] if folders is None else folders + [temp],
-                                    f'{prefix}{temp}_{lux}',
-                                    specific_device)
+                        [temp] if folders is None else folders + [temp],
+                        f'{prefix}{temp}_{lux}',
+                        specific_device)
                     for serial_num in new_files.keys():
                         try:
                             results[serial_num] += new_files[serial_num]
@@ -303,22 +298,27 @@ class AutomatedCase(threading.Thread):
                 break
 
         self.is_running = False
+        self.stop_signal = False
         return results
 
-    # def execute(self, lights_seq_xml,
-    #             pull_files_bool: bool, pull_files_location,
-    #             photo_bool: bool, video_bool: bool,
-    #             specific_device=None, video_duration: int = None, ):
-    #     threading.Thread(target=self._execute,
-    #                      args=(lights_seq_xml,
-    #                            pull_files_bool, pull_files_location,
-    #                            photo_bool, video_bool,
-    #                            specific_device, video_duration,),
-    #                      daemon=True).start()
+    def execute(self, lights_seq_xml,
+                pull_files_bool: bool, pull_files_location: str,
+                photo_bool: bool, video_bool: bool,
+                specific_device=None, folders: list = None, filename_prefix: str = None,
+                lights_seq_in=None, seq_name=None,
+                video_duration: int = None):
+        threading.Thread(target=self._execute,
+                         args=(lights_seq_xml,
+                               pull_files_bool, pull_files_location,
+                               photo_bool, video_bool,
+                               specific_device, folders, filename_prefix,
+                               lights_seq_in, seq_name,
+                               video_duration),
+                         daemon=True).start()
 
-    def execute_req_template(self,
-                             requirements_file, files_destination,
-                             reports_bool: bool, reports_pdf_bool: bool, specific_device=None):
+    def _execute_req_template(self,
+                              requirements_file, files_destination,
+                              reports_bool: bool, reports_pdf_bool: bool, specific_device=None):
         if requirements_file == '':
             self.output_gui('Requirements file is mandatory!', msg_type='error')
             return
@@ -339,14 +339,14 @@ class AutomatedCase(threading.Thread):
 
         # Add data from cases to lists
         for lights_seq in lights_seqs:
-            seq_files_dict = self.execute(
-                 None,
-                 True, files_destination,
-                 photo_bool=True, video_bool=False, specific_device=specific_device,
-                 folders=[lights_seq['test_type']],
-                 filename_prefix=lights_seq['test_type'],
-                 lights_seq_in=lights_seq['lights_seq'],
-                 seq_name=lights_seq['test_type'])
+            seq_files_dict = self._execute(
+                None,
+                True, files_destination,
+                photo_bool=True, video_bool=False, specific_device=specific_device,
+                folders=[lights_seq['test_type']],
+                filename_prefix=lights_seq['test_type'],
+                lights_seq_in=lights_seq['lights_seq'],
+                seq_name=lights_seq['test_type'])
             for device_serial in seq_files_dict:
                 new_files[device_serial].append(
                     {
@@ -375,15 +375,13 @@ class AutomatedCase(threading.Thread):
                 self.current_action = 'Converting Report to PDF'
                 self.output_gui('Converting report to PDF...')
 
-    # def execute_req_template(self,
-    #                          requirements_file, files_destination,
-    #                          reports_bool: bool, reports_pdf_bool: bool, specific_device=None):
-    #     print(requirements_file, files_destination, reports_bool, reports_pdf_bool, specific_device)
-    #     threading.Thread(target=self._execute_req_template,
-    #                      args=(requirements_file, files_destination,
-    #                            reports_bool, reports_pdf_bool,
-    #                            specific_device,),
-    #                      daemon=True).start()
+    def execute_req_template(self,
+                             requirements_file, files_destination,
+                             reports_bool: bool, reports_pdf_bool: bool, specific_device=None):
+        threading.Thread(target=self._execute_req_template,
+                         args=(requirements_file, files_destination,
+                               reports_bool, reports_pdf_bool, specific_device),
+                         daemon=True).start()
 
     def __del__(self):
         self.lights.disconnect()

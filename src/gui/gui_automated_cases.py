@@ -262,6 +262,7 @@ def gui_automated_cases(adb, selected_lights_model, selected_luxmeter_model):
             )
 
         if cases is None:
+            print('cases init in gui')
             cases = AutomatedCase(adb, selected_lights_model, selected_luxmeter_model,
                                   window, '-OUT-', auto_cases_event)
             # Start Auto Cases Thread
