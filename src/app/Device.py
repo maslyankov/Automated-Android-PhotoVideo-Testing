@@ -316,7 +316,7 @@ class Device:
         :return: List of strings, each being a file located in sdcard/DCIM/Camera
         """
 
-        files_list = self.exec_shell("ls -d $PWD/* sdcard/DCIM/Camera").splitlines()
+        files_list = self.exec_shell("ls -d sdcard/DCIM/Camera/*").splitlines()
 
         try:
             check_for_missing_dir = files_list[0]
@@ -429,6 +429,7 @@ class Device:
     def pull_and_rename(self, dest, filename):
         pulled_files = []
         suffix = None
+        print('Files list \n', self.get_camera_files_list())
         for num, file in enumerate(self.get_camera_files_list()):
             if num > 0:
                 suffix = f"_{str(num)}"
