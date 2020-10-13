@@ -149,6 +149,7 @@ class Device:
         :return:None
         """
         print("Rooting device " + self.device_serial)
+        self.adb.anticipate_root = True
         CREATE_NO_WINDOW = 0x08000000
         root = subprocess.Popen([constants.ADB, '-s', self.device_serial, 'root'],
                                 stdin=subprocess.PIPE,
@@ -336,8 +337,11 @@ class Device:
         return res
     
     def get_wakefulness(self):
-        print(self.exec_shell("dumpsys activity | grep -E 'mWakefulness'"))
-        return self.exec_shell("dumpsys activity | grep -E 'mWakefulness'").split('=')[1]
+        try:
+            return self.exec_shell("dumpsys activity | grep -E 'mWakefulness'").split('=')[1]
+        except IndexError:
+            print('There was an issue with getting device wakefullness - probably a shell error!')
+            return None
 
     def get_device_leds(self):
         """

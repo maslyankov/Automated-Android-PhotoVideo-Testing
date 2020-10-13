@@ -207,6 +207,7 @@ def gui():
                         window[f'device_icon.{num}'].Update(visible=False)
                         break
                 try:
+                    print('device disconnected, detaching')
                     adb.detach_device(adb_received['serial'])
                     del devices[adb_received['serial']]
                 except KeyError:
@@ -218,7 +219,14 @@ def gui():
             diff_device = values[f"device_serial.{event.split('.')[1]}"]
             if values[f"device_attached.{event.split('.')[1]}"]:  # Attach device
                 # Add device to attached devices list
-                adb.attach_device(diff_device)
+                try:
+                    adb.attach_device(diff_device)
+                except ValueError as e:
+                    sg.popup_error(e)
+                    print(adb.attached_devices)
+                    # This next line fixes an issue that it tries to attach device after fail if you try again
+                    window[f"device_attached.{event.split('.')[1]}"].Update(False)
+                    continue
                 for num in range(constants.MAX_DEVICES_AT_ONE_RUN):
                     if values[f'device_serial.{num}'] == diff_device or values[f'device_serial.{num}'] == '':
                         window[f'device_attached.{num}'].Update(background_color='green')
@@ -233,6 +241,7 @@ def gui():
 
                 print('Currently opened app: {}'.format(devices[diff_device].get_current_app()))
             else:  # Detach
+                print('User wanted to detach device...')
                 adb.detach_device(diff_device)
 
                 for num in range(constants.MAX_DEVICES_AT_ONE_RUN):
@@ -319,6 +328,7 @@ def gui():
     attached = attached_devices_list.copy()
     for dev in attached:
         print(f"Detaching {dev}")
+        adb.detach_device(dev)
         adb.detach_device(dev)
 
     window.close()

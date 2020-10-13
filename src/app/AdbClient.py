@@ -47,10 +47,15 @@ class AdbClient:
         self.attached_devices = []  # to store attached devices - devices that are connected and we are attached to
         self.devices_obj = {}  # to store attached devices' objects
 
+        self.anticipate_root = False
+
     # ----- Main Stuff -----
     def _watchdog(self):
         time.sleep(1)  # Let's give the GUI time to load
         while True:
+            if self.anticipate_root:
+                time.sleep(2)
+                self.anticipate_root = False
             try:
                 devices_list = self.list_devices()
             except ConnectionResetError:
@@ -123,8 +128,8 @@ class AdbClient:
         :param device_obj: Device object
         :return: None
         """
-        self.attached_devices.append(device_serial)
         self.devices_obj[device_serial] = Device(self, device_serial)  # Assign device to object
+        self.attached_devices.append(device_serial)
 
         self.devices_obj[device_serial].set_led_color('0FFF00', 'RGB1', 'global_rgb')  # Poly
 
