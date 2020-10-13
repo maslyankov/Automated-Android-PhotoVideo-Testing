@@ -5,12 +5,16 @@ from pathlib import Path
 # Directories
 # determine if application is a script file or frozen exe
 if getattr(sys, 'frozen', False):
+    DEBUG_MODE = False
+
     EXE_PATH = os.path.dirname(sys.executable)
     SETTINGS_DIR = os.path.join(EXE_PATH, 'settings')
 
     ROOT_DIR = sys._MEIPASS
 else:
-    print('App not build to an exe')
+    print('App not build to an exe. Setting DEBUG_MODE on')
+    DEBUG_MODE = True
+
     ROOT_DIR = os.path.abspath(os.curdir + "/../")  # This is Project Root
     SETTINGS_DIR = os.path.join(ROOT_DIR, 'settings')
 
