@@ -88,7 +88,7 @@ def gui():
             size=(22, 1)
         ),
         sg.OptionMenu(
-            values=['None', 'Konita Minolta CL-200A', 'something else'],
+            values=list(constants.LUXMETERS_MODELS.keys()),
             key="selected_luxmeter_model",
             size=(22, 1)
         ),
@@ -174,8 +174,8 @@ def gui():
                 # Connected
                 for num in range(constants.MAX_DEVICES_AT_ONE_RUN):
                     try:
-                        if values[f'device_serial.{num}'] == '' or values[f'device_serial.{num}'] == adb_received[
-                            'serial']:
+                        if values[f'device_serial.{num}'] == '' or \
+                                values[f'device_serial.{num}'] == adb_received['serial']:
                             print("setting {} to row {}".format(adb_received['serial'], num))
 
                             window[f'device_attached.{num}'].Update(text=adb_received['serial'],
@@ -318,7 +318,6 @@ def gui():
             gui_help()
 
         if event == 'project_req_tool_btn':
-            print('asddasdsa')
             gui_project_req_file()
 
     # Before exiting...

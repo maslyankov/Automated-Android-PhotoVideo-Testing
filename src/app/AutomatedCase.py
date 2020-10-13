@@ -1,7 +1,6 @@
 import os
 import time
 import threading
-from multiprocessing import Process
 import xml.etree.cElementTree as ET
 from pathlib import Path
 
@@ -10,6 +9,7 @@ from PySimpleGUI import cprint as gui_print
 import src.constants as constants
 from src.app.LightsCtrl import LightsCtrl
 from src.konica.ChromaMeterKonica import ChromaMeterKonica
+from src.app.Sensor import Sensor
 from src.app.Reports import Report, parse_excel_template, generate_lights_seqs
 
 
@@ -60,6 +60,7 @@ class AutomatedCase(threading.Thread):
     def __init__(self, adb, lights_model, luxmeter_model, gui_window, gui_output, gui_event):
         # super(AutomatedCase, self).__init__()
         threading.Thread.__init__(self)
+        self.name = 'AutomatedCasesThread'
 
         # Class initialization
         self.attached_devices = adb.attached_devices
@@ -98,20 +99,16 @@ class AutomatedCase(threading.Thread):
 
     def _run_prereq(self):
         # Initialize Luxmeter
-        if self.luxmeter_model == 'Konita Minolta CL-200A':  # Konita Minolta CL-200A Selected
-            self.output_gui("Initializing Luxmeter...")
-            self.luxmeter = ChromaMeterKonica()
-            self.output_gui("Luxmeter Initialized!", msg_type='success')
-        else:
-            self.output_gui("Unsupported luxmeter selected!", msg_type='error')
+        self.output_gui("Initializing Luxmeter...")
+        self.luxmeter = Sensor(constants.LUXMETERS_MODELS[self.luxmeter_model])
+        self.output_gui("Luxmeter Initialized!", msg_type='success')
+        #self.output_gui("Unsupported luxmeter selected!", msg_type='error')
 
         # Initialize Lights
         self.output_gui('Initializing lights...')
         self.lights = LightsCtrl(self.lights_model)  # Create lights object
         self.output_gui("Lights Initialized!", msg_type='success')
-
-    def run(self):
-        self._run_prereq()
+        #self.output_gui("Unsupported lights selected!", msg_type='error')
 
     # def run_prereq(self):
     #     prereq_thread = threading.Thread(

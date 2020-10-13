@@ -19,16 +19,13 @@ class LightsCtrl:
         print('Selected light model: ', constants.LIGHTS_MODELS.get(model, "Invalid light model"))
         self.lights_model = constants.LIGHTS_MODELS[model]
 
+        self.available_lights = constants.AVAILABLE_LIGHTS[self.lights_model]
         if self.lights_model == constants.LIGHTS_MODELS['SpectriWave']:
-            self.available_lights = constants.AVAILABLE_LIGHTS['SpectriWave']
-
             # Instance API object
             self.api = IQL_Dual_WiFi_Wireless_Lighting_API()
 
             # Connect to Light box, redirecting its stdout, because its hell
             self.api.connect()
-        else:
-            self.available_lights = []
 
     def status(self):
         if self.lights_model == constants.LIGHTS_MODELS['SpectriWave']:
@@ -49,6 +46,8 @@ class LightsCtrl:
             else:
                 self.api.cbox_right.set_lamp(color_temp, int(selected_target_light), 1)
                 print('I did: ', color_temp, selected_target_light, 1)
+
+        # if self.lights_model == constants.LIGHTS_MODELS['test']:
 
         self.current_color_temp = color_temp
         print(f"[{color_temp}] turning on")
@@ -113,6 +112,11 @@ class LightsCtrl:
             return
 
         print(f"\n\nSetting lux to {target_lux}")
+
+        if self.lights_model == constants.LIGHTS_MODELS['test']:
+            luxmeter_obj.fake_lux = target_lux
+            time.sleep(2)
+            return target_lux
 
         curr_lux = luxmeter_obj.get_lux()
         if curr_lux is None:

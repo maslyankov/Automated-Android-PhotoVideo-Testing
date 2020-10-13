@@ -61,17 +61,24 @@ CUSTOM_ACTIONS = [
 
 # Lights
 LIGHTS_MODELS = {
-    'SpectriWave': 0,
-    'lightStudio': 1
+    'SpectriWave': 1,
+    'lightStudio': 2
 }
 
 AVAILABLE_LIGHTS = {
-    'SpectriWave': ['D65', 'D75', 'TL84', 'INCA'],
-    'lightStudio': []
+    1: ['D65', 'D75', 'TL84', 'INCA'],
+    2: []
+}
+
+# LUXMETERS
+LUXMETERS_MODELS = {
+    'Konita Minolta CL-200A': 1
 }
 
 # Light Temperatures
 KELVINS_TABLE = {
+    "INCA1":    (2400, 'Standard Incandescent lamps'),
+    "INCA2":    (2550, 'Soft white Incandescent lamps'),
     "WW":       (2700, 'Warm White'),
     "A":        (2856, 'Incandescent - typical, domestic, tungsten-filament lighting'),
     "TL83":     (3000, 'Warm white fluorescent'),
@@ -87,3 +94,8 @@ KELVINS_TABLE = {
 
 # Imatest
 
+# DEBUG
+if DEBUG_MODE:
+    LIGHTS_MODELS['test'] = 0
+    AVAILABLE_LIGHTS[0] = ['D65', 'D75', 'TL84', 'INCA']
+    LUXMETERS_MODELS['test'] = 0

@@ -2,13 +2,14 @@ import os
 import time
 import PySimpleGUI as sg
 from src.app.LightsCtrl import LightsCtrl
-from src.konica.ChromaMeterKonica import ChromaMeterKonica
+from src.app.Sensor import Sensor
 
 import src.constants as constants
 
 
 def gui_test_lights(selected_lights_model, selected_luxmeter_model):
     lights = LightsCtrl(selected_lights_model)  # Create object
+    selected_luxmeter_model_id = constants.LUXMETERS_MODELS[selected_luxmeter_model]
 
     if selected_lights_model == 'SpectriWave':
         lights_header_image = [
@@ -104,9 +105,9 @@ def gui_test_lights(selected_lights_model, selected_luxmeter_model):
         time.sleep(1)
         lights_status = lights.status()
 
-    if selected_luxmeter_model == 'Konita Minolta CL-200A': # Konita Minolta CL-200A Selected
-        print("Initializing Luxmeter...")
-        luxmeter = ChromaMeterKonica()
+    print("Initializing Luxmeter...")
+    luxmeter = Sensor(selected_luxmeter_model_id)
+
 
     while True:
         event, values = window.read(600)
@@ -137,12 +138,12 @@ def gui_test_lights(selected_lights_model, selected_luxmeter_model):
             elif event == 'selected_color_temp':
                 window['selected_light_num'].Update(values=['all', '0', '1', '2'])
 
-        if selected_luxmeter_model == 'Konita Minolta CL-200A':  # Konita Minolta CL-200A Selected
-            if luxmeter.is_alive:
+        if luxmeter.is_alive:
+            if selected_luxmeter_model == 'Konita Minolta CL-200A':  # Konita Minolta CL-200A Selected
                 window['luxmeter_name'].Update('Konita Minolta CL-200A')
-                window['luxmeter_lux_value'].Update(str(luxmeter.get_lux()))
-            else:
-                window['luxmeter_lux_value'].Update("Connection Lost")
+            window['luxmeter_lux_value'].Update(str(luxmeter.get_lux()))
+        else:
+            window['luxmeter_lux_value'].Update("Connection Lost")
 
         print('vals', values)  # Debugging
         print('event', event)  # Debugging

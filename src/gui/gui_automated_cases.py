@@ -264,9 +264,8 @@ def gui_automated_cases(adb, selected_lights_model, selected_luxmeter_model):
         if cases is None:
             cases = AutomatedCase(adb, selected_lights_model, selected_luxmeter_model,
                                   window, '-OUT-', auto_cases_event)
+            # Start Auto Cases Thread
             cases.start()
-            # cases.prep()
-            # cases.run_prereq()
 
     adb.gui_window = main_gui_window
     window.close()
