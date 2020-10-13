@@ -97,17 +97,11 @@ class Device:
     def __init__(self, adb, device_serial):
         print("Attaching to device...")
 
-        self.adb = adb
-        self.d = self.adb.client.device(device_serial)  # Create device client object
+        # Object Parameters #
         self.scrcpy = []
 
-        # Object Parameters #
         # Info
         self.device_serial = device_serial  # Assign device serial as received in arguments
-        try:
-            self.friendly_name = self.get_device_model()
-        except RuntimeError:
-            print("Device went offline!")
 
         # Settings
         self.logs_enabled = False
@@ -126,10 +120,19 @@ class Device:
         self.goto_video_seq = []
         self.actions_time_gap = 1
 
-        self.root()  # Make sure we are using root for device
-
         # Persistence
         self.device_xml = os.path.join(constants.DEVICES_SETTINGS_DIR, f'{device_serial}.xml')
+
+        self.adb = adb
+
+        self.root()  # Make sure we are using root for device
+
+        self.d = self.adb.client.device(device_serial)  # Create device client object
+
+        try:
+            self.friendly_name = self.get_device_model()
+        except RuntimeError:
+            print("Device went offline!")
 
         print("Conn devs: ", adb.attached_devices)  # Debugging
         print("Device Serial: ", device_serial)  # Debugging
