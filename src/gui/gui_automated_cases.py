@@ -211,7 +211,7 @@ def gui_automated_cases(adb, selected_lights_model, selected_luxmeter_model):
             place(sg.Text('0', key='progress_value', size=(3, 1), visible=False)),
             place(sg.Text('%', key='progress_value_symbol', pad=(0, 0), visible=False)),
 
-            place(sg.Text('', key='progress_curr_module', pad=(5, 0), visible=False))
+            place(sg.Text('', key='progress_curr_module', size=(20, 1), pad=(5, 0), visible=False))
         ]
     ]
 

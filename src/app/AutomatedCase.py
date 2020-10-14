@@ -300,7 +300,7 @@ class AutomatedCase(threading.Thread):
 
         self.is_running = False
         self.stop_signal = False
-        print('Small Exec Results: \n' + str(results))
+        print('Small Exec Files Result: \n' + str(results))
         return results
 
     def execute(self, lights_seq_xml,
@@ -349,16 +349,18 @@ class AutomatedCase(threading.Thread):
                 filename_prefix=lights_seq['test_type'],
                 lights_seq_in=lights_seq['lights_seq'],
                 seq_name=lights_seq['test_type'])
-            for device_serial in seq_files_dict:
-                new_files[device_serial].append(
-                    {
-                        'analysis_type': lights_seq['test_type'],
-                        'image_files': seq_files_dict[device_serial]
-                    }
-                )
+            if seq_files_dict is not None:
+                for device_serial in seq_files_dict.keys():
+                    new_files[device_serial].append(
+                        {
+                            'analysis_type': lights_seq['test_type'],
+                            'image_files': seq_files_dict[device_serial]
+                        }
+                    )
 
             self.output_gui(f'Test cases for {lights_seq["test_type"]} finished.', 'success')
-            self.output_gui(new_files)
+            self.progress = 0
+            print("New case files from template:\n", new_files)
 
         # -- Report (Analyze) --
         if reports_bool:

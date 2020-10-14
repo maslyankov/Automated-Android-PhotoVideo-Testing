@@ -65,7 +65,7 @@ def parse_excel_template(excel_file) -> dict:
     }
     conf_min_col = 1
     conf_min_row = 4
-    conf_max_row = 58
+    conf_max_row = 77
     filter_str = 'functional'
     # Config end
 
