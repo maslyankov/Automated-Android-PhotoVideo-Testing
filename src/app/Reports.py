@@ -99,22 +99,36 @@ class Report:
     def analyze_images_parallel(self, images, ini_file, num_processes: int = 4):
         tasks = []
 
-        tasks.append(self.imatest.new_parallel_task(image_files=r'C:\images\sfrplus_0123.jpg',
-                                                    analysis_type=self.imatest.SFRPLUS_ANALYSIS))
-        tasks.append(self.imatest.new_parallel_task(
-            image_files=[r'C:\images\blemish_0001.jpg', r'C:\images\blemish_0002.jpg', r'C:\images\blemish_0003.jpg'],
-            analysis_type=self.imatest.BLEMISH_ANALYSIS))
+        for device_serial in images.keys():
+            for test_num, test_dict in enumerate(images[device_serial]):
+                print(f"ADDING TASK - {test_dict['analysis_type']}\n{test_dict['image_files']}")
+                tasks.append(
+                    self.imatest.new_parallel_task(
+                        image_files=test_dict['image_files'],
+                        analysis_type=self.imatest_analysis_type(test_dict['analysis_type'])
+                    )
+                )
 
         result = self.imatest.parallel_analyzer(tasks=tasks, ini_file=ini_file, run_parallel=True,
                                                 num_workers=num_processes)
 
-        print(result)
+        return result
+
+    def imatest_analysis_type(self, test_type):
+        # Filter out special characters and spaces
+        test_type = ''.join(filter(str.isalnum, test_type.lower()))
+
+        for tt in constants.IMATEST_TEST_TYPES.keys():
+            if test_type == tt:
+                print(f'For analysis type {test_type} we found {getattr(self.imatest, constants.IMATEST_TEST_TYPES[tt])}')  # DEBUG PRINT
+                return getattr(self.imatest, constants.IMATEST_TEST_TYPES[tt])
+        # if it still hasn't returned, then will come through here
+        print('Analysis Type not found in IMATEST_TEST_TYPES: ', test_type)
 
     def __del__(self):
         print("Terminating Imatest Library")
         # When finished terminate the library
         self.imatest.terminate_library()
-
     # Static Methods
     @staticmethod
     def xls_to_xlsx(xls_file) -> str:
@@ -261,6 +275,7 @@ class Report:
                             tests_seq[current_tt][current_temp][current_lux]
                         except KeyError:
                             tests_seq[current_tt][current_temp][current_lux] = {}
+                            tests_seq[current_tt][current_temp][current_lux]['params'] = {}
                         print('- LUX: ' + str(current_lux))
                     else:
                         current_lux = None
@@ -268,23 +283,25 @@ class Report:
                 if col == param_col:  # Params
                     if value is not None and current_lux is not None:
                         current_param = value
-                        tests_seq[current_tt][current_temp][current_lux][current_param] = {}
+                        tests_seq[current_tt][current_temp][current_lux]['params'][current_param] = {}
                         print('\tPARAM: ' + str(current_param))
                     else:
                         current_param = None
 
                 if col == min_col:  # Min
                     if current_param is not None:
-                        if current_param not in tests_seq[current_tt][current_temp][current_lux]:
-                            tests_seq[current_tt][current_temp][current_lux][current_param] = {}
+                        if current_param not in tests_seq[current_tt][current_temp][current_lux]['params']:
+                            tests_seq[current_tt][current_temp][current_lux]['params'][current_param] = {}
 
-                        tests_seq[current_tt][current_temp][current_lux][current_param]['min'] = value
-
+                        tests_seq[current_tt][current_temp][current_lux]['params'][current_param]['min'] = value
                         print('\tMin: ' + str(value))
 
                 if col == max_col:  # Max
                     if current_param is not None:
-                        tests_seq[current_tt][current_temp][current_lux][current_param]['max'] = value
+                        if current_param not in tests_seq[current_tt][current_temp][current_lux]['params']:
+                            tests_seq[current_tt][current_temp][current_lux]['params'][current_param] = {}
+
+                        tests_seq[current_tt][current_temp][current_lux]['params'][current_param]['max'] = value
                         print('\tMax: ' + str(value) + '\n')
 
         return tests_seq

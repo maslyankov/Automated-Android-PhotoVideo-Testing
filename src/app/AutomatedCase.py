@@ -88,6 +88,8 @@ class AutomatedCase(threading.Thread):
         self.lights_model = lights_model
         self.lights = None
 
+        self.excel_data = None
+
     def run(self):
         self._run_prereq()
 
@@ -285,11 +287,21 @@ class AutomatedCase(threading.Thread):
                         [temp] if folders is None else folders + [temp],
                         f'{prefix}{temp}_{lux}',
                         specific_device)
+
+
+
                     for serial_num in new_files.keys():
                         try:
                             results[serial_num] += new_files[serial_num]
                         except KeyError:
                             results[serial_num] = new_files[serial_num]
+
+                        # add new_files to self.excel_data[test_type][light][lux]['filename']
+                        if self.excel_data is not None:
+                            # Lower case and filter all but letters
+                            test_type = prefix.strip('_')  # TODO: Not use prefix for this
+                            # add filename to excel_data dict
+                            self.excel_data[test_type][temp][lux]['filename'] = str(new_files[serial_num][0])
 
             self.output_gui(f'{temp} is done! Turning it off.', 'success')
             self.lights.turn_off(temp)
@@ -329,9 +341,13 @@ class AutomatedCase(threading.Thread):
             self.output_gui('Files destination is mandatory!', msg_type='error')
             return
 
+        self.current_action = 'starting'
         excel_data = Report.parse_excel_template(requirements_file)
         lights_seqs = Report.generate_lights_seqs(excel_data)
         new_files = {}
+
+        # Add filenames to excel_data afterwards
+        self.excel_data = excel_data
 
         # Allocate lists for devices' results data
         if specific_device:
@@ -340,7 +356,7 @@ class AutomatedCase(threading.Thread):
             for device_serial in self.attached_devices:
                 new_files[device_serial] = []
 
-        # Add data from cases to lists
+        # Execute cases and persist data
         for lights_seq in lights_seqs:
             if self.stop_signal:
                 self.output_gui('Received stop command! Stopping lights sequences...')
@@ -365,18 +381,38 @@ class AutomatedCase(threading.Thread):
                 print(lights_seq['test_type'], ' is empty, skipping it')
             self.output_gui(f'Test cases for {lights_seq["test_type"]} finished.', 'success')
             self.progress = 0
-            print("New case files from template:\n", new_files)
+
+            print(f'Ecxel data: \n{excel_data}')
+
+        print("New case files from template:\n", new_files)
+
+        print(f'Ecxel data: \n{excel_data}')
+        testdict = {'Type1000123456': [{'analysis_type': 'eSFR ISO', 'image_files': ['C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\eSFR ISO\\D65\\eSFR ISO_D65_20.jpg', 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\eSFR ISO\\D65\\eSFR ISO_D65_80.jpg', 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\eSFR ISO\\D65\\eSFR ISO_D65_200.jpg']}, {'analysis_type': 'Random', 'image_files': ['C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Random\\D75\\Random_D75_20.jpg', 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Random\\D75\\Random_D75_80.jpg', 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Random\\D75\\Random_D75_200.jpg']}, {'analysis_type': 'Colorcheck', 'image_files': ['C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Colorcheck\\D75\\Colorcheck_D75_80.jpg', 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Colorcheck\\D65\\Colorcheck_D65_20.jpg', 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Colorcheck\\D65\\Colorcheck_D65_80.jpg', 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Colorcheck\\D65\\Colorcheck_D65_200.jpg', 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Colorcheck\\D65\\Colorcheck_D65_1000.jpg']}, {'analysis_type': 'Distortion', 'image_files': ['C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Distortion\\D65\\Distortion_D65_80.jpg']}, {'analysis_type': 'Uniformity', 'image_files': ['C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Uniformity\\D65\\Uniformity_D65_80.jpg', 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Uniformity\\D65\\Uniformity_D65_200.jpg']}]}
+        print(f'test dict: \n{testdict}')
+        ini_file = os.path.normpath(r"C:\Program Files\Imatest\v2020.2\IT\samples\python\ini_file\imatest-v2.ini")
+
+        # for
+        # for test_type in excel_data.keys():
+        #     list_len = len()
+        #     # Filter out special characters and spaces
+        #     test_type_clean = ''.join(filter(str.isalnum, test_type.lower()))
+        #     for light in excel_data[test_type].keys():
+        #         for lux in excel_data[test_type][light].keys():
+        #             filename = ''
+        #             excel_data[test_type][light][lux]['filename'] = filename
+
         if self.stop_signal:
             self.output_gui('Received stop command! Stopping template testing...')
             return
         # -- Report (Analyze) --
         if reports_bool:
+            # Figure out stuff with ini file
+
             self.current_action = 'Analyzing Images'
             self.output_gui('Analyzing images...')
             # report = Report()
-            # report.analyze_images_parallel(images, ini_file, num_processes=4)
-
-            # Figure out stuff with ini file
+            # images_analysis = report.analyze_images_parallel(testdict, ini_file, num_processes=4)
+            # print('Analysis Results:\n', images_analysis)
 
             self.current_action = 'Generating Report'
             self.output_gui('Generating report...')
@@ -386,6 +422,8 @@ class AutomatedCase(threading.Thread):
                 self.current_action = 'Converting Report to PDF'
                 self.output_gui('Converting report to PDF...')
 
+        self.excel_data = None
+        self.current_action = 'Finished'
         self.output_gui("Template testing Done!", 'success')
 
     def execute_req_template(self,

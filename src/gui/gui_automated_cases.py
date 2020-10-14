@@ -103,7 +103,7 @@ def template_tab_logic(window, values, event,
         if values[auto_cases_event]['progress'] > 0 and not values[auto_cases_event]['error']:
             window['run_template_automation_btn'].Update('Stop', disabled=False)
 
-        if values[auto_cases_event]['current_action'] == 'finished':
+        if values[auto_cases_event]['current_action'] == 'Finished':
             sg.Popup('Cases done!')
 
     try:

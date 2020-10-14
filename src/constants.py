@@ -93,6 +93,26 @@ KELVINS_TABLE = {
 }
 
 # Imatest
+IMATEST_TEST_TYPES = {
+    'blemish': 'BLEMISH_ANALYSIS',
+    'checkerboard': 'CHECKERBOARD_ANALYSIS',
+    'colorcheck': 'COLORCHECK_ANALYSIS',
+    'distortion': 'DISTORTION_ANALYSIS',
+    'dotpattern': 'DOTPATTERN_ANALYSIS',
+    'esfriso': 'ESFRISO_ANALYSIS',
+    'colortone': 'COLOR_TONE_ANALYSIS',
+    'random': 'RANDOM_ANALYSIS',
+    'sfr': 'SFR_ANALYSIS',
+    'sfrplus': 'SFRPLUS_ANALYSIS',
+    'sfrreg': 'SFRREG_ANALYSIS',
+    'star': 'STAR_ANALYSIS',
+    'uniformity': 'UNIFORMITY_ANALYSIS',
+    'wedge': 'WEDGE_ANALYSIS'
+}
+
+IMATEST_TEST_TYPES_CALLS = {
+
+}
 
 # DEBUG
 if DEBUG_MODE:
