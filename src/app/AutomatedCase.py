@@ -8,9 +8,8 @@ from PySimpleGUI import cprint as gui_print
 
 import src.constants as constants
 from src.app.LightsCtrl import LightsCtrl
-from src.konica.ChromaMeterKonica import ChromaMeterKonica
 from src.app.Sensor import Sensor
-from src.app.Reports import Report, parse_excel_template, generate_lights_seqs
+from src.app.Reports import Report
 
 
 def dict_len(dictionary):
@@ -126,7 +125,8 @@ class AutomatedCase(threading.Thread):
             {
                 'progress': self.progress,
                 'error': self.error,
-                'current_action': self.current_action
+                'current_action': self.current_action,
+                'is_running': self.is_running
             }
         )
         gui_print(text, window=self.gui_window, key=self.gui_output, colors=text_color)
@@ -173,7 +173,7 @@ class AutomatedCase(threading.Thread):
                  photo_bool: bool, video_bool: bool,
                  specific_device=None, folders: list = None, filename_prefix: str = None,
                  lights_seq_in=None, seq_name=None,
-                 video_duration: int = None) -> dict:
+                 video_duration: int = None, single_exec: bool = False) -> dict:
         if lights_seq_xml == '':
             self.output_gui('Lights sequence XML is mandatory!', msg_type='error')
             return
@@ -198,6 +198,7 @@ class AutomatedCase(threading.Thread):
             self.lights_seq = lights_seq_in
             current_action = seq_name
 
+        self.current_action = current_action
         # Check if passed sequence is not empty...
         d_len = dict_len(self.lights_seq)
         if d_len == 0:
@@ -224,8 +225,6 @@ class AutomatedCase(threading.Thread):
             self.lights.set_brightness(1)
 
             for lux in self.lights_seq[temp]:
-                self.current_action = current_action
-
                 current_lux = self.lights.set_lux(self.luxmeter, lux)
 
                 # send progress to gui thread
@@ -234,7 +233,8 @@ class AutomatedCase(threading.Thread):
                     {
                         'progress': self.progress,
                         'error': self.error,
-                        'current_action': self.current_action
+                        'current_action': self.current_action,
+                        'is_running': self.is_running
                     }
                 )
                 if self.stop_signal:
@@ -298,8 +298,8 @@ class AutomatedCase(threading.Thread):
                 self.progress = 0
                 break
 
-        self.is_running = False
-        self.stop_signal = False
+        if single_exec:
+            self.is_running = False
         print('Small Exec Files Result: \n' + str(results))
         return results
 
@@ -309,13 +309,14 @@ class AutomatedCase(threading.Thread):
                 specific_device=None, folders: list = None, filename_prefix: str = None,
                 lights_seq_in=None, seq_name=None,
                 video_duration: int = None):
+        self.stop_signal = False
         threading.Thread(target=self._execute,
                          args=(lights_seq_xml,
                                pull_files_bool, pull_files_location,
                                photo_bool, video_bool,
                                specific_device, folders, filename_prefix,
                                lights_seq_in, seq_name,
-                               video_duration),
+                               video_duration, True),
                          daemon=True).start()
 
     def _execute_req_template(self,
@@ -328,8 +329,8 @@ class AutomatedCase(threading.Thread):
             self.output_gui('Files destination is mandatory!', msg_type='error')
             return
 
-        excel_data = parse_excel_template(requirements_file)
-        lights_seqs = generate_lights_seqs(excel_data)
+        excel_data = Report.parse_excel_template(requirements_file)
+        lights_seqs = Report.generate_lights_seqs(excel_data)
         new_files = {}
 
         # Allocate lists for devices' results data
@@ -341,6 +342,9 @@ class AutomatedCase(threading.Thread):
 
         # Add data from cases to lists
         for lights_seq in lights_seqs:
+            if self.stop_signal:
+                self.output_gui('Received stop command! Stopping lights sequences...')
+                break
             seq_files_dict = self._execute(
                 None,
                 True, files_destination,
@@ -357,11 +361,14 @@ class AutomatedCase(threading.Thread):
                             'image_files': seq_files_dict[device_serial]
                         }
                     )
-
+            else:
+                print(lights_seq['test_type'], ' is empty, skipping it')
             self.output_gui(f'Test cases for {lights_seq["test_type"]} finished.', 'success')
             self.progress = 0
             print("New case files from template:\n", new_files)
-
+        if self.stop_signal:
+            self.output_gui('Received stop command! Stopping template testing...')
+            return
         # -- Report (Analyze) --
         if reports_bool:
             self.current_action = 'Analyzing Images'
@@ -379,13 +386,17 @@ class AutomatedCase(threading.Thread):
                 self.current_action = 'Converting Report to PDF'
                 self.output_gui('Converting report to PDF...')
 
+        self.output_gui("Template testing Done!", 'success')
+
     def execute_req_template(self,
                              requirements_file, files_destination,
                              reports_bool: bool, reports_pdf_bool: bool, specific_device=None):
+        self.stop_signal = False
         threading.Thread(target=self._execute_req_template,
                          args=(requirements_file, files_destination,
                                reports_bool, reports_pdf_bool, specific_device),
                          daemon=True).start()
+        print('After thread exec in func')
 
     def __del__(self):
         self.lights.disconnect()
