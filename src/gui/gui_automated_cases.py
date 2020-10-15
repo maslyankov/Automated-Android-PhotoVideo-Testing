@@ -220,15 +220,15 @@ def gui_automated_cases(adb, selected_lights_model, selected_luxmeter_model):
             sg.Tab('Template Testing', template_tab, key='template_cases_tab')
         ]], key='auto_cases_tabs_group', enable_events=True)],
 
-        [sg.Multiline(key='-OUT-', size=(59, 10), autoscroll=True)],
-        [sg.ProgressBar(max_value=100, orientation='h', size=(40, 5), pad=None, key='progressbar', visible=True)],
+        [sg.Multiline(key='-OUT-', size=(59, 10), pad=None, autoscroll=True)],
+        [sg.ProgressBar(max_value=100, orientation='h', size=(34, 5), pad=None, key='progressbar', visible=True)],
         [
             place(sg.Text('0 %', key='total_progress_value', size=(4, 1), visible=True, justification='right')),
 
             place(sg.VerticalSeparator(pad=None)),
 
-            place(sg.Text('', key='progress_curr_module', size=(40, 1), pad=(2, 0), visible=True, justification='right')),
-            place(sg.Text('100 %', key='progress_value', size=(4, 1), visible=True, justification='right')),
+            place(sg.Text('', key='progress_curr_module', size=(35, 1), pad=(2, 0), visible=True, justification='right')),
+            place(sg.Text('0 %', key='progress_value', size=(4, 1), visible=True, justification='right')),
         ]
     ]
 
@@ -269,14 +269,16 @@ def gui_automated_cases(adb, selected_lights_model, selected_luxmeter_model):
                                                   visible=values[auto_cases_event]['is_running'])
 
         if values['auto_cases_tabs_group'] == 'configurable_cases_tab':
-            print('tab is at configurable cases')
+            if event == 'auto_cases_tabs_group':
+                print('tab is at configurable cases')
             configurable_tab_logic(
                 window, values, event,
                 cases, auto_cases_event
             )
 
         if values['auto_cases_tabs_group'] == 'template_cases_tab':
-            print('tab is at template cases')
+            if event == 'auto_cases_tabs_group':
+                print('tab is at template cases')
             template_tab_logic(
                 window, values, event,
                 cases, auto_cases_event

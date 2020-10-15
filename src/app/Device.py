@@ -198,6 +198,8 @@ class Device:
             return self.d.shell(cmd)
         except AttributeError:
             raise ValueError('You tried to reach a device that is already disconnected!')
+        except RuntimeError:
+            raise RuntimeError('Device Disconnected!')
 
     def push_file(self, src, dst):
         """
@@ -416,6 +418,7 @@ class Device:
             print('Currently opened: ', self.get_current_app())
             print("Opening {}...".format(package))
             self.exec_shell("monkey -p '{}' -v 1".format(package))
+            time.sleep(1)  # Give a bit of time to the device to load the app
         else:
             print("{} was already opened! Continuing...".format(package))
 

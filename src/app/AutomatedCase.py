@@ -1,3 +1,4 @@
+import json
 import os
 import time
 import threading
@@ -88,7 +89,7 @@ class AutomatedCase(threading.Thread):
         self.lights_model = lights_model
         self.lights = None
 
-        self.excel_data = None
+        self.template_data = None
 
     def run(self):
         self._run_prereq()
@@ -297,11 +298,14 @@ class AutomatedCase(threading.Thread):
                             results[serial_num] = new_files[serial_num]
 
                         # add new_files to self.excel_data[test_type][light][lux]['filename']
-                        if self.excel_data is not None:
+                        if self.template_data is not None:
                             # Lower case and filter all but letters
                             test_type = prefix.strip('_')  # TODO: Not use prefix for this
                             # add filename to excel_data dict
-                            self.excel_data[test_type][temp][lux]['filename'] = str(new_files[serial_num][0])
+                            try:
+                                self.template_data[test_type][temp][lux]['filename'] = str(new_files[serial_num][0])
+                            except IndexError:
+                                print(f'No new file for {test_type}//{temp}//{str(lux)}')
 
             self.output_gui(f'{temp} is done! Turning it off.', 'success')
             self.lights.turn_off(temp)
@@ -334,72 +338,61 @@ class AutomatedCase(threading.Thread):
     def _execute_req_template(self,
                               requirements_file, files_destination,
                               reports_bool: bool, reports_pdf_bool: bool, specific_device=None):
-        if requirements_file == '':
-            self.output_gui('Requirements file is mandatory!', msg_type='error')
-            return
-        elif files_destination == '':
-            self.output_gui('Files destination is mandatory!', msg_type='error')
-            return
+        # if requirements_file == '':
+        #     self.output_gui('Requirements file is mandatory!', msg_type='error')
+        #     return
+        # elif files_destination == '':
+        #     self.output_gui('Files destination is mandatory!', msg_type='error')
+        #     return
 
         self.current_action = 'starting'
-        excel_data = Report.parse_excel_template(requirements_file)
-        lights_seqs = Report.generate_lights_seqs(excel_data)
-        new_files = {}
+        # template_data = Report.parse_excel_template(requirements_file)
+        # lights_seqs = Report.generate_lights_seqs(template_data)
+        # files_to_analyze = {}
+        #
+        # # Add filenames to template_data afterwards
+        # self.template_data = template_data
+        #
+        # # Allocate lists for devices' results data
+        # if specific_device:
+        #     files_to_analyze[specific_device] = []
+        # else:
+        #     for device_serial in self.attached_devices:
+        #         files_to_analyze[device_serial] = []
+        #
+        # # Execute cases and persist data
+        # for lights_seq in lights_seqs:
+        #     if self.stop_signal:
+        #         self.output_gui('Received stop command! Stopping lights sequences...')
+        #         break
+        #     seq_files_dict = self._execute(
+        #         None,
+        #         True, files_destination,
+        #         photo_bool=True, video_bool=False, specific_device=specific_device,
+        #         folders=[lights_seq['test_type']],
+        #         filename_prefix=lights_seq['test_type'],
+        #         lights_seq_in=lights_seq['lights_seq'],
+        #         seq_name=lights_seq['test_type'])
+        #     if seq_files_dict is not None:
+        #         for device_serial in seq_files_dict.keys():
+        #             files_to_analyze[device_serial].append(
+        #                 {
+        #                     'analysis_type': lights_seq['test_type'],
+        #                     'image_files': seq_files_dict[device_serial]
+        #                 }
+        #             )
+        #     else:
+        #         print(lights_seq['test_type'], ' is empty, skipping it')
+        #     self.output_gui(f'Test cases for {lights_seq["test_type"]} finished.', 'success')
+        #     self.progress = 0
+        #
+        # print("New files to analyze from template:\n", files_to_analyze)
+        # print(f'Template data: \n{template_data}')
 
-        # Add filenames to excel_data afterwards
-        self.excel_data = excel_data
-
-        # Allocate lists for devices' results data
-        if specific_device:
-            new_files[specific_device] = []
-        else:
-            for device_serial in self.attached_devices:
-                new_files[device_serial] = []
-
-        # Execute cases and persist data
-        for lights_seq in lights_seqs:
-            if self.stop_signal:
-                self.output_gui('Received stop command! Stopping lights sequences...')
-                break
-            seq_files_dict = self._execute(
-                None,
-                True, files_destination,
-                photo_bool=True, video_bool=False, specific_device=specific_device,
-                folders=[lights_seq['test_type']],
-                filename_prefix=lights_seq['test_type'],
-                lights_seq_in=lights_seq['lights_seq'],
-                seq_name=lights_seq['test_type'])
-            if seq_files_dict is not None:
-                for device_serial in seq_files_dict.keys():
-                    new_files[device_serial].append(
-                        {
-                            'analysis_type': lights_seq['test_type'],
-                            'image_files': seq_files_dict[device_serial]
-                        }
-                    )
-            else:
-                print(lights_seq['test_type'], ' is empty, skipping it')
-            self.output_gui(f'Test cases for {lights_seq["test_type"]} finished.', 'success')
-            self.progress = 0
-
-            print(f'Ecxel data: \n{excel_data}')
-
-        print("New case files from template:\n", new_files)
-
-        print(f'Ecxel data: \n{excel_data}')
+        test_template_data = {'eSFR ISO': {'D65': {20: {'params': {'mtf30': {'min': 0.3, 'max': 0.8}, 'oversharpening': {'min': 0, 'max': 30}}, 'filename': 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\eSFR ISO\\D65\\eSFR ISO_D65_20.jpg'}, 80: {'params': {'mtf30': {'min': 0.3, 'max': 0.8}, 'oversharpening': {'min': 0, 'max': 30}, 'ER': {'min': 0, 'max': 0.1}}, 'filename': 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\eSFR ISO\\D65\\eSFR ISO_D65_80.jpg'}, 200: {'params': {'mtf30': {'min': 0.3, 'max': 0.8}, 'oversharpening': {'min': 0, 'max': 30}, 'ER': {'min': 0, 'max': 0.1}}, 'filename': 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\eSFR ISO\\D65\\eSFR ISO_D65_200.jpg'}}}, 'Random': {'D75': {20: {'params': {'Texture Acutance': {'min': 0.7, 'max': 1}}, 'filename': 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Random\\D75\\Random_D75_20.jpg'}, 80: {'params': {'Texture Acutance': {'min': 0.7, 'max': 1}}, 'filename': 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Random\\D75\\Random_D75_80.jpg'}, 200: {'params': {'Texture Acutance': {'min': 0.7, 'max': 1}}, 'filename': 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Random\\D75\\Random_D75_200.jpg'}}}, 'ITDR-36Chart': {}, 'Colorcheck': {'D75': {80: {'params': {'accuracy max': {'min': None, 'max': None}, 'accuracy mean': {'min': None, 'max': None}, 'saturation': {'min': 85, 'max': 135}, 'white balance': {'min': None, 'max': None}}, 'filename': 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Colorcheck\\D75\\Colorcheck_D75_80.jpg'}}, 'D65': {20: {'params': {'SNR': {'min': 30, 'max': 100}, 'TNR': {'min': 30, 'max': 100}}, 'filename': 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Colorcheck\\D65\\Colorcheck_D65_20.jpg'}, 80: {'params': {'exposure': {'min': 92, 'max': 162}, 'SNR': {'min': 33, 'max': 100}, 'TNR': {'min': 33, 'max': 100}}, 'filename': 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Colorcheck\\D65\\Colorcheck_D65_80.jpg'}, 200: {'params': {'accuracy max': {'min': None, 'max': None}, 'accuracy mean': {'min': None, 'max': None}, 'saturation': {'min': 85, 'max': 135}, 'white balance': {'min': None, 'max': None}, 'exposure': {'min': 92, 'max': 162}, 'gamma': {'min': 0.4, 'max': 0.75}, 'SNR': {'min': 38, 'max': 100}, 'TNR': {'min': 38, 'max': 100}}, 'filename': 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Colorcheck\\D65\\Colorcheck_D65_200.jpg'}, 1000: {'params': {'exposure': {'min': 92, 'max': 162}}, 'filename': 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Colorcheck\\D65\\Colorcheck_D65_1000.jpg'}}}, 'Distortion': {'D65': {80: {'params': {'35 to 45 deg': {'min': 0, 'max': 6}, '46 to 65': {'min': 0, 'max': 10}, 65: {'min': 0, 'max': 14}}, 'filename': 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Distortion\\D65\\Distortion_D65_80.jpg'}}}, 'Uniformity': {'D65': {80: {'params': {'Relative Illumination': {'min': 70, 'max': 100}}, 'filename': 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Uniformity\\D65\\Uniformity_D65_80.jpg'}, 200: {'params': {'Color uniformity': {'min': 0, 'max': 10}, 'Veiling glare': {'min': 0, 'max': 10}}, 'filename': 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Uniformity\\D65\\Uniformity_D65_200.jpg'}}}}
         testdict = {'Type1000123456': [{'analysis_type': 'eSFR ISO', 'image_files': ['C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\eSFR ISO\\D65\\eSFR ISO_D65_20.jpg', 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\eSFR ISO\\D65\\eSFR ISO_D65_80.jpg', 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\eSFR ISO\\D65\\eSFR ISO_D65_200.jpg']}, {'analysis_type': 'Random', 'image_files': ['C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Random\\D75\\Random_D75_20.jpg', 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Random\\D75\\Random_D75_80.jpg', 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Random\\D75\\Random_D75_200.jpg']}, {'analysis_type': 'Colorcheck', 'image_files': ['C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Colorcheck\\D75\\Colorcheck_D75_80.jpg', 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Colorcheck\\D65\\Colorcheck_D65_20.jpg', 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Colorcheck\\D65\\Colorcheck_D65_80.jpg', 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Colorcheck\\D65\\Colorcheck_D65_200.jpg', 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Colorcheck\\D65\\Colorcheck_D65_1000.jpg']}, {'analysis_type': 'Distortion', 'image_files': ['C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Distortion\\D65\\Distortion_D65_80.jpg']}, {'analysis_type': 'Uniformity', 'image_files': ['C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Uniformity\\D65\\Uniformity_D65_80.jpg', 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Uniformity\\D65\\Uniformity_D65_200.jpg']}]}
         print(f'test dict: \n{testdict}')
         ini_file = os.path.normpath(r"C:\Program Files\Imatest\v2020.2\IT\samples\python\ini_file\imatest-v2.ini")
-
-        # for
-        # for test_type in excel_data.keys():
-        #     list_len = len()
-        #     # Filter out special characters and spaces
-        #     test_type_clean = ''.join(filter(str.isalnum, test_type.lower()))
-        #     for light in excel_data[test_type].keys():
-        #         for lux in excel_data[test_type][light].keys():
-        #             filename = ''
-        #             excel_data[test_type][light][lux]['filename'] = filename
 
         if self.stop_signal:
             self.output_gui('Received stop command! Stopping template testing...')
@@ -411,18 +404,45 @@ class AutomatedCase(threading.Thread):
             self.current_action = 'Analyzing Images'
             self.output_gui('Analyzing images...')
             # report = Report()
-            # images_analysis = report.analyze_images_parallel(testdict, ini_file, num_processes=4)
-            # print('Analysis Results:\n', images_analysis)
+            # images_analysis = report.analyze_images_parallel(testdict, ini_file, num_processes=4)  # Returns (<class 'str'>)
+            #
+            # images_analysis_readable = json.loads(images_analysis)
+            # # open output file for writing
+            # with open('imatest_results.json', 'w') as outfile:
+            #     json.dump(images_analysis_readable, outfile)
+
+            # Load data from file to save time while debugging
+            with open('imatest_results.json') as json_file:
+                images_analysis_readable = json.load(json_file)
+
+            # print(f'Analysis Results of type ({type(images_analysis)}):\n', images_analysis)
+            print('Parsed:\n', images_analysis_readable)
 
             self.current_action = 'Generating Report'
             self.output_gui('Generating report...')
+
+            # Decode JSONs
+            print('Converting jsons list to dict')
+            jsons_dict = {}
+            for test_results in images_analysis_readable:
+                print('data>title:\n', test_results['data']['title'])
+                jsons_dict[test_results['data']['title'].split('.')[0]] = test_results['data']
+            print('jsons dict starts:\n', jsons_dict,'\n\n\n----')
+
+            for test_type in test_template_data.keys():
+                for light_temp in test_template_data[test_type].keys():
+                    for lux in test_template_data[test_type][light_temp].keys():
+                        for param in test_template_data[test_type][light_temp][lux]['params'].keys():
+                            print(jsons_dict[f'{test_type}_{light_temp}_{lux}'][param])
+                            # if test_results["data"]["image_path_name"] == test_template_data[test_type][light_temp]['filename']:
+                            #     for param in test_results["data"]
 
             if reports_pdf_bool:
                 # Convert report to pdf
                 self.current_action = 'Converting Report to PDF'
                 self.output_gui('Converting report to PDF...')
 
-        self.excel_data = None
+        self.template_data = None
         self.current_action = 'Finished'
         self.output_gui("Template testing Done!", 'success')
 
