@@ -110,10 +110,6 @@ IMATEST_TEST_TYPES = {
     'wedge': 'WEDGE_ANALYSIS'
 }
 
-IMATEST_TEST_TYPES_CALLS = {
-
-}
-
 # DEBUG
 if DEBUG_MODE:
     LIGHTS_MODELS['test'] = 0
