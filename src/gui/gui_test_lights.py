@@ -63,7 +63,7 @@ def gui_test_lights(selected_lights_model, selected_luxmeter_model):
 
     layout = [
         lights_header_image,
-        [sg.Frame('Status', status_frame, font='Any 12', title_color='white')],
+        [sg.Frame('Status', status_frame, font='Any 12')],
         [sg.HorizontalSeparator()],
         [
             sg.Text('Color Temperature:'),
@@ -78,21 +78,20 @@ def gui_test_lights(selected_lights_model, selected_luxmeter_model):
                      key='selected_light_num',
                      default_value='all',
                      enable_events=True),
-            sg.Button('Turn on', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 2),
+            sg.Button('Turn on', size=(10, 2),
                       key='on_1_btn', disabled=False),
-            sg.Button('Turn off', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 2),
+            sg.Button('Turn off', size=(10, 2),
                       key='off_1_btn', disabled=False)
         ],
         [
             sg.Text(text='Set Brightness'),
             sg.Slider(range=(1, 100), orientation='h', key='selected_brightness'),
-            sg.Button('Set', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 2),
+            sg.Button('Set', size=(10, 2),
                       key='set_brightness_btn', disabled=False)
         ],
         [
-            sg.Frame('Luxmeter', luxmeter_frame, font='Any 12', title_color='white', visible=False if selected_luxmeter_model == 'None' else True),
+            sg.Frame('Luxmeter', luxmeter_frame, font='Any 12', visible=False if selected_luxmeter_model == 'None' else True),
             sg.Button('Party',
-                   button_color=(sg.theme_text_element_background_color(), 'silver'),
                    size=(10, 2),
                    key='send_settings_btn', disabled=False)]
     ]

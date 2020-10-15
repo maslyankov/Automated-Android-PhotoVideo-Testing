@@ -6,28 +6,25 @@ import src.constants as constants
 from src.app.AutomatedCase import AutomatedCase
 
 from src.gui.gui_automated_cases_lights_xml_gui import lights_xml_gui
-from src.gui.utils_gui import place
+from src.gui.utils_gui import place, Tabs
 import threading
 
 
 def configurable_tab_logic(window, values, event,
                            cases, auto_cases_event):
     window['duration_spinner'].Update(disabled=values['mode_photos'])
-    if event == 'save_location':
-        if values["pull_files"]:
-            window['capture_cases_btn'].Update(disabled=False)
 
-    if event == "pull_files":
+    if event == "pull_files" or values['pull_files']:
         # window['clear_files'].Update(disabled=not values['pull_files'])  # Does not affect anything yet
         window['save_location'].Update(disabled=not values['pull_files'])
         window['save_location_browse_btn'].Update(disabled=not values['pull_files'])
-        window['capture_cases_btn'].Update(disabled=(values['save_location'] == ''))
+        window['capture_cases_btn'].Update(disabled=(values['save_location_browse_btn'] == ''))
 
     if event == 'manage_lights_btn':
         lights_xml_gui(values['selected_lights_seq'])
 
     if event == "capture_cases_btn":
-        if values['pull_files'] and values['save_location'] == '':
+        if values['pull_files'] and values['save_location_browse_btn'] == '':
             print("Save Location must be set!")
         else:
             try:
@@ -35,7 +32,7 @@ def configurable_tab_logic(window, values, event,
                     window['capture_cases_btn'].Update(disabled=True)
                     try:
                         cases.execute(values['selected_lights_seq'],
-                                      values['pull_files'], values['save_location'],
+                                      values['pull_files'], values['save_location_browse_btn'],
                                       values['mode_photos'] or values['mode_both'],
                                       values['mode_videos'] or values['mode_both'],
                                       video_duration=values['duration_spinner'],
@@ -82,7 +79,7 @@ def template_tab_logic(window, values, event,
         if not cases.is_running:
             # If cases are NOT running then button should start them
             try:
-                cases.execute_req_template(values['template_location'], values['save_location_output'],
+                cases.execute_req_template(values['template_browse_btn'], values['save_location_output_browse_btn'],
                                            values['generate_reports_bool'], values['generate_reports_pdf_bool'],
                                            specific_device=None if values['use_all_devices_bool'] else values[
                                                'selected_device'])
@@ -157,7 +154,7 @@ def gui_automated_cases(adb, selected_lights_model, selected_luxmeter_model):
         ],
         [
             sg.Text('Save Location:', size=(11, 1)),
-            sg.InputText(size=(36, 1), key='save_location', disabled=True, enable_events=True),
+            sg.InputText(size=(36, 1), key='save_location', readonly=True, enable_events=True),
             sg.FolderBrowse(key='save_location_browse_btn')
         ],
     ]
@@ -173,20 +170,20 @@ def gui_automated_cases(adb, selected_lights_model, selected_luxmeter_model):
     diff_tuning_layout = []
 
     configurable_tab = [
-        [sg.Frame('Test Case', case_frame_layout, font='Any 12', title_color='white')],
-        [sg.Frame('After Case', post_case_frame_layout, font='Any 12', title_color='white')],
-        [sg.Frame('Lights', lights_frame_layout, font='Any 12', title_color='white')],
-        [sg.Frame('Queue sequences with different tunings', diff_tuning_layout, font='Any 12', title_color='white')],
+        [sg.Frame('Test Case', case_frame_layout, font='Any 12')],
+        [sg.Frame('After Case', post_case_frame_layout, font='Any 12')],
+        [sg.Frame('Lights', lights_frame_layout, font='Any 12')],
+        [sg.Frame('Queue sequences with different tunings', diff_tuning_layout, font='Any 12')],
 
-        [sg.Button('Run', key='capture_cases_btn', size=(50, 2))]
+        [sg.Button('Run', key='capture_cases_btn', size=(52, 2))]
     ]
 
     # TEMPLATE TAB
     template_frame = [
         [
-            sg.Text('Use:'),
-            sg.InputText(size=(36, 1), key='template_location', disabled=True, enable_events=True),
-            sg.FilesBrowse(
+            sg.Text('Use:', size=(11, 1)),
+            sg.Input(size=(36, 1), key='template_location'),
+            sg.FileBrowse(
                 key='template_browse_btn',
                 file_types=(
                     ('Microsoft Excel', '*.xls *.xlsx *.xlsm *.xltx *.xltm'),
@@ -202,20 +199,20 @@ def gui_automated_cases(adb, selected_lights_model, selected_luxmeter_model):
 
     destination_frame = [[
         sg.Text('Save Location:', size=(11, 1)),
-        sg.InputText(size=(36, 1), key='save_location_output', disabled=True, enable_events=True),
+        sg.Input(size=(36, 1), key='save_location_output', enable_events=True),
         sg.FolderBrowse(key='save_location_output_browse_btn')
     ]]
 
     template_tab = [
-        [sg.Frame('Template', template_frame, font='Any 12', title_color='white')],
-        [sg.Frame('Checklist', checklist_frame, font='Any 12', title_color='white')],
-        [sg.Frame('Save to...', destination_frame, font='Any 12', title_color='white')],
-        [sg.Button('DO THE MAGIC', key='run_template_automation_btn', size=(50, 2))]
+        [sg.Frame('Template', template_frame, font='Any 12')],
+        [sg.Frame('Checklist', checklist_frame, font='Any 12')],
+        [sg.Frame('Save to...', destination_frame, font='Any 12')],
+        [sg.Button('DO THE MAGIC', key='run_template_automation_btn', size=(52, 2))]
     ]
 
     layout = [
-        [sg.Frame('Select Device', select_device_frame, font='Any 12', title_color='white')],
-        [sg.TabGroup([[
+        [sg.Frame('Select Device', select_device_frame, font='Any 12')],
+        [Tabs([[
             sg.Tab('Configurable', configurable_tab, key='configurable_cases_tab'),
             sg.Tab('Template Testing', template_tab, key='template_cases_tab')
         ]], key='auto_cases_tabs_group', enable_events=True)],

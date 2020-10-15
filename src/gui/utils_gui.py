@@ -17,7 +17,7 @@ History
   - Revised button_color can be like 'black'.
   - Revised len of button_text to check halfwidth and fullwidth if character.
 """
-
+import src.constants as constants
 import PySimpleGUI as sg
 
 
@@ -60,7 +60,7 @@ class Tree(sg.Tree):
         self.text = None
         self.list = []
         self.treedata = sg.TreeData()
-        self._init(headings=headings,lines=num_rows, width=column_width, row_height=row_height,
+        self._init(headings=headings, lines=num_rows, width=column_width, row_height=row_height,
                    text=text_color, background=background_color, font=font,
                    key=key)
 
@@ -160,6 +160,16 @@ class Tree(sg.Tree):
         values = self.treedata.tree_dict[key].values
         return values[0] if values else ''
 
+    def get_parent_value(self, key):
+        """
+        Get values[0] of node.
+        : Parameters
+          key - str, key of node
+        : Return
+          str, value of node
+        """
+        return self.get_value(self.treedata.tree_dict[key].parent)
+
     def hide_header(self, window):
         """
         Hide header of tree.
@@ -193,6 +203,7 @@ class Tree(sg.Tree):
             self.treedata.Insert(parent, key, name, [text])
             if update:
                 self.tree.update(values=self.treedata)
+        self.select(key)
         return key
 
     def load_tree(self, dictionary):
@@ -531,3 +542,55 @@ class Tree(sg.Tree):
     def collapse_all(self):
         for key in self.treedata.tree_dict:
             self.tree.Widget.item(self._key_to_id(key), open=False)
+
+
+class Tabs(sg.TabGroup):
+    def __init__(self, layout, tab_location: str = None,
+                 title_color: str = constants.GUI_BUTTON_TEXT_COLOR,
+                 tab_background_color: str = constants.GUI_BUTTON_BG_COLOR,
+                 selected_title_color: str = constants.GUI_TEXT_COLOR,
+                 selected_background_color: str = constants.GUI_BG_COLOR,
+                 background_color: str = None, font='Any 12',
+                 change_submits: bool = False, enable_events: bool = True,
+                 pad=None, border_width: int = 0,
+                 theme=None, key=None, k=None,
+                 tooltip: str = None, visible: bool = True, metadata=None):
+        self._init(layout=layout, tab_location=tab_location,
+                   title_color=title_color, tab_background_color=tab_background_color,
+                   selected_title_color=selected_title_color, selected_background_color=selected_background_color,
+                   background_color=background_color, font=font,
+                   change_submits=change_submits, enable_events=enable_events,
+                   pad=pad, border_width=border_width,
+                   theme=theme, key=key, k=k,
+                   tooltip=tooltip, visible=visible, metadata=metadata)
+
+    def _init(self, layout, tab_location: str = None,
+              title_color: str = None, tab_background_color: str = None,
+              selected_title_color: str = None, selected_background_color: str = None,
+              background_color: str = None, font=None,
+              change_submits: bool = False, enable_events: bool = False,
+              pad=None, border_width: int = None,
+              theme=None, key=None, k=None,
+              tooltip: str = None, visible: bool = True, metadata=None):
+        """
+        Initialization for sg.Tree
+        : Parameter
+          lines - int, lines of tree view
+          width - int, width of tree view in chars.
+          row_height - int, line height of tree view in pixels.
+          text - color for text.
+          background - color of background.
+          font - font of text
+          key - str, key of element in PySimpleGUI.
+        : return
+          None
+        """
+        super().__init__(layout=layout, tab_location=tab_location,
+                         title_color=title_color, tab_background_color=tab_background_color,
+                         selected_title_color=selected_title_color, selected_background_color=selected_background_color,
+                         background_color=background_color, font=font,
+                         change_submits=change_submits, enable_events=enable_events,
+                         pad=pad, border_width=border_width,
+                         theme=theme, key=key, k=k,
+                         tooltip=tooltip, visible=visible, metadata=metadata
+                         )

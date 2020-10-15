@@ -41,9 +41,9 @@ def gui_help():
         [
             sg.Text('How to', font='Any 24'),
         ],
-        [sg.Frame("General", general_info, font='Any 12', title_color='white')],
-        [sg.Frame("Lights", lights_info, font='Any 12', title_color='white')],
-        [sg.Frame("Device Screen Control", device_screen_ctrl, font='Any 12', title_color='white')]
+        [sg.Frame("General", general_info, font='Any 12')],
+        [sg.Frame("Lights", lights_info, font='Any 12')],
+        [sg.Frame("Device Screen Control", device_screen_ctrl, font='Any 12')]
     ]
 
     # Create the Window

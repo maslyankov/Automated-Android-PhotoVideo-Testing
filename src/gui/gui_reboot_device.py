@@ -16,7 +16,7 @@ def gui_reboot_device(attached_devices, device_obj):
                     font="Any 18",
                     size=(13, 1))
         ],
-        [sg.Button('Reboot', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 2),
+        [sg.Button('Reboot', size=(10, 2),
                    key='reboot_device_btn', disabled=False)]
     ]
 

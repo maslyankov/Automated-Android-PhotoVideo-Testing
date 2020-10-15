@@ -31,7 +31,7 @@ def gui_push_file(attached_devices, device_obj):
             sg.InputText(size=(35, 1), key='source_file', enable_events=True),
             sg.FileBrowse()
         ],
-        [sg.Button('Push File', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 2),
+        [sg.Button('Push File', size=(10, 2),
                    key='push_file_btn', disabled=True)]
     ]
 

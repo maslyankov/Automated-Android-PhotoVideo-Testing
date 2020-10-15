@@ -18,7 +18,7 @@ def gui_project_req_file():
     light_types_list = ['D65', 'D75', 'TL84', 'INCA']
     params_list = ['R_pixel_mean', 'G_pixel_mean', 'B_pixel_mean']
 
-
+    current_file = None
     left_col = [[tree]]
 
     right_col = [
@@ -62,6 +62,23 @@ def gui_project_req_file():
         [
             sg.B('Expand', key='expand_btn', size=(12, 1)),
             sg.B('Collapse', key='collapse_btn', size=(12, 1)),
+        ],
+        [sg.HorizontalSeparator()],
+            [sg.T('Currently loaded: ')],
+            [sg.T('New requirements file', key='current_filename_label', size=(30, 1))],
+            [sg.B('Save', key='save_btn', size=(12, 1))],
+        [sg.HorizontalSeparator()],
+        [
+            sg.FileBrowse(
+                button_text='Import',
+                key='import_btn',
+                file_types=(("Proj Req", "*.projreq"),)
+            ),
+            sg.SaveAs(
+                button_text='Export',
+                key='export_btn',
+                file_types=(("Proj Req", "*.projreq"),)
+            )
         ]
     ]
 
@@ -86,6 +103,13 @@ def gui_project_req_file():
         print('vals', values)  # Debugging
         print('event', event)  # Debugging
 
+        if current_file is not None:
+            # A file is loaded
+
+            pass
+        else:
+            window['current_filename_label'].Update('New requirements file')
+
         if event == 'add_type_btn':
             tree.insert_node('', f"{values['add_type_value']}", values['add_type_value'])
 
@@ -93,7 +117,6 @@ def gui_project_req_file():
             current = tree.where()
             if tree.get_text(values['-TREE-'][0]) == 'params':
                 tree.insert_node(current, f"{values['add_param_value']}", values['add_param_value'])
-                tree.select(current)
             else:
                 print('You can only add params to "params"')
 
@@ -101,7 +124,6 @@ def gui_project_req_file():
             current = tree.where()
             if tree.get_text(values['-TREE-'][0]) in test_modules_list:
                 tree.insert_node(current, f"{values['add_light_temp_value']}", values['add_light_temp_value'])
-                tree.select(current)
             else:
                 print('You can only add light temps test type elements')
 
@@ -110,21 +132,19 @@ def gui_project_req_file():
             if tree.get_text(values['-TREE-'][0]) in light_types_list:
                 new_elem = tree.insert_node(current, values['add_lux_value'], values['add_lux_value'])
                 tree.insert_node(new_elem, 'params', 'params')
-                tree.select(current)
             else:
                 print('Select temp first')
 
         if event == 'add_min_max_btn':
             current = tree.where()
-            #if tree.get_text(values['-TREE-'][0]) in light_types_list:
-            min = tree.insert_node(current, 'min', 'min')
-            tree.insert_node(min, values['param_min_value'], values['param_min_value'])
-            max = tree.insert_node(current, 'max', 'max')
-            tree.insert_node(max, values['param_max_value'], values['param_max_value'])
-
-            tree.select(current)
-            #else:
-            #    print('Select param first')
+            curr_parent_val = tree.get_parent_value(current)
+            if curr_parent_val == 'params':
+                min = tree.insert_node(current, 'min', 'min')
+                tree.insert_node(min, values['param_min_value'], values['param_min_value'])
+                max = tree.insert_node(current, 'max', 'max')
+                tree.insert_node(max, values['param_max_value'], values['param_max_value'])
+            else:
+                print("Trying to add min,max to invalid place. parent val: ", curr_parent_val)
 
         if event == 'mv_up_btn':
             print(f'Move up {values["-TREE-"]}')
@@ -148,5 +168,9 @@ def gui_project_req_file():
         if event == 'collapse_btn':
             tree.collapse_all()
             print('expanding nodes')
+
+        if event == 'save_btn':
+            print(tree.dump_tree())
+
 
     window.close()

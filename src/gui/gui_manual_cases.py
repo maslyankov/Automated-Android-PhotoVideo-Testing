@@ -40,9 +40,9 @@ def gui_manual_cases(attached_devices, device_obj):  # TODO
     ]
 
     layout = [
-        [sg.Frame('Select Device', select_device_frame, font='Any 12', title_color='white')],
-        [sg.Frame('Test Case', case_frame_layout, font='Any 12', title_color='white')],
-        [sg.Frame('After Case', post_case_frame_layout, font='Any 12', title_color='white')],
+        [sg.Frame('Select Device', select_device_frame, font='Any 12')],
+        [sg.Frame('Test Case', case_frame_layout, font='Any 12')],
+        [sg.Frame('After Case', post_case_frame_layout, font='Any 12')],
         [sg.Button('Do Case', key='capture_case_btn')]
     ]
 

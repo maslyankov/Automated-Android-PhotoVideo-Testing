@@ -15,13 +15,30 @@ from src.gui.gui_reboot_device import gui_reboot_device
 from src.gui.gui_setup_device import gui_setup_device
 from src.gui.gui_test_lights import gui_test_lights
 from src.gui.gui_project_req_file import gui_project_req_file
-from src.gui.utils_gui import place
+from src.gui.utils_gui import place, Tabs
 
 import src.constants as constants
 
 
 def gui():
-    sg.theme('DarkBlack')  # Add a touch of color
+    #sg.theme('DarkBlack')  # Add a touch of color
+    # Set GUI theme
+    sg.theme_slider_border_width(0)
+    sg.theme_slider_color(constants.GUI_SLIDER_COLOR)
+    sg.theme_background_color(constants.GUI_BG_COLOR)
+    sg.theme_element_background_color(constants.GUI_ELEMENT_BG_COLOR)
+    sg.theme_element_text_color(constants.GUI_ELEMENT_TEXT_COLOR)
+    sg.theme_text_color(constants.GUI_TEXT_COLOR)
+    sg.theme_text_element_background_color(constants.GUI_BG_COLOR)
+    sg.theme_input_text_color(constants.GUI_INPUT_TEXT_COLOR)
+    sg.theme_input_background_color(constants.GUI_INPUT_BG_COLOR)
+    sg.theme_button_color(
+        (constants.GUI_BUTTON_TEXT_COLOR,
+         constants.GUI_BUTTON_BG_COLOR)
+    )
+    sg.theme_border_width(constants.GUI_BORDER_WIDTH)
+    sg.theme_progress_bar_border_width(constants.GUI_PROGRESS_BAR_BORDER_WIDTH)
+    sg.theme_progress_bar_color(constants.GUI_PROGRESS_BAR_COLOR)
 
     devices_frame = []
     for num in range(constants.MAX_DEVICES_AT_ONE_RUN):
@@ -29,13 +46,11 @@ def gui():
         devices_frame += [
                              place(sg.Image(filename='', key=f'device_icon.{num}', visible=False)),
                              place(sg.Checkbox('', key=f'device_attached.{num}',
-                                               text_color="black",
                                                disabled=True,
                                                enable_events=True,
                                                visible=False,
                                                size=(17, 1))),
                              place(sg.InputText(key=f'device_serial.{num}',
-                                                background_color="red",
                                                 size=(15, 1),
                                                 readonly=True,
                                                 default_text='',
@@ -44,13 +59,11 @@ def gui():
                                                 disabled=True,
                                                 visible=False)),
                              place(sg.Button('Identify',
-                                             button_color=(sg.theme_text_element_background_color(), 'silver'),
                                              key=f'identify_device_btn.{num}',
                                              disabled=True,
                                              enable_events=True,
                                              visible=False)),
                              place(sg.Button('Control',
-                                             button_color=(sg.theme_text_element_background_color(), 'silver'),
                                              key=f'ctrl_device_btn.{num}',
                                              disabled=True,
                                              enable_events=True,
@@ -59,21 +72,21 @@ def gui():
                          ],
 
     device_settings_frame_layout = [[
-        sg.Button('Edit camxoverridesettings', button_color=(sg.theme_text_element_background_color(), 'silver'),
+        sg.Button('Edit camxoverridesettings',
                   size=(20, 3),
                   key='camxoverride_btn',
                   disabled=True,
                   tooltip='Edit or view camxoverridesettings of any attached device'),
-        sg.Button('Push file', button_color=(sg.theme_text_element_background_color(), 'silver'),
+        sg.Button('Push file',
                   size=(12, 3),
                   key='push_file_btn',
                   disabled=True),
-        sg.Button('Reboot Device', button_color=(sg.theme_text_element_background_color(), 'silver'),
+        sg.Button('Reboot Device',
                   size=(12, 3),
                   key='reboot_device_btn',
                   disabled=True,
                   tooltip='Reboot devices immediately'),
-        sg.Button('Setup', button_color=(sg.theme_text_element_background_color(), 'silver'),
+        sg.Button('Setup',
                   size=(12, 3),
                   key='setup_device_btn',
                   disabled=True,
@@ -94,7 +107,6 @@ def gui():
         ),
         sg.Button(
             'Test Lights',
-            button_color=(sg.theme_text_element_background_color(), 'silver'),
             size=(11, 3),
             key='test_lights_btn',
             disabled=False
@@ -105,9 +117,9 @@ def gui():
     # All the stuff inside your window.
     tab_main = [
         [sg.Image(os.path.join(constants.ROOT_DIR, 'images', 'automated-video-testing-header.png'))],
-        [sg.Frame('Devices', devices_frame, font='Any 12', title_color='white')],
-        [sg.Frame('Settings', device_settings_frame_layout, font='Any 12', title_color='white')],
-        [sg.Frame('Lights', lights_frame_layout, font='Any 12', title_color='white')],
+        [sg.Frame('Devices', devices_frame, font='Any 12')],
+        [sg.Frame('Settings', device_settings_frame_layout, font='Any 12')],
+        [sg.Frame('Lights', lights_frame_layout, font='Any 12')],
         [sg.Button('Generate Project Requirements File', size=(30, 2), key='project_req_tool_btn', disabled=False)],
         [
             sg.Button('Capture Cases (Manual)', size=(25, 2), key='capture_manual_btn', disabled=True),
@@ -127,11 +139,15 @@ def gui():
     ]
 
     layout = [
-        [sg.TabGroup([[
-            sg.Tab('Testing', tab_main),
-            sg.Tab('Reporting', tab2_layout),
-            sg.Tab('Tools', tab3_layout),
-        ]], key='main_tabs_group', enable_events=True)],
+        [
+            Tabs([
+                [
+                    sg.Tab('Testing', tab_main),
+                    sg.Tab('Reporting', tab2_layout),
+                    sg.Tab('Tools', tab3_layout),
+                ]],
+                key='main_tabs_group',
+        )],
         [
             sg.Button('Exit', size=(20, 1)),
             sg.Text('App Version: {}'.format(constants.APP_VERSION), size=(43, 1), justification="right")
@@ -179,6 +195,7 @@ def gui():
                             print("setting {} to row {}".format(adb_received['serial'], num))
 
                             window[f'device_attached.{num}'].Update(text=adb_received['serial'],
+                                                                    text_color='black',
                                                                     background_color='yellow',
                                                                     disabled=False,
                                                                     visible=True)
@@ -229,8 +246,9 @@ def gui():
                     continue
                 for num in range(constants.MAX_DEVICES_AT_ONE_RUN):
                     if values[f'device_serial.{num}'] == diff_device or values[f'device_serial.{num}'] == '':
-                        window[f'device_attached.{num}'].Update(background_color='green')
-                        window[f'device_friendly.{num}'].Update(background_color='green',
+                        window[f'device_attached.{num}'].Update(text_color='white', background_color='green')
+                        window[f'device_friendly.{num}'].Update(text_color='white',
+                                                                background_color='green',
                                                                 value=devices[diff_device].friendly_name,
                                                                 disabled=False)
                         window[f'identify_device_btn.{num}'].Update(disabled=False)
@@ -246,8 +264,8 @@ def gui():
 
                 for num in range(constants.MAX_DEVICES_AT_ONE_RUN):
                     if values[f'device_serial.{num}'] == diff_device or values[f'device_serial.{num}'] == '':
-                        window[f'device_attached.{num}'].Update(background_color='yellow')
-                        window[f'device_friendly.{num}'].Update(background_color='yellow')
+                        window[f'device_attached.{num}'].Update(text_color='black', background_color='yellow')
+                        window[f'device_friendly.{num}'].Update(text_color='black', background_color='yellow')
                         window[f'identify_device_btn.{num}'].Update(disabled=True)
                         window[f'ctrl_device_btn.{num}'].Update(disabled=True)
                         break

@@ -153,7 +153,6 @@ def build_seq_gui(obj, prop_key, clickable_elements):  # TODO - Fix list of acti
                        ),
                        place(sg.Button(
                            'Test!',
-                           button_color=(sg.theme_text_element_background_color(), 'silver'),
                            size=(4, 1),
                            key=f'{prop_key}_selected_action_test_btn.{num}',
                            disabled=False if num == 0 or num == len(getattr(obj, constants.ACT_SEQUENCES[
@@ -195,7 +194,6 @@ def build_seq_gui(obj, prop_key, clickable_elements):  # TODO - Fix list of acti
                    ],
     gui_seq += [
                    sg.Button('Test sequence!',
-                             button_color=(sg.theme_text_element_background_color(), 'silver'),
                              size=(42, 1),
                              key=f'{prop_key}_selected_action_sequence_test_btn',
                              disabled=False)
@@ -262,7 +260,6 @@ def gui_setup_device(attached_devices, device_obj):
                     0]].get_camera_app_pkg() is not None else ''
             ),
             sg.Button('Test!',
-                      button_color=(sg.theme_text_element_background_color(), 'silver'),
                       size=(5, 1),
                       key='test_app_btn', disabled=False)
         ], ]
@@ -286,17 +283,16 @@ def gui_setup_device(attached_devices, device_obj):
 
     for elem in list(constants.ACT_SEQUENCES.keys()):
         frame = [sg.Frame(f'{constants.ACT_SEQUENCES_DESC[elem]} Action Sequence',
-                          build_seq_gui(device_obj[attached_devices[0]], elem, clickable_elements), font='Any 12',
-                          title_color='white')]
+                          build_seq_gui(device_obj[attached_devices[0]], elem, clickable_elements), font='Any 12')]
         seq_column.append(frame)
 
     layout = [
-        [sg.Frame('Select device', select_device_frame, font='Any 12', title_color='white')],
-        [sg.Frame('Logs', logs_frame, font='Any 12', title_color='white')],
-        [sg.Frame('Select Camera App', select_app_frame, font='Any 12', title_color='white')],
-        [sg.Frame('Actions Sequences Settings', actions_seq_settings_frame, font='Any 12', title_color='white')],
+        [sg.Frame('Select device', select_device_frame, font='Any 12')],
+        [sg.Frame('Logs', logs_frame, font='Any 12')],
+        [sg.Frame('Select Camera App', select_app_frame, font='Any 12')],
+        [sg.Frame('Actions Sequences Settings', actions_seq_settings_frame, font='Any 12')],
         [sg.Column(seq_column, size=(370, 230), scrollable=True, vertical_scroll_only=True)],
-        [sg.Button('Save Settings', button_color=(sg.theme_text_element_background_color(), 'silver'), size=(10, 2),
+        [sg.Button('Save Settings', size=(10, 2),
                    key='save_btn', disabled=False)]
     ]
 
