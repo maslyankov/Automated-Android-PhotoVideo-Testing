@@ -47,35 +47,20 @@ def _ConvertDictToXmlRecurse(parent, dictitem):
     assert type(dictitem) is not type([])
     if isinstance(dictitem, dict):
         for (tag, child) in dictitem.items():
-            print(child)
-            tag = str(tag).strip(' ')
+            tag = str(tag).replace(' ', '')
 
-            if str('{http://www.w3.org/1999/xlink}href') == str(tag):
-                continue
-
-            if tag == '_text':
-                parent.text = child
-
-            elif type(child) is type([]):
+            if type(child) is type([]):
                 # iterate through the array and convert
                 for listchild in child:
                     elem = ET.Element(tag)
                     parent.append(elem)
                     _ConvertDictToXmlRecurse(elem, listchild)
             else:
-
-                if tag == '_text':
-                    continue
-
-                if tag == 'id' and str(parent.tag) == 'language':
-                    continue
-
                 elem = ET.Element(tag)
                 parent.append(elem)
                 _ConvertDictToXmlRecurse(elem, child)
-
     else:
-        parent.text = str(dictitem)
+        parent.text = str(dictitem).strip(' ')
 
 def ConvertDictToXml(xmldict):
 
@@ -84,7 +69,7 @@ def ConvertDictToXml(xmldict):
     Converts a dictionary to an XML ElementTree Element
 
     """
-    print('input dict: \n', xmldict)
+    print('input dict: \n', xmldict, '\n')
     roottag = 'proj_requirements'
     root = ET.Element(roottag)
     root.set('time_updated', str(datetime.now()))

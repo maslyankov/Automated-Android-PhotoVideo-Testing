@@ -66,7 +66,6 @@ def xml_from_sequence(obj, prop, xml_obj):
         elem_id = ET.SubElement(elem, "id")  # set
         elem_desc = ET.SubElement(elem, "description")  # set
 
-        print(action)
         elem.set('type', action[1][2])
         if action[1][2] == 'tap':  # If we have coords set, its a tap action
             elem_coordinates = ET.SubElement(elem, "coordinates")

@@ -160,7 +160,6 @@ class Tree(sg.Tree):
     #             self.dfs(child,child_dict)
 
     def dfs(self, node, ndict):
-        #ndict[node.text] = {}
         try:
             values = node.values[0]
         except IndexError:
@@ -172,11 +171,21 @@ class Tree(sg.Tree):
             # If at root
             curr = ndict
         else:
-            curr = ndict[node.text] = {}
+            try:
+                ndict[node.text]
+            except KeyError:
+                curr = ndict[node.text] = {}
+            else:
+                curr = ndict[node.text]
 
         if values != 'param-val':
             for idx, child in enumerate(node.children):
-                curr[child.text] = {}
+                try:
+                    curr[child.text]
+                except KeyError:
+                    curr[child.text] = {}
+                else:
+                    print('not creating empty dict for ', node.text)
                 self.dfs(child, curr)
         else:
             ndict[node.text] = float(node.children[0].text)
