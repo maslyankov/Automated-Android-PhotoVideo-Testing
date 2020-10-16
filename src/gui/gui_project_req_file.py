@@ -5,7 +5,7 @@ import src.constants as constants
 from src.gui.utils_gui import Tree
 
 
-def gui_project_req_file():
+def gui_project_req_file(proj_req=None):
     print('KLQLQLQLQ')
     treedata = sg.TreeData()
     tree = Tree(
@@ -20,6 +20,8 @@ def gui_project_req_file():
 
     current_file = None
     left_col = [[tree]]
+
+
 
     right_col = [
         [

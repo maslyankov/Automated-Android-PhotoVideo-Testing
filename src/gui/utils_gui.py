@@ -139,7 +139,28 @@ class Tree(sg.Tree):
             dictionary[key] = [node.parent, children, node.text, node.values]
         return dictionary
 
+    # def dfs(self, node, ndict):
+    #     if node.text != 'root':
+    #         child_num = len(node.children)
+    #         if child_num>1:
+    #             ndict[node.text] = {}
+    #         elif child_num==1:
+    #             try:
+    #                 print(ndict)
+    #                 ndict[self.get_text(node.parent)] = int(node.text)
+    #             except ValueError:
+    #                 pass
+    #
+    #     children = []
+    #     for idx, child in enumerate(node.children):
+    #         child_dict = {}
+    #         if node.text != 'root':
+    #             self.dfs(child, ndict[node.text])
+    #         else:
+    #             self.dfs(child,child_dict)
+
     def dfs(self, node, ndict):
+        #ndict[node.text] = {}
         try:
             values = node.values[0]
         except IndexError:
@@ -154,9 +175,7 @@ class Tree(sg.Tree):
             curr = ndict[node.text] = {}
 
         if values != 'param-val':
-            print(f'will go through children, vals: "{values}"')
             for idx, child in enumerate(node.children):
-                print(f'now at {node.text} creating ndict[{child.text}]')
                 curr[child.text] = {}
                 self.dfs(child, curr)
         else:
@@ -166,7 +185,6 @@ class Tree(sg.Tree):
         out_dict = {}
         self.dfs(self.treedata.tree_dict[''], out_dict)
         return out_dict
-
 
     def get_text(self, key):
         """
