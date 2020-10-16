@@ -1,9 +1,10 @@
+import json
 import os
 import PySimpleGUI as sg
 
 import src.constants as constants
+from src.app.utils import ConvertDictToXml
 from src.gui.utils_gui import Tree
-
 
 def gui_project_req_file(proj_req=None):
     print('KLQLQLQLQ')
@@ -25,15 +26,20 @@ def gui_project_req_file(proj_req=None):
 
     right_col = [
         [
+            sg.Text('',visible=False, key='import_dir'),
             sg.FileBrowse(
                 button_text='Import',
                 key='import_btn',
-                file_types=(("Proj Req", "*.projreq"),)
+                file_types=(("Proj Req", "*.projreq"),),
+                enable_events=True,
+                target='import_btn'
             ),
             sg.SaveAs(
                 button_text='Export',
                 key='export_btn',
-                file_types=(("Proj Req", "*.projreq"),)
+                file_types=(("Proj Req", "*.projreq"),),
+                enable_events=True,
+                target='export_btn'
             )
         ],
         [sg.HorizontalSeparator()],
@@ -96,10 +102,9 @@ def gui_project_req_file(proj_req=None):
     window = sg.Window('Project Requirements File Tool', layout,
                        icon=os.path.join(constants.ROOT_DIR, 'images', 'automated-video-testing-header-icon.ico'))
     tree.set_window(window)
-    lqlq = None
     while True:
         event, values = window.read()
-        if lqlq is None:
+        if event == 'load_d_btn':
             lqlq = False
             tree.load_tree({'': ['', ['1'], 'root', []], '1': ['', ['2'], 'SFR Plus', ['SFR Plus']], '2': ['1', ['3', '4', '5', '6'], 'D65', ['D65']], '3': ['2', ['7'], 20, [20]], '4': ['2', ['8'], 60, [60]], '5': ['2', ['9'], 100, [100]], '6': ['2', ['10'], 200, [200]], '7': ['3', ['11', '12'], 'params', ['params']], '8': ['4', ['13', '14'], 'params', ['params']], '9': ['5', [], 'params', ['params']], '10': ['6', [], 'params', ['params']], '11': ['7', ['15', '17'], 'G_pixel_mean', ['G_pixel_mean']], '12': ['7', ['19', '21'], 'B_pixel_mean', ['B_pixel_mean']], '13': ['8', ['23', '25'], 'B_pixel_mean', ['B_pixel_mean']], '14': ['8', ['27', '29'], 'R_pixel_mean', ['R_pixel_mean']], '15': ['11', ['16'], 'min', ['param-val']], '16': ['15', [], '12', ['12']], '17': ['11', ['18'], 'max', ['param-val']], '18': ['17', [], '21', ['21']], '19': ['12', ['20'], 'min', ['param-val']], '20': ['19', [], '12', ['12']], '21': ['12', ['22'], 'max', ['param-val']], '22': ['21', [], '21', ['21']], '23': ['13', ['24'], 'min', ['param-val']], '24': ['23', [], '2', ['2']], '25': ['13', ['26'], 'max', ['param-val']], '26': ['25', [], '23', ['23']], '27': ['14', ['28'], 'min', ['param-val']], '28': ['27', [], '2', ['2']], '29': ['14', ['30'], 'max', ['param-val']], '30': ['29', [], '23', ['23']]})
 
@@ -109,10 +114,11 @@ def gui_project_req_file(proj_req=None):
         print('vals', values)  # Debugging
         print('event', event)  # Debugging
 
-        if current_file is not None:
-            # A file is loaded
+        if values['import_btn'] != '':
+            current_file = os.path.normpath(values['import_btn'])
 
-            pass
+        if current_file is not None:
+            window['current_filename_label'].Update(current_file.split(os.path.sep)[-1])
         else:
             window['current_filename_label'].Update('New requirements file')
 
@@ -176,9 +182,24 @@ def gui_project_req_file(proj_req=None):
             print('expanding nodes')
 
         if event == 'save_btn':
-            print(tree.dump_tree_dict())
+            if current_file is not None:
+                dump_dict = tree.dump_tree_dict()
+                # open output file for writing
+                with open(current_file, 'w') as outfile:
+                    json.dump(dump_dict, outfile)
+                print('Saved this:\n', dump_dict)
 
+        if event == 'export_btn':
+            dump_dict = tree.dump_tree_dict()
+            # open output file for writing
+            # ET.ElementTree(tree_root).write(values['export_btn'])
+            xml = ConvertDictToXml(dump_dict)
+            print("Out XML:\n", xml)
+            with open(values['export_btn'], 'wb') as outfile:
+                outfile.write(xml)
 
-
+        if event == 'import_btn':
+            # Import file
+            pass
 
     window.close()
