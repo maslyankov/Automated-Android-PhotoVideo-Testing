@@ -23,6 +23,24 @@ def gui_project_req_file():
 
     right_col = [
         [
+            sg.FileBrowse(
+                button_text='Import',
+                key='import_btn',
+                file_types=(("Proj Req", "*.projreq"),)
+            ),
+            sg.SaveAs(
+                button_text='Export',
+                key='export_btn',
+                file_types=(("Proj Req", "*.projreq"),)
+            )
+        ],
+        [sg.HorizontalSeparator()],
+        [sg.T('Currently loaded: ')],
+        [sg.T('New requirements file', key='current_filename_label', size=(30, 1))],
+        [sg.B('Save', key='save_btn', size=(12, 1))],
+        [sg.B('Load Tree', key='load_d_btn', enable_events=True, size=(12, 1))],
+        [sg.HorizontalSeparator()],
+        [
             sg.Combo(test_modules_list, key='add_type_value', size=(15,1)),
             sg.B('Add Type', key='add_type_btn', size=(10, 1)),
         ],
@@ -63,23 +81,6 @@ def gui_project_req_file():
             sg.B('Expand', key='expand_btn', size=(12, 1)),
             sg.B('Collapse', key='collapse_btn', size=(12, 1)),
         ],
-        [sg.HorizontalSeparator()],
-            [sg.T('Currently loaded: ')],
-            [sg.T('New requirements file', key='current_filename_label', size=(30, 1))],
-            [sg.B('Save', key='save_btn', size=(12, 1))],
-        [sg.HorizontalSeparator()],
-        [
-            sg.FileBrowse(
-                button_text='Import',
-                key='import_btn',
-                file_types=(("Proj Req", "*.projreq"),)
-            ),
-            sg.SaveAs(
-                button_text='Export',
-                key='export_btn',
-                file_types=(("Proj Req", "*.projreq"),)
-            )
-        ]
     ]
 
     layout = [
@@ -93,9 +94,12 @@ def gui_project_req_file():
     window = sg.Window('Project Requirements File Tool', layout,
                        icon=os.path.join(constants.ROOT_DIR, 'images', 'automated-video-testing-header-icon.ico'))
     tree.set_window(window)
-
+    lqlq = None
     while True:
         event, values = window.read()
+        if lqlq is None:
+            lqlq = False
+            tree.load_tree({'': ['', ['1'], 'root', []], '1': ['', ['2'], 'SFR Plus', ['SFR Plus']], '2': ['1', ['3', '4', '5', '6'], 'D65', ['D65']], '3': ['2', ['7'], 20, [20]], '4': ['2', ['8'], 60, [60]], '5': ['2', ['9'], 100, [100]], '6': ['2', ['10'], 200, [200]], '7': ['3', ['11', '12'], 'params', ['params']], '8': ['4', ['13', '14'], 'params', ['params']], '9': ['5', [], 'params', ['params']], '10': ['6', [], 'params', ['params']], '11': ['7', ['15', '17'], 'G_pixel_mean', ['G_pixel_mean']], '12': ['7', ['19', '21'], 'B_pixel_mean', ['B_pixel_mean']], '13': ['8', ['23', '25'], 'B_pixel_mean', ['B_pixel_mean']], '14': ['8', ['27', '29'], 'R_pixel_mean', ['R_pixel_mean']], '15': ['11', ['16'], 'min', ['param-val']], '16': ['15', [], '12', ['12']], '17': ['11', ['18'], 'max', ['param-val']], '18': ['17', [], '21', ['21']], '19': ['12', ['20'], 'min', ['param-val']], '20': ['19', [], '12', ['12']], '21': ['12', ['22'], 'max', ['param-val']], '22': ['21', [], '21', ['21']], '23': ['13', ['24'], 'min', ['param-val']], '24': ['23', [], '2', ['2']], '25': ['13', ['26'], 'max', ['param-val']], '26': ['25', [], '23', ['23']], '27': ['14', ['28'], 'min', ['param-val']], '28': ['27', [], '2', ['2']], '29': ['14', ['30'], 'max', ['param-val']], '30': ['29', [], '23', ['23']]})
 
         if event == sg.WIN_CLOSED or event == 'Close':  # if user closes window or clicks cancel
             break
@@ -139,9 +143,9 @@ def gui_project_req_file():
             current = tree.where()
             curr_parent_val = tree.get_parent_value(current)
             if curr_parent_val == 'params':
-                min = tree.insert_node(current, 'min', 'min')
+                min = tree.insert_node(current, 'min', 'param-val')
                 tree.insert_node(min, values['param_min_value'], values['param_min_value'])
-                max = tree.insert_node(current, 'max', 'max')
+                max = tree.insert_node(current, 'max', 'param-val')
                 tree.insert_node(max, values['param_max_value'], values['param_max_value'])
             else:
                 print("Trying to add min,max to invalid place. parent val: ", curr_parent_val)
@@ -170,7 +174,9 @@ def gui_project_req_file():
             print('expanding nodes')
 
         if event == 'save_btn':
-            print(tree.dump_tree())
+            print(tree.dump_tree_dict())
+
+
 
 
     window.close()
