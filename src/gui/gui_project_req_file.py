@@ -194,7 +194,7 @@ def gui_project_req_file(proj_req=None):
                 dump_dict = tree.dump_tree_dict()
                 # open output file for writing
                 # ET.ElementTree(tree_root).write(values['export_btn'])
-                xml = ConvertDictToXml(dump_dict)
+                xml = ConvertDictToXml(dump_dict, 'proj_requirements')
                 print("Out XML:\n", xml)
                 with open(values['export_btn'], 'wb') as outfile:
                     outfile.write(xml)

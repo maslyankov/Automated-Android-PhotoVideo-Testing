@@ -62,7 +62,7 @@ def _ConvertDictToXmlRecurse(parent, dictitem):
     else:
         parent.text = str(dictitem).strip(' ')
 
-def ConvertDictToXml(xmldict):
+def ConvertDictToXml(xmldict, name='root', file_is_new=False):
 
     """
 
@@ -70,8 +70,9 @@ def ConvertDictToXml(xmldict):
 
     """
     print('input dict: \n', xmldict, '\n')
-    roottag = 'proj_requirements'
-    root = ET.Element(roottag)
+    root = ET.Element(name)
+    if file_is_new:
+        root.set('time_created', str(datetime.now()))
     root.set('time_updated', str(datetime.now()))
 
     _ConvertDictToXmlRecurse(root, xmldict)

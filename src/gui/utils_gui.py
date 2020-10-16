@@ -139,26 +139,6 @@ class Tree(sg.Tree):
             dictionary[key] = [node.parent, children, node.text, node.values]
         return dictionary
 
-    # def dfs(self, node, ndict):
-    #     if node.text != 'root':
-    #         child_num = len(node.children)
-    #         if child_num>1:
-    #             ndict[node.text] = {}
-    #         elif child_num==1:
-    #             try:
-    #                 print(ndict)
-    #                 ndict[self.get_text(node.parent)] = int(node.text)
-    #             except ValueError:
-    #                 pass
-    #
-    #     children = []
-    #     for idx, child in enumerate(node.children):
-    #         child_dict = {}
-    #         if node.text != 'root':
-    #             self.dfs(child, ndict[node.text])
-    #         else:
-    #             self.dfs(child,child_dict)
-
     def dfs(self, node, ndict):
         try:
             values = node.values[0]
