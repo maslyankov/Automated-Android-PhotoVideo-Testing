@@ -1,7 +1,8 @@
 from datetime import datetime
 
+import xml.etree.ElementTree as ET
 import src.constants as constants
-
+from src.gui.utils_gui import Tree
 
 
 def kelvin_to_illumenant(kelvins):
@@ -41,10 +42,37 @@ def only_chars(val: str) -> int:
     if isinstance(val, str):
         return ''.join(filter(lambda x: x.isalpha(), val))
 
-# XML Utils
-import xml.etree.ElementTree as ET
-def ConvertDictToXml(xmldict, name='root', file_is_new=False):
 
+# XML Utils
+def _convert_dict_to_xml_recurse(parent, dictitem):
+    assert type(dictitem) is not type([])
+    if isinstance(dictitem, dict):
+        for (tag, child) in dictitem.items():
+            tag = str(tag).replace(' ', '')
+
+            if type(child) is type([]):
+                print(child.tag)
+                # iterate through the array and convert
+                for listchild in child:
+                    elem = ET.Element(tag)
+                    parent.append(elem)
+                    _convert_dict_to_xml_recurse(elem, listchild)
+            else:
+                try:
+                    child['params']
+                except (TypeError, KeyError):
+                    elem = ET.Element(tag)
+                else:
+                    elem = ET.Element(parent.tag)
+                    elem.set('lux', tag)
+                    print(f'parent tag {parent.tag}, tag {tag}')
+                parent.append(elem)
+                _convert_dict_to_xml_recurse(elem, child)
+    else:
+        parent.text = str(dictitem).strip(' ')
+
+
+def convert_dict_to_xml(xmldict, name='root', file_is_new=False):
     """
 
     Converts a dictionary to an XML ElementTree Element
@@ -52,69 +80,36 @@ def ConvertDictToXml(xmldict, name='root', file_is_new=False):
     """
     print('input dict: \n', xmldict, '\n')
     root = ET.Element(name)
-    if file_is_new:
-        root.set('time_created', str(datetime.now()))
-    root.set('time_updated', str(datetime.now()))
 
-    _ConvertDictToXmlRecurse(root, xmldict)
+    xmldata = {}
+
+    if file_is_new:
+        xmldata['time_created'] = str(datetime.now())
+    xmldata['time_updated'] = str(datetime.now())
+    xmldata['proj_req'] = xmldict
+
+    _convert_dict_to_xml_recurse(root, xmldata)
 
     ret = ET.tostring(root)
 
     return ret
 
 
-def _ConvertDictToXmlRecurse(parent, dictitem):
-    assert type(dictitem) is not type([])
-    if isinstance(dictitem, dict):
-        for (tag, child) in dictitem.items():
-            tag = str(tag).replace(' ', '')
-
-            if type(child) is type([]):
-                # iterate through the array and convert
-                for listchild in child:
-                    elem = ET.Element(tag)
-                    parent.append(elem)
-                    _ConvertDictToXmlRecurse(elem, listchild)
-            else:
-                elem = ET.Element(tag)
-                parent.append(elem)
-                _ConvertDictToXmlRecurse(elem, child)
-    else:
-        parent.text = str(dictitem).strip(' ')
-
-def ConvertXMLFileToDict(filepath):
-    xml_root = ET.parse(filepath).getroot()
-    return ConvertXmlToDict(xml_root)
-
-def ConvertXmlToDict(root, dictclass=dict):
-    """
-    Converts an XML file or ElementTree Element to a dictionary
-
-    """
-    # If a string is passed in, try to open it as a file
-
-    if type(root) == type('') or type(root) == type(u''):
-        root = ET.fromstring(root)
-
-    elif not isinstance(root, ET.Element):
-        raise TypeError('Expected ElementTree.Element or file path string')
-    return {root.tag: _ConvertXmlToDictRecurse(root, dictclass)}
-
-
 def merge_dicts(a, b, path=None):
-    "merges b into a recursively"
+    "merges b into a recursively "
     if path is None: path = []
     for key in b:
         if key in a:
             if isinstance(a[key], dict) and isinstance(b[key], dict):
                 merge_dicts(a[key], b[key], path + [str(key)])
             elif a[key] == b[key]:
-                pass # same leaf value
+                pass  # same leaf value
             else:
                 raise Exception('Conflict at %s' % '.'.join(path + [str(key)]))
         else:
             a[key] = b[key]
     return a
+
 
 def dict_vals_to_int(d):
     for key in d.keys():
@@ -124,6 +119,7 @@ def dict_vals_to_int(d):
         except AttributeError:
             pass
     return d
+
 
 def _ConvertXmlToDictRecurse(node, dictclass):
     nodedict = dictclass()
@@ -185,3 +181,27 @@ def _ConvertXmlToDictRecurse(node, dictclass):
         # if we don't have child nodes or attributes, just set the text
         nodedict = text
     return nodedict
+
+
+def ConvertXmlToDict(root, dictclass=dict):
+    """
+    Converts an XML file or ElementTree Element to a dictionary
+
+    """
+    # If a string is passed in, try to open it as a file
+
+    if type(root) == type('') or type(root) == type(u''):
+        root = ET.fromstring(root)
+
+    elif not isinstance(root, ET.Element):
+        raise TypeError('Expected ElementTree.Element or file path string')
+    return {root.tag: _ConvertXmlToDictRecurse(root, dictclass)}
+
+
+def ConvertXMLFileToDict(filepath):
+    xml_root = ET.parse(filepath).getroot()
+    return ConvertXmlToDict(xml_root)
+
+
+def dict_to_tree(dict_in):
+    pass
