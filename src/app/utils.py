@@ -116,22 +116,30 @@ def merge_dicts(a, b, path=None):
             a[key] = b[key]
     return a
 
+def dict_vals_to_int(d):
+    for key in d.keys():
+        try:
+            if d[key].isdigit():
+                d[key] = int(d[key])
+        except AttributeError:
+            pass
+    return d
 
 def _ConvertXmlToDictRecurse(node, dictclass):
     nodedict = dictclass()
 
     if len(node.items()) > 0:
         # if we have attributes, set them
-        nodedict.update(dict(node.items()))
+        nodedict.update(dict_vals_to_int(dict(node.items())))
 
     for child in node:
         current = (None, None)
         # recursively add the element's children
         newitem = _ConvertXmlToDictRecurse(child, dictclass)
-        print(child.tag, )
+        child_key = int(child.tag) if child.tag.isdigit() else child.tag
+
         if child.tag in nodedict.keys():
             # found duplicate tag, force a list
-            #print('child tag: ', child.tag)
             try:
                 child.attrib['lux']
             except KeyError:
@@ -142,24 +150,19 @@ def _ConvertXmlToDictRecurse(node, dictclass):
                 curr_key = int(child.attrib['lux']) if child.attrib['lux'].isdigit() else child.attrib['lux']
                 try:
                     # Key appears multiple times -> merge recursively
-                    nodedict[child.tag][curr_key] = merge_dicts(nodedict[child.tag][curr_key], newitem)
+                    nodedict[child_key][curr_key] = merge_dicts(nodedict[child_key][curr_key], newitem)
                 except KeyError:
-                    print('else except keyerror1', child.tag)
-                    nodedict[child.tag][curr_key] = newitem
+                    nodedict[child_key][curr_key] = newitem
         else:
-            print('if else')
             # only one, directly set the dictionary
-            print('one: ', newitem)
             try:
                 child.attrib['lux']
             except KeyError:
-                print('except keyerror2', child.tag)
-                nodedict[child.tag] = newitem
+                nodedict[child_key] = newitem
             else:
                 curr_key = int(child.attrib['lux']) if child.attrib['lux'].isdigit() else child.attrib['lux']
-                print('else except keyerror2', child.tag, curr_key)
-                nodedict[child.tag] = {}
-                nodedict[child.tag][curr_key] = newitem
+                nodedict[child_key] = {}
+                nodedict[child_key][curr_key] = newitem
 
     if node.text is None:
         text = ''
@@ -168,7 +171,6 @@ def _ConvertXmlToDictRecurse(node, dictclass):
 
     if len(nodedict) > 0:
         # if we have a dictionary add the text as a dictionary value (if there is any)
-
         if len(text) > 0:
             try:
                 text = float(text)
@@ -182,5 +184,4 @@ def _ConvertXmlToDictRecurse(node, dictclass):
             pass
         # if we don't have child nodes or attributes, just set the text
         nodedict = text
-
     return nodedict
