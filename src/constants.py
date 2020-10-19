@@ -92,6 +92,11 @@ KELVINS_TABLE = {
     "D75":      (7500, 'North sky Daylight')
 }
 
+# Filetypes
+EXCEL_FILETYPES = [
+    'xls', 'xlsx', 'xlsm', 'xltx', 'xltm'
+]
+
 # Imatest
 IMATEST_TEST_TYPES = {
     'blemish': 'BLEMISH_ANALYSIS',

@@ -40,10 +40,10 @@ class IQL_Dual_WiFi_Wireless_Lighting_API:
         self.cbox_left = ControlBox(lamp_ip='10.66.66.41', dimmer_ip='10.66.66.51', sources=self.sources)
 
     def connect(self):
-        with open('lights_output.txt', 'w') as f:
-            with redirect_stdout(f):
-                thread = threading.Thread(target=self.connect, args=(), daemon=True)
-                thread.start()
+        # with open('lights_output.txt', 'w') as f:
+        #     with redirect_stdout(f):
+        thread = threading.Thread(target=self.connect, args=(), daemon=True)
+        thread.start()
 
     def _connect(self):
         self.cbox_right.connect()

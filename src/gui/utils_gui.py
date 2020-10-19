@@ -234,12 +234,17 @@ class Tree(sg.Tree):
         : return
           None
         """
-        if name:
+        print('name', name)
+        if name == 0 or name:
             key = self._new_key()
             self.treedata.Insert(parent, key, name, [text])
             if update:
                 self.tree.update(values=self.treedata)
-        self.select(key)
+        try:
+            self.select(key)
+        except UnboundLocalError:
+            return
+
         return key
 
     def load_tree(self, dictionary):
@@ -473,6 +478,7 @@ class Tree(sg.Tree):
 
     def _load_dict_to_tree(self, parent_key, parent_name, dict_in):
         try:
+            print('dict in bef: ', dict_in)
             for key, child in dict_in.items():
                 # if len(child) == 1: # Values[0] = param
                 #     # insert to current

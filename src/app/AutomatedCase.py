@@ -336,9 +336,9 @@ class AutomatedCase(threading.Thread):
                          daemon=True).start()
 
     def _execute_req_template(self,
-                              requirements_file, files_destination,
+                              requirements_dict, files_destination,
                               reports_bool: bool, reports_pdf_bool: bool, specific_device=None):
-        # if requirements_file == '':
+        # if requirements_dict == '':
         #     self.output_gui('Requirements file is mandatory!', msg_type='error')
         #     return
         # elif files_destination == '':
@@ -346,8 +346,9 @@ class AutomatedCase(threading.Thread):
         #     return
 
         self.current_action = 'starting'
-        # template_data = Report.parse_excel_template(requirements_file)
-        # lights_seqs = Report.generate_lights_seqs(template_data)
+        template_data = requirements_dict
+        lights_seqs = Report.generate_lights_seqs(template_data)
+        print("Lights Seq: ", lights_seqs)
         # files_to_analyze = {}
         #
         # # Add filenames to template_data afterwards
@@ -447,11 +448,11 @@ class AutomatedCase(threading.Thread):
         self.output_gui("Template testing Done!", 'success')
 
     def execute_req_template(self,
-                             requirements_file, files_destination,
+                             requirements_dict, files_destination,
                              reports_bool: bool, reports_pdf_bool: bool, specific_device=None):
         self.stop_signal = False
         threading.Thread(target=self._execute_req_template,
-                         args=(requirements_file, files_destination,
+                         args=(requirements_dict, files_destination,
                                reports_bool, reports_pdf_bool, specific_device),
                          daemon=True).start()
         print('After thread exec in func')

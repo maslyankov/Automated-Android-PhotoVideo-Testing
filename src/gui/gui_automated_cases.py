@@ -4,9 +4,11 @@ import PySimpleGUI as sg
 
 import src.constants as constants
 from src.app.AutomatedCase import AutomatedCase
+from src.app.Reports import Report
 
 from src.gui.gui_automated_cases_lights_xml_gui import lights_xml_gui
 from src.gui.utils_gui import place, Tabs
+from src.gui.gui_project_req_file import gui_project_req_file
 import threading
 
 
@@ -78,8 +80,12 @@ def template_tab_logic(window, values, event,
     if event == 'run_template_automation_btn':
         if not cases.is_running:
             # If cases are NOT running then button should start them
+
+            template_data = gui_project_req_file(values['template_browse_btn'])
+            print('template_data: ', template_data)
+
             try:
-                cases.execute_req_template(values['template_browse_btn'], values['save_location_output_browse_btn'],
+                cases.execute_req_template(template_data, values['save_location_output_browse_btn'],
                                            values['generate_reports_bool'], values['generate_reports_pdf_bool'],
                                            specific_device=None if values['use_all_devices_bool'] else values[
                                                'selected_device'])
@@ -179,6 +185,7 @@ def gui_automated_cases(adb, selected_lights_model, selected_luxmeter_model):
     ]
 
     # TEMPLATE TAB
+    excel_formats = "".join(f"*.{w} " for w in constants.EXCEL_FILETYPES).rstrip(' ')
     template_frame = [
         [
             sg.Text('Use:', size=(11, 1)),
@@ -186,7 +193,7 @@ def gui_automated_cases(adb, selected_lights_model, selected_luxmeter_model):
             sg.FileBrowse(
                 key='template_browse_btn',
                 file_types=(
-                    ('Microsoft Excel', '*.xls *.xlsx *.xlsm *.xltx *.xltm'),
+                    ('Microsoft Excel', excel_formats),
                 )
             )
         ]
