@@ -3,11 +3,7 @@ import os
 from openpyxl import Workbook, load_workbook
 from openpyxl import cell as xlcell, worksheet
 import win32com.client as win32
-
-try:
-    from imatest.it import ImatestLibrary, ImatestException
-except RuntimeError as e:
-    print('Fatal Reports Error: ', e)
+from imatest.it import ImatestLibrary, ImatestException
 
 import src.constants as constants
 from src.app.utils import kelvin_to_illumenant, only_digits, only_chars
@@ -15,7 +11,14 @@ from src.app.utils import kelvin_to_illumenant, only_digits, only_chars
 
 class Report:
     def __init__(self):
-        self.imatest = ImatestLibrary()
+        try:
+            self.imatest = ImatestLibrary()
+        except ImatestException.MatlabException as e:
+            raise RuntimeWarning('Imatest: MathLab Error!\n', e)
+        except ImatestException.LicenseException as e:
+            raise RuntimeWarning('Imatest: License Error!\n', e)
+        except RuntimeError as e:
+            print('Imatest: Runtime Error!\n', e)
 
     def analyze_images(self, test_type, root_dir, images_list):
         result = None

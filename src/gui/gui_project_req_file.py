@@ -3,7 +3,7 @@ import os
 import PySimpleGUI as sg
 
 import src.constants as constants
-from src.app.utils import ConvertDictToXml
+from src.app.utils import ConvertDictToXml, ConvertXMLFileToDict
 from src.gui.utils_gui import Tree
 
 def gui_project_req_file(proj_req=None):
@@ -203,6 +203,10 @@ def gui_project_req_file(proj_req=None):
 
         if event == 'import_btn':
             # Import file
-            pass
+            if values['import_btn'].endswith('.projreq'):
+                dict = ConvertXMLFileToDict(values['import_btn'])
+                print("dict is ", dict)
+            else:
+                sg.popup_error('Wrong file format or path!')
 
     window.close()
