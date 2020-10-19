@@ -465,6 +465,38 @@ class Tree(sg.Tree):
         item = self.tree.Widget.selection()
         return '' if len(item) == 0 else self.tree.IdToKey[item[0]]
 
+    def load_dict(self, dict_in):
+        # Clean tree
+        self.delete_all_nodes()
+        print('load dict got: ', dict_in)
+        self._load_dict_to_tree('', '', dict_in)
+
+    def _load_dict_to_tree(self, parent_key, parent_name, dict_in):
+        try:
+            for key, child in dict_in.items():
+                # if len(child) == 1: # Values[0] = param
+                #     # insert to current
+                #     print('small child is: ', child)
+                # else:
+                if key == 'lux':
+                    continue
+
+                if parent_name != key:
+                    if key == 'min' or key == 'max':
+                        key_text = 'param-val'
+                    else:
+                        key_text = key
+                    new_key = self.insert_node(parent=parent_key, name=key, text=key_text)
+                    self._load_dict_to_tree(new_key, key, child)
+                else:
+                    self._load_dict_to_tree(parent_key, key, child)
+                # Recursion
+        except AttributeError:
+            print(f"'{parent_key}', '{parent_name}', '{dict_in}'")
+            if dict_in != '':
+                self.insert_node(parent_key, dict_in, dict_in)
+            pass
+
     def _all_nodes(self, parent='', new=True):
         """
         Get all keys of nodes in list order.

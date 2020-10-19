@@ -183,7 +183,7 @@ def _ConvertXmlToDictRecurse(node, dictclass):
     return nodedict
 
 
-def ConvertXmlToDict(root, dictclass=dict):
+def convert_xml_to_dict(root, dictclass=dict):
     """
     Converts an XML file or ElementTree Element to a dictionary
 
@@ -192,15 +192,14 @@ def ConvertXmlToDict(root, dictclass=dict):
 
     if type(root) == type('') or type(root) == type(u''):
         root = ET.fromstring(root)
-
     elif not isinstance(root, ET.Element):
         raise TypeError('Expected ElementTree.Element or file path string')
     return {root.tag: _ConvertXmlToDictRecurse(root, dictclass)}
 
 
-def ConvertXMLFileToDict(filepath):
+def convert_xml_file_to_dict(filepath):
     xml_root = ET.parse(filepath).getroot()
-    return ConvertXmlToDict(xml_root)
+    return convert_xml_to_dict(xml_root)
 
 
 def dict_to_tree(dict_in):

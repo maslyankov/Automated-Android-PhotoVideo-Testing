@@ -3,7 +3,7 @@ import os
 import PySimpleGUI as sg
 
 import src.constants as constants
-from src.app.utils import convert_dict_to_xml, ConvertXMLFileToDict
+from src.app.utils import convert_dict_to_xml, convert_xml_file_to_dict
 from src.gui.utils_gui import Tree
 
 def gui_project_req_file(proj_req=None):
@@ -185,9 +185,10 @@ def gui_project_req_file(proj_req=None):
             if current_file is not None:
                 dump_dict = tree.dump_tree_dict()
                 # open output file for writing
-                with open(current_file, 'w') as outfile:
-                    json.dump(dump_dict, outfile)
-                print('Saved this:\n', dump_dict)
+                xml = convert_dict_to_xml(dump_dict, 'projreq_file')
+                print("Out XML:\n", xml)
+                with open(current_file, 'wb') as outfile:
+                    outfile.write(xml)
 
         if event == 'export_btn':
             if values['export_btn'].endswith('.projreq'):
@@ -198,20 +199,25 @@ def gui_project_req_file(proj_req=None):
                 print("Out XML:\n", xml)
                 with open(values['export_btn'], 'wb') as outfile:
                     outfile.write(xml)
+            elif values['export_btn'] == '':
+                pass
             else:
                 sg.popup_error('Wrong file format!')
 
         if event == 'import_btn':
             # Import file
             if values['import_btn'].endswith('.projreq'):
-                dict = ConvertXMLFileToDict(values['import_btn'])['projreq_file']
+                dict = convert_xml_file_to_dict(values['import_btn'])['projreq_file']
                 print("dict")
                 try:
                     print("created {dict['time_created']}")
                 except KeyError:
                     pass
                 print(f" was last modified {dict['time_updated']} is \n{dict['proj_req']}")
-                print(dict)
+
+                tree.load_dict(dict['proj_req'])
+            elif values['export_btn'] == '':
+                pass
             else:
                 sg.popup_error('Wrong file format or path!')
     window.close()
