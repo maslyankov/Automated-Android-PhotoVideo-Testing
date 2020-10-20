@@ -51,7 +51,6 @@ def _convert_dict_to_xml_recurse(parent, dictitem, parent_tag=None):
         for (tag, child) in dictitem.items():
             tag = str(tag).replace(' ', '')
             if type(child) is type([]):
-                print(child.tag)
                 # iterate through the array and convert
                 for listchild in child:
                     elem = ET.Element(tag)
@@ -67,12 +66,12 @@ def _convert_dict_to_xml_recurse(parent, dictitem, parent_tag=None):
                         elem.set('name', tag)
                     else:
                         elem = ET.Element(tag)
-                        print('except elem tag: ', tag, ' parent: ', parent.tag, ' child: ', child)
+                        # print('except elem tag: ', tag, ' parent: ', parent.tag, ' child: ', child)
                 else:
                     elem = ET.Element('light')
                     elem.set('color', parent_tag)
                     elem.set('lux', tag)
-                    print(f'color (parent) {parent.tag}, lux (tag): {tag}')
+                    # print(f'color (parent) {parent.tag}, lux (tag): {tag}')
                 if not is_light:
                     parent.append(elem)
                 else:
@@ -100,7 +99,7 @@ def convert_dict_to_xml(xmldict, name='root', file_is_new=False):
     xmldata['proj_req'] = xmldict
 
     _convert_dict_to_xml_recurse(root, xmldata)
-    print(root)
+
     ret = ET.tostring(root)
 
     return ret
@@ -122,14 +121,18 @@ def merge_dicts(a, b, path=None):
     return a
 
 
-def dict_vals_to_int(d):
+def dict_vals_to_int(d, filter=None):
+    d_out = {}
     for key in d.keys():
-        try:
-            if d[key].isdigit():
-                d[key] = int(d[key])
-        except AttributeError:
-            pass
-    return d
+        if key not in filter:
+            try:
+                if d[key].isdigit():
+                    d_out[key] = int(d[key])
+                else:
+                    d_out[key] = d[key]
+            except AttributeError:
+                pass
+    return d_out
 
 
 def _convert_xml_to_dict_recurse(node, dictclass):
@@ -137,7 +140,6 @@ def _convert_xml_to_dict_recurse(node, dictclass):
 
     if node.tag == 'light':
         par_key = node.attrib['color']
-        lux_key = int(node.attrib['lux']) if node.attrib['lux'].isdigit() else node.attrib['lux']
     elif node.tag == 'param':
         par_key = node.attrib['name']
     else:
@@ -145,54 +147,49 @@ def _convert_xml_to_dict_recurse(node, dictclass):
 
     if len(node.items()) > 0:
         # if we have attributes, set them
-        nodedict.update(dict_vals_to_int(dict(node.items())))
+        nodedict.update(dict_vals_to_int(dict(node.items()), filter=['name','color','lux', 'value']))
 
     for child in node:
         current = (None, None)
         # recursively add the element's children
         newitem = _convert_xml_to_dict_recurse(child, dictclass)
-        child_key = child.tag
+        child_key = int(child.tag) if child.tag.isdigit() else child.tag
 
         if child.tag in nodedict.keys():
             if child.tag == 'light':
                 try:
-                    # Key appears multiple times -> merge recursively
                     nodedict[par_key][child_key] = newitem
                 except KeyError:
-                    print('in key error: ', par_key, child_key)
-                    nodedict[child_key] = newitem
+                    pass
             elif child.tag == 'param':
                 pass
-            # found duplicate tag, force a list
-            else:
-                # append to existing list
-                # Rare case
-                print(f'in rare case: "{child.tag}", "{newitem}" ')
-                nodedict[child.tag] = newitem
         else:
             # only one, directly set the dictionary
-            try:
-                child.attrib['lux']
-            except KeyError:
-                nodedict[child_key] = newitem
+            if child.tag == 'light':
+                temp_key = child.attrib['color']
+                curr_key = int(child.attrib['lux']) if child.attrib['lux'].isdigit() else child.attrib['lux']
+                try:
+                    nodedict[temp_key][curr_key] = newitem
+                except KeyError:
+                    nodedict[temp_key] = {}
+                    nodedict[temp_key][curr_key] = newitem
+            elif child.tag == 'param':
+                param_key = child.attrib['name']
+                try:
+                    nodedict[param_key] = newitem
+                except KeyError:
+                    nodedict = {}
+                    nodedict[param_key] = newitem
             else:
-                nodedict[child_key] = {}
-                nodedict[child_key][curr_key] = newitem
+                nodedict[child_key] = newitem
+
 
     if node.text is None:
         text = ''
     else:
         text = node.text.strip()
 
-    if len(nodedict) > 0:
-        # if we have a dictionary add the text as a dictionary value (if there is any)
-        if len(text) > 0:
-            try:
-                text = float(text)
-            except ValueError:
-                pass
-            nodedict['_text'] = text
-    else:
+    if len(nodedict) <= 0:
         try:
             text = float(text)
         except ValueError:

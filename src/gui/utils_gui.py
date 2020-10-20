@@ -239,7 +239,6 @@ class Tree(sg.Tree):
         : return
           None
         """
-        print('name', name)
         if name == 0 or name:
             key = self._new_key()
             self.treedata.Insert(parent, key, name, [text])
@@ -483,12 +482,7 @@ class Tree(sg.Tree):
 
     def _load_dict_to_tree(self, parent_key, parent_name, dict_in):
         try:
-            print('dict in bef: ', dict_in)
             for key, child in dict_in.items():
-                # if len(child) == 1: # Values[0] = param
-                #     # insert to current
-                #     print('small child is: ', child)
-                # else:
                 if key == 'lux':
                     continue
 
@@ -503,7 +497,7 @@ class Tree(sg.Tree):
                     self._load_dict_to_tree(parent_key, key, child)
                 # Recursion
         except AttributeError:
-            print(f"'{parent_key}', '{parent_name}', '{dict_in}'")
+            # print(f"'{parent_key}', '{parent_name}', '{dict_in}'")
             if dict_in != '':
                 self.insert_node(parent_key, dict_in, dict_in)
             pass

@@ -123,7 +123,7 @@ def gui_project_req_file(proj_req=None):
                 print('Proj Req: ', proj_req)
                 window['go_templ_btn'].Update(visible=True)
                 current_file = import_templ(proj_req, tree)
-        print(event)
+
         if event == 'load_d_btn':
             lqlq = False
             tree.load_tree({'': ['', ['1'], 'root', []], '1': ['', ['2'], 'SFR Plus', ['SFR Plus']],
@@ -148,8 +148,8 @@ def gui_project_req_file(proj_req=None):
         if event == sg.WIN_CLOSED or event == 'Close':  # if user closes window or clicks cancel
             break
 
-        print('vals', values)  # Debugging
-        print('event', event)  # Debugging
+        # print('vals', values)  # Debugging
+        # print('event', event)  # Debugging
 
         if event == 'add_type_btn':
             tree.insert_node('', f"{values['add_type_value']}", values['add_type_value'])
@@ -244,7 +244,6 @@ def gui_project_req_file(proj_req=None):
             go_templ_btn_clicked = True
 
         if current_file is not None:
-            print("curr file split : ", current_file.split(os.path.sep)[-1])
             window['current_filename_label'].Update(current_file.split(os.path.sep)[-1])
             if not is_excel:
                 window['save_btn'].Update(disabled=False)
@@ -277,8 +276,9 @@ def import_templ(templ_in, tree):
         except NameError:
             if templ_in.endswith('projreq'):
                 file_data = convert_xml_to_dict(templ_in)['projreq_file']
+                print("file data: ", file_data)
                 try:
-                    print("created {file_data['time_created']}")
+                    print(f"created {file_data['time_created']}")
                 except KeyError:
                     pass
                 try:
