@@ -44,12 +44,12 @@ def only_chars(val: str) -> int:
 
 
 # XML Utils
-def _convert_dict_to_xml_recurse(parent, dictitem):
+def _convert_dict_to_xml_recurse(parent, dictitem, parent_tag=None):
+    elem_tag = None
     assert type(dictitem) is not type([])
     if isinstance(dictitem, dict):
         for (tag, child) in dictitem.items():
             tag = str(tag).replace(' ', '')
-
             if type(child) is type([]):
                 print(child.tag)
                 # iterate through the array and convert
@@ -58,16 +58,27 @@ def _convert_dict_to_xml_recurse(parent, dictitem):
                     parent.append(elem)
                     _convert_dict_to_xml_recurse(elem, listchild)
             else:
+                is_light = tag in constants.KELVINS_TABLE.keys() or tag.endswith('K')
                 try:
                     child['params']
                 except (TypeError, KeyError):
-                    elem = ET.Element(tag)
+                    if parent.tag == 'params':
+                        elem = ET.Element('param')
+                        elem.set('name', tag)
+                    else:
+                        elem = ET.Element(tag)
+                        print('except elem tag: ', tag, ' parent: ', parent.tag, ' child: ', child)
                 else:
-                    elem = ET.Element(parent.tag)
+                    elem = ET.Element('light')
+                    elem.set('color', parent_tag)
                     elem.set('lux', tag)
-                    print(f'parent tag {parent.tag}, tag {tag}')
-                parent.append(elem)
-                _convert_dict_to_xml_recurse(elem, child)
+                    print(f'color (parent) {parent.tag}, lux (tag): {tag}')
+                if not is_light:
+                    parent.append(elem)
+                else:
+                    elem = parent
+                    elem_tag = tag
+                _convert_dict_to_xml_recurse(elem, child, elem_tag)
     else:
         parent.text = str(dictitem).strip(' ')
 
@@ -89,7 +100,7 @@ def convert_dict_to_xml(xmldict, name='root', file_is_new=False):
     xmldata['proj_req'] = xmldict
 
     _convert_dict_to_xml_recurse(root, xmldata)
-
+    print(root)
     ret = ET.tostring(root)
 
     return ret
@@ -121,8 +132,16 @@ def dict_vals_to_int(d):
     return d
 
 
-def _ConvertXmlToDictRecurse(node, dictclass):
+def _convert_xml_to_dict_recurse(node, dictclass):
     nodedict = dictclass()
+
+    if node.tag == 'light':
+        par_key = node.attrib['color']
+        lux_key = int(node.attrib['lux']) if node.attrib['lux'].isdigit() else node.attrib['lux']
+    elif node.tag == 'param':
+        par_key = node.attrib['name']
+    else:
+        par_key = node.tag
 
     if len(node.items()) > 0:
         # if we have attributes, set them
@@ -131,24 +150,25 @@ def _ConvertXmlToDictRecurse(node, dictclass):
     for child in node:
         current = (None, None)
         # recursively add the element's children
-        newitem = _ConvertXmlToDictRecurse(child, dictclass)
-        child_key = int(child.tag) if child.tag.isdigit() else child.tag
+        newitem = _convert_xml_to_dict_recurse(child, dictclass)
+        child_key = child.tag
 
         if child.tag in nodedict.keys():
-            # found duplicate tag, force a list
-            try:
-                child.attrib['lux']
-            except KeyError:
-                # append to existing list
-                # Rare case
-                nodedict[child.tag].append(newitem)
-            else:
-                curr_key = int(child.attrib['lux']) if child.attrib['lux'].isdigit() else child.attrib['lux']
+            if child.tag == 'light':
                 try:
                     # Key appears multiple times -> merge recursively
-                    nodedict[child_key][curr_key] = merge_dicts(nodedict[child_key][curr_key], newitem)
+                    nodedict[par_key][child_key] = newitem
                 except KeyError:
-                    nodedict[child_key][curr_key] = newitem
+                    print('in key error: ', par_key, child_key)
+                    nodedict[child_key] = newitem
+            elif child.tag == 'param':
+                pass
+            # found duplicate tag, force a list
+            else:
+                # append to existing list
+                # Rare case
+                print(f'in rare case: "{child.tag}", "{newitem}" ')
+                nodedict[child.tag] = newitem
         else:
             # only one, directly set the dictionary
             try:
@@ -156,7 +176,6 @@ def _ConvertXmlToDictRecurse(node, dictclass):
             except KeyError:
                 nodedict[child_key] = newitem
             else:
-                curr_key = int(child.attrib['lux']) if child.attrib['lux'].isdigit() else child.attrib['lux']
                 nodedict[child_key] = {}
                 nodedict[child_key][curr_key] = newitem
 
@@ -191,16 +210,7 @@ def convert_xml_to_dict(root, dictclass=dict):
     # If a string is passed in, try to open it as a file
 
     if type(root) == type('') or type(root) == type(u''):
-        root = ET.fromstring(root)
+        root = ET.parse(root).getroot() #ET.fromstring(root)
     elif not isinstance(root, ET.Element):
         raise TypeError('Expected ElementTree.Element or file path string')
-    return {root.tag: _ConvertXmlToDictRecurse(root, dictclass)}
-
-
-def convert_xml_file_to_dict(filepath):
-    xml_root = ET.parse(filepath).getroot()
-    return convert_xml_to_dict(xml_root)
-
-
-def dict_to_tree(dict_in):
-    pass
+    return {root.tag: _convert_xml_to_dict_recurse(root, dictclass)}

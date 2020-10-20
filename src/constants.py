@@ -77,7 +77,7 @@ LUXMETERS_MODELS = {
 
 # Light Temperatures
 KELVINS_TABLE = {
-    "INCA1":    (2400, 'Standard Incandescent lamps'),
+    "INCA":    (2400, 'Standard Incandescent lamps'),
     "INCA2":    (2550, 'Soft white Incandescent lamps'),
     "WW":       (2700, 'Warm White'),
     "A":        (2856, 'Incandescent - typical, domestic, tungsten-filament lighting'),

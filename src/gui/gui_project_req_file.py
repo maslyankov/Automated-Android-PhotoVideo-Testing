@@ -3,7 +3,7 @@ import os
 import PySimpleGUI as sg
 
 import src.constants as constants
-from src.app.utils import convert_dict_to_xml, convert_xml_file_to_dict
+from src.app.utils import convert_dict_to_xml, convert_xml_to_dict
 from src.gui.utils_gui import Tree, place
 from src.app.Reports import Report
 
@@ -276,7 +276,7 @@ def import_templ(templ_in, tree):
             template_data
         except NameError:
             if templ_in.endswith('projreq'):
-                file_data = convert_xml_file_to_dict(templ_in)['projreq_file']
+                file_data = convert_xml_to_dict(templ_in)['projreq_file']
                 try:
                     print("created {file_data['time_created']}")
                 except KeyError:

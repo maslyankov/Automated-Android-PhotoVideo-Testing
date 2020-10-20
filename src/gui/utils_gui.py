@@ -168,7 +168,12 @@ class Tree(sg.Tree):
                     print('not creating empty dict for ', node.text)
                 self.dfs(child, curr)
         else:
-            ndict[node.text] = float(node.children[0].text)
+            print('ndict: ', ndict)
+            print('key: ', node.text)
+            try:
+                ndict[node.text] = float(node.children[0].text)
+            except IndexError:
+                ndict[node.text] = ''
 
     def dump_tree_dict(self):
         out_dict = {}
