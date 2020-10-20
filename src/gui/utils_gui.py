@@ -228,7 +228,7 @@ class Tree(sg.Tree):
         """
         self.tree = window[self.key]
 
-    def insert_node(self, parent, name, text, update=True):
+    def insert_node(self, parent, name, text, update=True, auto_select=True):
         """
         Insert a new node under parent, by name and text
         : Parameters
@@ -244,10 +244,11 @@ class Tree(sg.Tree):
             self.treedata.Insert(parent, key, name, [text])
             if update:
                 self.tree.update(values=self.treedata)
-        try:
-            self.select(key)
-        except UnboundLocalError:
-            return
+        if auto_select:
+            try:
+                self.select(key)
+            except UnboundLocalError:
+                return
 
         return key
 
@@ -476,9 +477,12 @@ class Tree(sg.Tree):
 
     def load_dict(self, dict_in):
         # Clean tree
-        self.delete_all_nodes()
+        if len(self.treedata.tree_dict[''].children):
+            print('cleaning', len(self.treedata.tree_dict[''].children))
+            self.delete_all_nodes()
         print('load dict got: ', dict_in)
         self._load_dict_to_tree('', '', dict_in)
+        self.expand_all()
 
     def _load_dict_to_tree(self, parent_key, parent_name, dict_in):
         try:
