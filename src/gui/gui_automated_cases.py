@@ -81,17 +81,18 @@ def template_tab_logic(window, values, event,
         if not cases.is_running:
             # If cases are NOT running then button should start them
 
-            template_data = gui_project_req_file(values['template_browse_btn'])
+            template_data = gui_project_req_file(values['template_browse_btn'] if values['template_browse_btn'] != '' else None, return_val=True)
             print('template_data: ', template_data)
 
-            try:
-                cases.execute_req_template(template_data, values['save_location_output_browse_btn'],
-                                           values['generate_reports_bool'], values['generate_reports_pdf_bool'],
-                                           specific_device=None if values['use_all_devices_bool'] else values[
-                                               'selected_device'])
-            except ValueError as e:
-                cases.stop_signal = True
-                sg.popup_error(e)
+            if template_data is not None:
+                try:
+                    cases.execute_req_template(template_data, values['save_location_output_browse_btn'],
+                                               values['generate_reports_bool'], values['generate_reports_pdf_bool'],
+                                               specific_device=None if values['use_all_devices_bool'] else values[
+                                                   'selected_device'])
+                except ValueError as e:
+                    cases.stop_signal = True
+                    sg.popup_error(e)
         else:
             # If cases are running then button should stop them
             window['capture_cases_btn'].Update(disabled=True)
@@ -194,6 +195,7 @@ def gui_automated_cases(adb, selected_lights_model, selected_luxmeter_model):
                 key='template_browse_btn',
                 file_types=(
                     ('Microsoft Excel', excel_formats),
+                    ("Proj Req", "*.projreq"),
                 )
             )
         ]

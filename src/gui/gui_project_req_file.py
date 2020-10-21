@@ -10,7 +10,7 @@ from src.app.Reports import Report
 is_excel = False
 
 
-def gui_project_req_file(proj_req=None):
+def gui_project_req_file(proj_req=None, return_val=False):
     global is_excel
     go_templ_btn_clicked = False
 
@@ -27,13 +27,17 @@ def gui_project_req_file(proj_req=None):
 
     left_col = [[tree]]
 
+    excel_formats = "".join(f"*.{w} " for w in constants.EXCEL_FILETYPES).rstrip(' ')
     right_col = [
         [
             sg.Text('', visible=False, key='import_dir'),
             sg.FileBrowse(
                 button_text='Import',
                 key='import_btn',
-                file_types=(("Proj Req", "*.projreq"),),
+                file_types=(
+                    ("Proj Req", "*.projreq"),
+                    ('Microsoft Excel', excel_formats),
+                ),
                 enable_events=True,
                 target='import_btn'
             ),
@@ -93,7 +97,7 @@ def gui_project_req_file(proj_req=None):
         ],
         [sg.HorizontalSeparator()],
         [
-            place(sg.Button('Go!', key='go_templ_btn', visible=False))
+            place(sg.Button('Execute Template!', key='go_templ_btn', visible=False, size=(30, 2)))
         ]
     ]
 
@@ -121,10 +125,14 @@ def gui_project_req_file(proj_req=None):
             if proj_req is not None:
                 print('Proj Req: ', proj_req)
                 current_file = import_templ(proj_req, tree)
+            if return_val:
                 window['go_templ_btn'].Update(visible=True)
 
 
-        if event == sg.WIN_CLOSED or event == 'Close':  # if user closes window or clicks cancel
+
+        if event == sg.WIN_CLOSED or event == 'Close' or event == 'go_templ_btn':  # if user closes window or clicks cancel
+            if event == 'go_templ_btn':
+                go_templ_btn_clicked = True
             break
 
         # print('vals', values)  # Debugging
@@ -217,10 +225,7 @@ def gui_project_req_file(proj_req=None):
             if values['import_btn'] == '':
                 pass
             else:
-                current_file = import_templ(os.path.normpath(values['import_btn']), tree)
-
-        if event == 'go_templ_btn':
-            go_templ_btn_clicked = True
+                current_file = import_templ(values['import_btn'], tree)
 
         if current_file is not None:
             window['current_filename_label'].Update(current_file.split(os.path.sep)[-1])
@@ -230,6 +235,11 @@ def gui_project_req_file(proj_req=None):
                 window['save_btn'].Update(disabled=True)
         else:
             window['current_filename_label'].Update('New requirements file')
+
+        if current_file.endswith('.projreq'):
+            window['save_btn'].Update(disabled=False)
+        else:
+            window['save_btn'].Update(disabled=True)
 
     window.close()
     if go_templ_btn_clicked:
@@ -242,6 +252,7 @@ def import_templ(templ_in, tree):
     global is_excel
 
     if templ_in is not None:
+        templ_in = os.path.normpath(templ_in)
         # Check if it is an Excel file
         for ext in constants.EXCEL_FILETYPES:
             if templ_in.endswith(ext):
@@ -264,13 +275,11 @@ def import_templ(templ_in, tree):
                     print(f" was last modified {file_data['time_updated']} ")
                 except KeyError:
                     pass
-
                 print(f"is \n{file_data['proj_req']}")
                 template_data = file_data['proj_req']
                 is_excel = False
             else:
                 sg.popup_error('Unknown proj_req filetype.')
-                current_file = None
         # Load file to gui tree
         try:
             template_data
