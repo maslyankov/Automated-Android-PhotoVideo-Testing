@@ -1,0 +1,4 @@
+File        ,Date/time        ,Ch,HD chan,Dead thresh,N_dead,Hot thresh,N_hot,Cor_side_pxls,L_side_%,R_side_%,cor_mean_%,cor_worst_%
+ uniformity_example.jpg,2020-10-21 12:20:07,Y,Any chan,    8,  332,    8,12555,32x32 pxls, 78.8, 79.3, 69.7, 64.8
+uniformity_example.jpg,2020-10-21 12:41:29,Y,Any chan,    8,  332,    8,12555,32x32 pxls, 78.8, 79.3, 69.7, 64.8
+uniformity_example.jpg,2020-10-21 12:45:53,Y,Any chan,    8,  332,    8,12555,32x32 pxls, 78.8, 79.3, 69.7, 64.8

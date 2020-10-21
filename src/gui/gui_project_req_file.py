@@ -20,10 +20,9 @@ def gui_project_req_file(proj_req=None, return_val=False):
         key='-TREE-', )
 
     # Lists Data
-    test_modules_list = ['SFR', 'SFR Plus', 'eSFR', 'Gamma']
-    light_types_list = ['D65', 'D75', 'TL84', 'INCA']
+    test_modules_list = list(constants.IMATEST_TEST_TYPES.keys())
+    light_types_list = constants.AVAILABLE_LIGHTS[1] # TODO: pass light num so that we show relevant stuff
     params_list = ['R_pixel_mean', 'G_pixel_mean', 'B_pixel_mean']
-
 
     left_col = [[tree]]
 
@@ -55,12 +54,12 @@ def gui_project_req_file(proj_req=None, return_val=False):
         [sg.B('Save', key='save_btn', disabled=True, size=(12, 1))],
         [sg.HorizontalSeparator()],
         [
-            sg.Combo(test_modules_list, key='add_type_value', size=(15, 1)),
+            sg.Combo(test_modules_list, key='add_type_value', size=(15, 1), default_value=test_modules_list[0]),
             sg.B('Add Type', key='add_type_btn', size=(10, 1)),
         ],
         [sg.HorizontalSeparator()],
         [
-            sg.Combo(light_types_list, key='add_light_temp_value', size=(15, 1)),
+            sg.Combo(light_types_list, key='add_light_temp_value', size=(15, 1), default_value=light_types_list[0]),
             sg.B('Add Temp', key='add_light_temp_btn', size=(10, 1)),
         ],
         [
@@ -72,8 +71,9 @@ def gui_project_req_file(proj_req=None, return_val=False):
 
         ],
         [
-            sg.Combo(params_list, key='add_param_value', size=(15, 1)),
+            sg.Combo(params_list, key='add_param_value', size=(15, 1), default_value=params_list[0]),
             sg.B('Add Param', key='add_param_btn', size=(10, 1)),
+            sg.B('Update', key='update_params_btn', size=(10, 1)),
         ],
         [
             sg.Text('Min: ', size=(12, 1)),
@@ -227,6 +227,9 @@ def gui_project_req_file(proj_req=None, return_val=False):
             else:
                 current_file = import_templ(values['import_btn'], tree)
 
+        if event == 'update_params_btn':
+            update_imatest_params()
+
         if current_file is not None:
             window['current_filename_label'].Update(current_file.split(os.path.sep)[-1])
             if not is_excel:
@@ -236,7 +239,7 @@ def gui_project_req_file(proj_req=None, return_val=False):
         else:
             window['current_filename_label'].Update('New requirements file')
 
-        if current_file.endswith('.projreq'):
+        if current_file is not None and current_file.endswith('.projreq'):
             window['save_btn'].Update(disabled=False)
         else:
             window['save_btn'].Update(disabled=True)
@@ -292,3 +295,58 @@ def import_templ(templ_in, tree):
     else:
         pass
     return None
+
+
+def recursive_items(dictionary):
+    for key, value in dictionary.items():
+        if type(value) is dict:
+            yield from recursive_items(value)
+        else:
+            yield (key, value)
+
+
+def update_imatest_params():
+    report_obj = Report()
+    images_dict = {'test_serial': []}
+    tests_params = {}
+    ini_file = os.path.join(constants.ROOT_DIR, 'images', 'imatest', 'ini_file', 'imatest-v2.ini')
+
+    tests_list = images_dict['test_serial']
+    for test_name in constants.IMATEST_TEST_TYPES.keys():
+        img_file = os.path.join(constants.ROOT_DIR, 'images', 'imatest', f'{test_name}_example.jpg')
+        new_dict = {
+            'analysis_type': test_name,
+            'image_files': [img_file]
+        }
+
+        tests_list.append(new_dict)
+
+    result = report_obj.analyze_images_parallel(images_dict, ini_file)
+    # open output file for writing
+    result_out_file = os.path.join(constants.DATA_DIR, 'imatest_all_tests_results.json')
+    with open(result_out_file, 'w') as outfile:
+        json.dump(result, outfile)
+
+    for res_dict in result:
+        current_type = None
+        for key, value in recursive_items(res_dict):
+            if current_type is None:
+                if key == 'title':
+                    current_type = value.split('_')[0]
+            else:
+                val_type = type(value).__name__
+                if val_type == type(str).__name__:
+                    # Skip string params
+                    continue
+                try:
+                    tests_params[current_type]
+                except KeyError:
+                    tests_params[current_type] = {}
+                    tests_params[current_type][key] = val_type
+                else:
+                    tests_params[current_type][key] = val_type
+
+    # open output file for writing
+    params_out_file = os.path.join(constants.DATA_DIR, 'imatest_params.json')
+    with open(params_out_file, 'w') as outfile:
+        json.dump(tests_params, outfile)

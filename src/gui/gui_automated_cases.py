@@ -194,8 +194,8 @@ def gui_automated_cases(adb, selected_lights_model, selected_luxmeter_model):
             sg.FileBrowse(
                 key='template_browse_btn',
                 file_types=(
-                    ('Microsoft Excel', excel_formats),
                     ("Proj Req", "*.projreq"),
+                    ('Microsoft Excel', excel_formats),
                 )
             )
         ]

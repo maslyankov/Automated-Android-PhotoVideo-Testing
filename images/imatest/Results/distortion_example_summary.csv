@@ -1,0 +1,57 @@
+Imatest,2020.2.0, , Distortion
+File,distortion_example.jpg
+Run date,21-Oct-2020 12:45:14,,Build 2020-09-30
+
+ROI, 28, 42, 1565, 1189, UL(x y) LR(x y)
+vstr.sz_orig, 1200, 1600
+Selected calculation,3rd ord DIV
+Best calculation,3rd ord DIV
+SMIA TV Distortion %, -1.71,Barrel
+ISO TV Distortion % , -0.857,Barrel
+k1, 0.02919,(radc = r_u + k1*r_u^3)
+[h1 h2], -0.001402, 0.0273,(fifth order: radc = r_u+h1*r_u^3+h2*r_u^5)
+Arctan/tan Coefficient, 0.02906
+Arctan/tan Scale, 0.9898
+Decentered radius, 0.15,(in center-to-corner units)
+Decentered angle, -0.268,(degrees)
+Decentered k1, 0.0293
+Decentered [h1 h2], -0.001716, 0.02776
+Decentered Arctan/tan Coeff., 0.02892
+
+X-spacing pxls, 90.553,Y-spacing pxls, 90.4091
+DY/DX ratio, 0.99841,DX/DY ratio, 1.0016
+
+vstr.nradius correction results
+Radius,Delta-R 3rd,Delta-R 5th,Delta-R atan,LensGeoDistort,LensGeoDistort,LensGeoDistort 
+Normalized,,,,3rd %,5th %,atan/tan %
+ 0.00,      0,      0,      0,   0.00,   0.00,   0.00
+ 0.10,2.93e-05,-1.44e-06,2.79e-05,  -0.03,   0.00,  -0.03
+ 0.20,0.000235,-4.84e-06,0.000223,  -0.12,   0.00,  -0.11
+ 0.30,0.000791,2.11e-05,0.000755,  -0.26,  -0.01,  -0.25
+ 0.40,0.00188,0.000174,0.00179,  -0.47,  -0.04,  -0.45
+ 0.50,0.00366,0.000653,0.00351,  -0.73,  -0.13,  -0.70
+ 0.60,0.00633,0.00179,0.00609,  -1.04,  -0.30,  -1.01
+ 0.70, 0.0101,0.00408,0.00972,  -1.42,  -0.58,  -1.37
+ 0.80,  0.015,0.00822, 0.0146,  -1.84,  -1.02,  -1.79
+ 0.90, 0.0214, 0.0151, 0.0209,  -2.32,  -1.65,  -2.27
+ 1.00, 0.0293,  0.026, 0.0288,  -2.85,  -2.54,  -2.80
+Worst,,,,   2.85,   2.54,   2.80
+
+Curvature and Distortion (Curvature/radius)
+Radius,Curv. 3rd,Curv. 5th,Curv. atan,Dist. 3rd,Dist. 5th,Dist. atan 
+ 0.02,0.00352,-0.000199,0.00334,  0.176,-0.00996,  0.167
+ 0.12, 0.0211,-0.000263, 0.0201,  0.176,-0.00219,  0.167
+ 0.22, 0.0387,0.00367,  0.037,  0.176, 0.0167,  0.168
+ 0.32, 0.0563, 0.0149, 0.0541,  0.176, 0.0467,  0.169
+ 0.42, 0.0739, 0.0369, 0.0716,  0.176, 0.0877,  0.171
+ 0.52, 0.0915, 0.0728, 0.0896,  0.176,   0.14,  0.172
+ 0.62,  0.109,  0.126,  0.108,  0.176,  0.203,  0.175
+ 0.72,  0.127,    0.2,  0.128,  0.176,  0.278,  0.177
+ 0.82,  0.144,  0.298,  0.148,  0.176,  0.363,   0.18
+ 0.92,  0.162,  0.423,  0.169,  0.176,   0.46,  0.184
+
+Exif data
+File Modification Date/Time     , 2020:10:01 05:25:34+03:00
+Color Space                     , sRGB
+Image Width                     , 1600
+Image Height                    , 1200

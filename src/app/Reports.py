@@ -1,3 +1,4 @@
+import json
 import os
 
 from openpyxl import Workbook, load_workbook
@@ -97,7 +98,7 @@ class Report:
         except Exception as ex:
             print(str(ex))
 
-        return result
+        return json.loads(result)  # Return readable json object
 
     def analyze_images_parallel(self, images, ini_file, num_processes: int = 4):
         tasks = []
@@ -115,7 +116,7 @@ class Report:
         result = self.imatest.parallel_analyzer(tasks=tasks, ini_file=ini_file, run_parallel=True,
                                                 num_workers=num_processes)
 
-        return result
+        return json.loads(result)  # Return readable json object
 
     def imatest_analysis_type(self, test_type):
         # Filter out special characters and spaces

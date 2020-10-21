@@ -1,0 +1,150 @@
+Imatest,2020.2.0, , sfrplus_a batch
+
+Width & Height (pxl), 3888, 2592
+Zone weights (Ctr-PtWy-Cor),  1.00,  0.75,  0.50
+roi_mult, 1716  1174  1878  1425 ; 45  1196  207  1444 ; 3681  1161  3843  1407 ; 1711  179  1873  429 ; 1722  2175  1884  2425 ; 
+Regions,5
+Center,1
+Part way,2
+Corner,2
+
+Secondary_rdout_1, MTF30.
+Secondary_rdout_2, .
+TV Distortion %,   -1.29,
+Field of View (FoV) in cm and degrees (if lens to chart distance has been entered)
+Diagonal FoV cm,    0.00,
+Horizontal FoV cm,    0.00,
+Vertical FoV cm,    0.00,
+
+Date, 21-Oct-2020 12:45:43,
+File, sfrplus_example.jpg,
+Camera,  Canon EOS 40D
+Lens,  24.0 - 70.0 mm 
+ISO speed,  100
+Focal length,  24.0 mm
+Shutter speed, 0.6
+Aperture, 8.0
+
+Plot title
+
+Summary results for creating plots
+
+MTF50 (Cy/Pxl) Mean Ctr,  0.3377
+R1090 (pxl) Mean Ctr,  1.4604
+CA (pxl) Mean Ctr,  0.0277
+MTF50 (LW/PH) Mean Ctr,   1750.4
+R1090 (/PH) Mean Ctr,   1774.9
+Peak MTF Mean Ctr,   1.038
+MTF50P (Cy/Pxl) Mean Ctr,  0.3336
+MTF50P (LW/PH) Mean Ctr,   1729.6
+MTF20 (Cy/Pxl) Mean Ctr,  0.4093
+MTF20 (LW/PH) Mean Ctr,   2121.6
+LSF PW50 (pxl) Mean Ctr,  1.7371
+CA (area %) Mean Ctr,      NaN
+CA (crossing %) Mean Ctr,      NaN
+CA (R-G %) Mean Ctr, -0.01989
+CA (B-G %) Mean Ctr,  0.03620
+MTF50C (Cy/Pxl) Mean Ctr,     NaN
+MTF Area PkNorm (Cy/Pxl) Mean Ctr,  0.3307
+MTF30. Mean Ctr,     0.38245
+Shannon capacity Mean Ctr,  0.00
+
+MTF50 (Cy/Pxl) Mean Pt Wy,  0.3517
+R1090 (pxl) Mean Pt Wy,  1.3587
+CA (pxl) Mean Pt Wy,  0.0810
+MTF50 (LW/PH) Mean Pt Wy,   1823.1
+R1090 (/PH) Mean Pt Wy,   1907.8
+Peak MTF Mean Pt Wy,   1.055
+MTF50P (Cy/Pxl) Mean Pt Wy,  0.3455
+MTF50P (LW/PH) Mean Pt Wy,   1791.1
+MTF20 (Cy/Pxl) Mean Pt Wy,  0.4299
+MTF20 (LW/PH) Mean Pt Wy,   2228.6
+LSF PW50 (pxl) Mean Pt Wy,  1.6884
+CA (area %) Mean Pt Wy,      NaN
+CA (crossing %) Mean Pt Wy,      NaN
+CA (R-G %) Mean Pt Wy,  0.00000
+CA (B-G %) Mean Pt Wy,  0.00000
+MTF50C (Cy/Pxl) Mean Pt Wy,     NaN
+MTF Area PkNorm (Cy/Pxl) Mean Pt Wy,  0.3420
+MTF30. Mean Pt Wy,     0.40020
+Shannon capacity Mean Pt Wy,  0.00
+
+MTF50 (Cy/Pxl) Min Pt Wy,  0.3509
+R1090 (pxl) Max Pt Wy,  1.3687
+CA (pxl) Max Pt Wy,  0.0918
+MTF50 (LW/PH) Min Pt Wy,   1819.3
+R1090 (/PH) Max Pt Wy,   1921.9
+Peak MTF Max Pt Wy,   1.063
+MTF50P (Cy/Pxl) Min Pt Wy,  0.3440
+MTF50P (LW/PH) Min Pt Wy,   1783.4
+MTF20 (Cy/Pxl) Min Pt Wy,  0.4282
+MTF20 (LW/PH) Min Pt Wy,   2219.6
+LSF PW50 (pxl) Max Pt Wy,  1.6991
+CA (area %) Max Pt Wy,      NaN
+CA (crossing %) Max Pt Wy,      NaN
+CA (R-G %) Max Pt Wy,  0.00000
+CA (B-G %) Max Pt Wy,  0.00000
+MTF50C (Cy/Pxl) Max Pt Wy,     NaN
+MTF Area PkNorm (Cy/Pxl) Min Pt Wy,  0.3404
+MTF30. Min Pt Wy,     0.39882
+Shannon capacity Min Pt Wy,  0.00
+
+MTF50 (Cy/Pxl) Mean Cor,  0.3250
+R1090 (pxl) Mean Cor,  1.6285
+CA (pxl) Mean Cor,  1.0519
+MTF50 (LW/PH) Mean Cor,   1684.7
+R1090 (/PH) Mean Cor,   1601.0
+Peak MTF Mean Cor,   1.011
+MTF50P (Cy/Pxl) Mean Cor,  0.3238
+MTF50P (LW/PH) Mean Cor,   1678.4
+MTF20 (Cy/Pxl) Mean Cor,  0.3980
+MTF20 (LW/PH) Mean Cor,   2063.3
+LSF PW50 (pxl) Mean Cor,  1.8307
+CA (area %) Mean Cor,  0.05793
+CA (crossing %) Mean Cor,  0.02008
+CA (R-G %) Mean Cor,  0.32392
+CA (B-G %) Mean Cor, -0.01901
+MTF50C (Cy/Pxl) Mean Cor,     NaN
+MTF Area PkNorm (Cy/Pxl) Mean Cor,  0.3212
+MTF30. Mean Cor,     0.37132
+Shannon capacity Mean Cor,  0.00
+
+MTF50 (Cy/Pxl) Min Cor,  0.3083
+R1090 (pxl) Max Cor,  1.7529
+CA (pxl) Max Cor,  1.1676
+MTF50 (LW/PH) Min Cor,   1598.3
+R1090 (/PH) Max Cor,   1723.2
+Peak MTF Max Cor,   1.022
+MTF50P (Cy/Pxl) Min Cor,  0.3083
+MTF50P (LW/PH) Min Cor,   1598.3
+MTF20 (Cy/Pxl) Min Cor,  0.3780
+MTF20 (LW/PH) Min Cor,   1959.4
+LSF PW50 (pxl) Max Cor,  1.9073
+CA (area %) Max Cor,  0.06426
+CA (crossing %) Max Cor,  0.02288
+CA (R-G %) Max Cor,  0.33403
+CA (B-G %) Max Cor,  0.04397
+MTF50C (Cy/Pxl) Max Cor,     NaN
+MTF Area PkNorm (Cy/Pxl) Min Cor,  0.3039
+MTF30. Min Cor,     0.35307
+Shannon capacity Min Cor,  0.00
+
+MTF50 (Cy/Pxl) Wtd mean,  0.3395
+R1090 (pxl) Wtd mean,  1.4639
+CA (pxl) Wtd mean,  0.7283
+MTF50 (LW/PH) Wtd mean,   1760.0
+R1090 (/PH) Wtd mean,   1780.5
+Peak MTF Wtd mean,   1.038
+MTF50P (Cy/Pxl) Wtd mean,  0.3354
+MTF50P (LW/PH) Wtd mean,   1738.7
+MTF20 (Cy/Pxl) Wtd mean,  0.4136
+MTF20 (LW/PH) Wtd mean,   2144.3
+LSF PW50 (pxl) Wtd mean,  1.7417
+CA (area %) Wtd mean,      NaN
+CA (crossing %) Wtd mean,      NaN
+CA (R-G %) Wtd mean,  0.21594
+CA (B-G %) Wtd mean, -0.01267
+MTF50C (Cy/Pxl) Wtd mean,     NaN
+MTF Area PkNorm (Cy/Pxl) Wtd mean,  0.3324
+MTF30. Wtd mean,     0.38589
+Shannon capacity Wtd mean,  0.00

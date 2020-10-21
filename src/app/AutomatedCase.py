@@ -401,9 +401,8 @@ class AutomatedCase(threading.Thread):
             self.current_action = 'Analyzing Images'
             self.output_gui('Analyzing images...')
             # report = Report()
-            # images_analysis = report.analyze_images_parallel(testdict, ini_file, num_processes=4)  # Returns (<class 'str'>)
+            # images_analysis_readable = report.analyze_images_parallel(testdict, ini_file, num_processes=4)  # Returns (<class 'str'>)
             #
-            # images_analysis_readable = json.loads(images_analysis)
             # # open output file for writing
             # with open('imatest_results.json', 'w') as outfile:
             #     json.dump(images_analysis_readable, outfile)
@@ -421,6 +420,9 @@ class AutomatedCase(threading.Thread):
             # Decode JSONs
             print('Converting jsons list to dict')
             jsons_dict = {}
+
+            print('result keys: ', images_analysis_readable[0]['data'].keys())
+
             for test_results in images_analysis_readable:
                 print('data>title:\n', test_results['data']['title'])
                 jsons_dict[test_results['data']['title'].split('.')[0]] = test_results['data']

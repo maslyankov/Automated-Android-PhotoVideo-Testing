@@ -19,10 +19,12 @@ else:
     SETTINGS_DIR = os.path.join(ROOT_DIR, 'settings')
 
 DEVICES_SETTINGS_DIR = os.path.join(SETTINGS_DIR, 'devices')
+DATA_DIR = os.path.join(ROOT_DIR, 'data')
 TMP_DIR = os.path.join(ROOT_DIR, 'temp')
 XML_DIR = os.path.join(TMP_DIR, 'XML')
 # Create dirs if not exist
 Path(DEVICES_SETTINGS_DIR).mkdir(parents=True, exist_ok=True)
+Path(DATA_DIR).mkdir(parents=True, exist_ok=True)
 Path(XML_DIR).mkdir(parents=True, exist_ok=True)
 
 ADB = os.path.join(ROOT_DIR, 'vendor', 'scrcpy-win64-v1.16', 'adb.exe')

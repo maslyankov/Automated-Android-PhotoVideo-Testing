@@ -1,0 +1,328 @@
+Imatest,2020.2.0, , Checkerboard_a
+File,checkerboard_example.jpg
+Run date,21-Oct-2020 12:45:14,,Build 2020-09-30
+INI file,C:\Users\mms00519\AppData\Local\Temp\tp5276dcca_91de_48d6_964e_10b9f11f80d0rp13408\a\tpe1370f22_cc92_4ab3_9dce_9844e6a5a290\imatest-v2.ini
+
+Table details: Origin for X & Y at upper left. H/V and Tan/sag orientation are for MTF-- normal to edge.
+N,Distance %,Direction,X1,Y1,X2,Y2,Width,Height,Region,Edge ID,X px from ctr,Y px from ctr,Edge angle degs,H/V(MTF),Tan/sag(MTF),CSV summary file
+1,  4.2,B,504,286,528,324,25,39,Center,0_0_V,4.2,24.0,0.00,Hor,,C:\Users\mms00519\PycharmProjects\automated_cases\images\imatest\Results\checkerboard_example_YB 4_01_MTF.csv
+2, 88.6,TL,38,26,62,62,25,37,Corner,-9_-5_V,-460.8,-237.0,0.00,Hor,,C:\Users\mms00519\PycharmProjects\automated_cases\images\imatest\Results\checkerboard_example_YTL 89_02_MTF.csv
+3, 91.0,TR,975,26,999,64,25,39,Corner,9_-5_V,476.5,-236.0,0.42,Hor,,C:\Users\mms00519\PycharmProjects\automated_cases\images\imatest\Results\checkerboard_example_YTR 91_03_MTF.csv
+4, 89.2,BL,33,493,57,531,25,39,Corner,-9_4_V,-467.2,231.0,0.00,Hor,,C:\Users\mms00519\PycharmProjects\automated_cases\images\imatest\Results\checkerboard_example_YBL 89_04_MTF.csv
+5, 91.1,BR,977,499,1001,537,25,39,Corner,9_4_V,476.6,237.0,-0.29,Hor,,C:\Users\mms00519\PycharmProjects\automated_cases\images\imatest\Results\checkerboard_example_YBR 91_05_MTF.csv
+
+mirror_input_setting, 0,, 0 = not mirrored. >=1 mirrored or rotated.
+exiftool(1), 1,,Selects exif program
+exiftool(2), 1,,Use orientation tag if 1
+chart_mirrored, 0
+Bayer error, 0
+chart upside-down, 0
+chart horizontally mirrored, 0
+chart vertically mirrored, 0
+chart rotated 180 degrees, 0
+crop_borders LTRB,0,0,0,0
+nroi, 5, 
+ROI length,0.85
+ROI width,1,Normal
+Zone weights (Ctr-PtWy-Cor),  1.00,  0.75,  0.50
+roi_mult, 504  286  528  324 ; 38  26  62  62 ; 975  26  999  64 ; 33  493  57  531 ; 977  499  1001  537 ; 
+X-center shift pixels,NaN
+Y-center shift pixels,NaN
+Rotation degrees,0.24728
+Horizontal convergence angle degrees,0.8604
+Vertical convergence angle degrees,4.246
+Bar-bar vertical fraction,0.09227,52.04,pixels
+Field of View,Units,Diag,Horiz,Vert
+,Frac. of bar-bar,22.566,19.637,10.789
+Pixel aspect ratio,1
+Skype stretch distortion pct,0.04124
+lens_to_chart_distance_cm,
+chart_height_bar_bar_cm,
+MTF50 asymmetry %,x,-19.2,y,43.4
+MTF50 center location %,x,47.8,y,52
+MTF50 center location pixels,489.89,y,293.25
+
+Primary results:  CA (chromatic aberration) % is for ctr-to-edge (0 if too close to ctr).,,,,,,,,,Secondary Readouts 1 2,,,,,,,,,,SecRdout3
+N,MTF50 (Cy/Pxl),R1090 (pxl),CA area(pxl),MTF50 (LW/PH),R1090 (/PH),Peak MTF,MTF50P (Cy/Pxl),MTF50P (LW/PH),MTF30,,Oversharpening%,Overshoot%,CA area %,CA crs(pxls),CA crs %,CA R-G %,CA B-G %,Undershoot%,
+1, 0.5383, 1.3821, 0.000,   607.2,   408.1, 1.0000, 0.5383,   607.2,   0.9883,   0.0000,-12.04,  0.43,   NaN, 0.000,   NaN, 0.000, 0.000, 0.103,   0.0000
+2, 0.2037, 2.5335, 0.000,   229.7,   222.6, 1.0000, 0.2037,   229.7,   0.2769,   0.0000,-36.24,  7.86,   NaN, 0.000,   NaN, 0.000, 0.000, 0.058,   0.0000
+3, 0.1748, 2.9518, 0.000,   197.2,   191.1, 1.0000, 0.1748,   197.2,   0.2328,   0.0000,-23.50,  1.16,   NaN, 0.000,   NaN, 0.000, 0.000, 0.055,   0.0000
+4, 0.3182, 1.8409, 0.000,   359.0,   306.4, 1.0000, 0.3182,   359.0,   0.3948,   0.0000,-24.08,  8.63,   NaN, 0.000,   NaN, 0.000, 0.000, 0.036,   0.0000
+5, 0.1970, 2.4024, 0.000,   222.2,   234.8, 1.0000, 0.1970,   222.2,   0.2713,   0.0000,-31.02, 12.70,   NaN, 0.000,   NaN, 0.000, 0.000, 0.037,   0.0000
+
+Summary,21-Oct-2020 12:45:14,,checkerboard_example.jpg
+5,Regions,1,Center,0,Part way,4,Corner,4,Outer (Ptwy+Corner: >30%)
+ ,MTF50 (Cy/Pxl),R1090 (pxl),CA (pxl),MTF50 (LW/PH),R1090 (/PH),Peak MTF,MTF50P (Cy/Pxl),MTF50P (LW/PH),MTF20 (Cy/Pxl),MTF20 (LW/PH),LSF PW50 (pxl),CA(area)%,CA(crossing)%,CA(R-G)Pxls,CA(B-G)Pxls%,MTF30,,x R-G pxl shift,x B-G pxl shift,y R-G pxl shift,y B-G pxl shift,
+Mean Ctr, 0.5383, 1.3821, 0.0000,  607.15,  408.08, 1.0000, 0.5383,  607.15, 1.0778, 1215.80, 0.8198,     NaN,     NaN, 0.00000, 0.00000,    0.98832,    0.00000, 0.00, 0.00, 0.00, 0.00
+Mean Pt Wy, 0.0000, 0.0000, 0.0000,    0.00,    0.00, 0.0000, 0.0000,    0.00, 0.0000,    0.00, 0.0000, 0.00000, 0.00000, 0.00000, 0.00000,    0.00000,    0.00000, 0.00, 0.00, 0.00, 0.00
+Worst Pt Wy, 0.0000, 0.0000, 0.0000,    0.00,    0.00, 0.0000, 0.0000,    0.00, 0.0000,    0.00, 0.0000, 0.00000, 0.00000, 0.00000, 0.00000,    0.00000,    0.00000, 0.00, 0.00, 0.00, 0.00
+Mean Cor, 0.2234, 2.4321, 0.0000,  252.03,  238.71, 1.0000, 0.2234,  252.03, 0.5292,  596.94, 1.7450,     NaN,     NaN, 0.00000, 0.00000,    0.29396,    0.00000, 0.00, 0.00, 0.00, 0.00
+Worst Cor, 0.1748, 2.9518, 0.0000,  197.19,  306.38, 1.0000, 0.1748,  197.19, 0.2768,  312.29, 2.2785,     NaN,     NaN, 0.00000, 0.00000,    0.23277,    0.00000, 0.00, 0.00, 0.00, 0.00
+Wtd mean, 0.4333, 1.7321, 0.0000,  488.78,  351.62, 1.0000, 0.4333,  488.78, 0.8950, 1009.51, 1.1282,     NaN,     NaN, 0.00000, 0.00000,    0.75687,    0.00000, 0.00, 0.00, 0.00, 0.00
+std/mean, 0.5288, 0.2768, 0.0000,    0.53,    0.32, 0.0000, 0.5288,    0.53, 0.7000,    0.70, 0.3875, 0.00000, 0.00000, 0.00000, 0.00000,    0.73099,        NaN, 0.00, 0.00, 0.00, 0.00
+min/max, 0.3248, 0.4682, 0.0000,    0.32,    0.47, 1.0000, 0.3248,    0.32, 0.2355,    0.24, 0.3598, 0.00000, 0.00000, 0.00000, 0.00000,    0.23552,        NaN, 0.00, 0.00, 0.00, 0.00
+mean outer, 0.2234, 2.4321, 0.0000,  252.03,  238.71, 1.0000, 0.2234,  252.03, 0.5292,  596.94, 1.7450,     NaN,     NaN, 0.00000, 0.00000,    0.29396,    0.00000, 0.00, 0.00, 0.00, 0.00
+min outer, 0.1748, 0.0000, 0.0000,  197.19,    0.00, 0.0000, 0.1748,    0.00, 0.2768,    0.00, 0.0000,     NaN,     NaN, 0.00000, 0.00000,    0.23277,    0.00000, 0.00, 0.00, 0.00, 0.00
+max outer, 0.3182, 0.0000, 0.0000,  358.98,    0.00, 0.0000, 0.3182,    0.00, 1.1757,    0.00, 0.0000,     NaN,     NaN, 0.00000, 0.00000,    0.39484,    0.00000, 0.00, 0.00, 0.00, 0.00
+Worst overall, 0.1748, 2.9518, 0.0000,  197.19,  191.07, 1.0000, 0.1748,  197.19, 0.0000,  312.29, 0.8198, 0.00000, 0.00000, 0.00000, 0.00000,    0.23277,    0.00000, 0.00, 0.00, 0.00, 0.00
+
+More results
+N,MTF20 (Cy/Pxl),MTF20 (LW/PH),LSF PW50 (pxl),Gamma from chart,R-G pixel shift,B-G pixel shift
+1, 1.0778,  1215.8, 0.8198, 1.545, 0.00, 0.00
+2, 0.3273,   369.1, 1.7336, 2.346, 0.00, 0.00
+3, 0.2768,   312.3, 1.9056, 2.366, 0.00, 0.00
+4, 1.1757,  1326.2, 1.0624, 2.351, 0.00, 0.00
+5, 0.3370,   380.1, 2.2785, 2.440, 0.00, 0.00
+
+Image WxH & Mpxls,1024,564,0.578
+Channel,Y
+Gamma,0.5,(input)
+Pixels per inch,0
+Pixels per mm,0
+um per pixel,0
+MTF50 wtd Cy/Pxl, 0.433
+MTF50 wtd LW/PH,   489
+
+SMIA TV Distortion %,-0.706,Barrel
+ISO TV Distortion  %,-0.353,Barrel
+TV distortion, -0.7063k_1, 0.0085,(r_u = r_d + k_1 r_d^3),(r in ctr-corner units)
+h_1 h_2,-0.0264, 0.0309,(5th order coeffs)
+coeffs (2nd-5th) for 5th ALL, 0.0000, 0.0000,Arctan/tan Coefficient, 0.0161,scale,0.9980
+Best distortion calculation, 5th Order
+Max geom distortion %,  0.57
+Min geom distortion %, -0.45
+Worst geom distortion %,  0.57
+x y Distortion decentering, 0.0000, 0.0000,fraction of center-corner distance (y positive downward)
+x y Distortion decentering, 0.0000, 0.0000,pixels from center
+Distortion decenter normalized,0           0
+Distortion statistics:  Radius - Radius undistorted - Delta Radius - Lens Geometrical Distortion
+Radius (distorted), 0.0000, 0.1000, 0.2000, 0.3000, 0.4000, 0.5000, 0.6000, 0.7000, 0.8000, 0.9000, 1.0000
+Radius (undistorted), 0.0000, 0.1000, 0.1998, 0.2994, 0.3986, 0.4977, 0.5967, 0.6961, 0.7966, 0.8990, 1.0045
+Delta-Radius, 0.0000, 0.0000, 0.0002, 0.0006, 0.0014, 0.0023, 0.0033, 0.0039, 0.0034, 0.0010,-0.0045
+Lens Geometric Distortion,   0.00,   0.03,   0.10,   0.21,   0.34,   0.47,   0.55,   0.55,   0.42,   0.11,  -0.45
+
+
+Horizontal profiles,,X-location (fraction)
+Location, Y-fraction,0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0
+Upper,177304.9645,0.1712,0.2847,0.3821,0.4590,0.5107,0.5328,0.5207,0.4698,0.3757,0.2337,0.0393
+Mid,0.5399,-0.0673,0.3013,0.5727,0.7546,0.8547,0.8807,0.8405,0.7417,0.5920,0.3993,0.1711
+Lower,0.9140,0.0468,0.2459,0.3962,0.5005,0.5611,0.5806,0.5616,0.5065,0.4180,0.2986,0.1508
+Vertical profiles,,Y-location (fraction)
+Location, X-fraction,0,0.1,0.2,0.3,0.4,0.5,0.6,0.7,0.8,0.9,1.0
+Left,97656.2500,0.2532,0.2889,0.3197,0.3440,0.3605,0.3679,0.3647,0.3496,0.3213,0.2782,0.2191
+Mid,0.5288,0.3773,0.5810,0.7372,0.8479,0.9148,0.9400,0.9253,0.8726,0.7839,0.6612,0.5062
+Right,0.9404,0.1981,0.2575,0.3020,0.3325,0.3502,0.3560,0.3511,0.3364,0.3131,0.2821,0.2445
+
+Level and noise analysis (pixel levels: gamma-encoded and linear)
+ROI, 1, 2, 3, 4, 5,
+Location,4.17B,88.6TL,91TR,89.2BL,91.1BR,
+Dark pixel level,   28.4,    2.7,    2.4,    2.7,    2.3,
+Light pixel level,  241.9,   70.1,   63.4,   69.4,   68.8,
+Dark level linear, 0.0124, 0.0001, 0.0001, 0.0001, 0.0001,
+Light level linear,  0.900,  0.076,  0.062,  0.074,  0.073,
+Noise dark pixels %,   0.41,   0.41,
+Noise light pixels %,   0.41,   0.41,
+S/N dark pixels,   27.1,   27.1,
+S/N light pixels,  234.1,  234.1,
+Noise dark linear %,   0.09,   0.09,
+Noise light linear %,   0.77,   0.77,
+S/N dark linear,   13.6,   13.6,
+S/N light linear,  117.0,  117.0,
+
+Summary results in single column for copying and creating plots
+
+Regions,5
+Center,1
+Part way,0
+Corner,4
+
+Date,21-Oct-2020 12:45:14
+File,checkerboard_example.jpg
+Plot title
+
+MTF50 (Cy/Pxl) Mean Ctr, 0.5383
+R1090 (pxl) Mean Ctr, 1.3821
+CA (pxl) Mean Ctr, 0.0000
+MTF50 (LW/PH) Mean Ctr,   607.2
+R1090 (/PH) Mean Ctr,   408.1
+Peak MTF Mean Ctr, 1.0000
+MTF50P (Cy/Pxl)) Mean Ctr, 0.5383
+MTF50P (LW/PH) Mean Ctr,   607.2
+MTF20 (Cy/Pxl) Mean Ctr, 1.0778
+MTF20 (LW/PH) Mean Ctr,  1215.8
+LSF PW50 (pxl) Mean Ctr, 0.8198
+CA (area %) Mean Ctr,     NaN
+CA (crossing %) Mean Ctr,     NaN
+CA (R-G Pxls) Mean Ctr, 0.00000
+CA (B-G Pxls) Mean Ctr, 0.00000
+MTF30 Mean Ctr,    0.98832
+
+MTF50 (Cy/Pxl) Mean Pt Wy, 0.0000
+R1090 (pxl) Mean Pt Wy, 0.0000
+CA (pxl) Mean Pt Wy, 0.0000
+MTF50 (LW/PH) Mean Pt Wy,     0.0
+R1090 (/PH) Mean Pt Wy,     0.0
+Peak MTF Mean Pt Wy, 0.0000
+MTF50P (Cy/Pxl)) Mean Pt Wy, 0.0000
+MTF50P (LW/PH) Mean Pt Wy,     0.0
+MTF20 (Cy/Pxl) Mean Pt Wy, 0.0000
+MTF20 (LW/PH) Mean Pt Wy,     0.0
+LSF PW50 (pxl) Mean Pt Wy, 0.0000
+CA (area %) Mean Pt Wy, 0.00000
+CA (crossing %) Mean Pt Wy, 0.00000
+CA (R-G Pxls) Mean Pt Wy, 0.00000
+CA (B-G Pxls) Mean Pt Wy, 0.00000
+MTF30 Mean Pt Wy,    0.00000
+
+MTF50 (Cy/Pxl) Min Pt Wy, 0.0000
+R1090 (pxl) Max Pt Wy, 0.0000
+CA (pxl) Max Pt Wy, 0.0000
+MTF50 (LW/PH) Min Pt Wy,     0.0
+R1090 (/PH) Max Pt Wy,     0.0
+Peak MTF Max Pt Wy, 0.0000
+MTF50P (Cy/Pxl)) Min Pt Wy, 0.0000
+MTF50P (LW/PH) Min Pt Wy,     0.0
+MTF20 (Cy/Pxl) Min Pt Wy, 0.0000
+MTF20 (LW/PH) Min Pt Wy,     0.0
+LSF PW50 (pxl) Max Pt Wy, 0.0000
+CA (area %) Max Pt Wy, 0.00000
+CA (crossing %) Max Pt Wy, 0.00000
+CA (R-G Pxls) Max Pt Wy, 0.00000
+CA (B-G Pxls) Max Pt Wy, 0.00000
+MTF30 Min Pt Wy,    0.00000
+
+MTF50 (Cy/Pxl) Mean Cor, 0.2234
+R1090 (pxl) Mean Cor, 2.4321
+CA (pxl) Mean Cor, 0.0000
+MTF50 (LW/PH) Mean Cor,   252.0
+R1090 (/PH) Mean Cor,   238.7
+Peak MTF Mean Cor, 1.0000
+MTF50P (Cy/Pxl)) Mean Cor, 0.2234
+MTF50P (LW/PH) Mean Cor,   252.0
+MTF20 (Cy/Pxl) Mean Cor, 0.5292
+MTF20 (LW/PH) Mean Cor,   596.9
+LSF PW50 (pxl) Mean Cor, 1.7450
+CA (area %) Mean Cor,     NaN
+CA (crossing %) Mean Cor,     NaN
+CA (R-G Pxls) Mean Cor, 0.00000
+CA (B-G Pxls) Mean Cor, 0.00000
+MTF30 Mean Cor,    0.29396
+
+MTF50 (Cy/Pxl) Min Cor, 0.1748
+R1090 (pxl) Max Cor, 2.9518
+CA (pxl) Max Cor, 0.0000
+MTF50 (LW/PH) Min Cor,   197.2
+R1090 (/PH) Max Cor,   306.4
+Peak MTF Max Cor, 1.0000
+MTF50P (Cy/Pxl)) Min Cor, 0.1748
+MTF50P (LW/PH) Min Cor,   197.2
+MTF20 (Cy/Pxl) Min Cor, 0.2768
+MTF20 (LW/PH) Min Cor,   312.3
+LSF PW50 (pxl) Max Cor, 2.2785
+CA (area %) Max Cor,     NaN
+CA (crossing %) Max Cor,     NaN
+CA (R-G Pxls) Max Cor, 0.00000
+CA (B-G Pxls) Max Cor, 0.00000
+MTF30 Min Cor,    0.23277
+
+MTF50 (Cy/Pxl) Wtd mean, 0.4333
+R1090 (pxl) Wtd mean, 1.7321
+CA (pxl) Wtd mean, 0.0000
+MTF50 (LW/PH) Wtd mean,   488.8
+R1090 (/PH) Wtd mean,   351.6
+Peak MTF Wtd mean, 1.0000
+MTF50P (Cy/Pxl)) Wtd mean, 0.4333
+MTF50P (LW/PH) Wtd mean,   488.8
+MTF20 (Cy/Pxl) Wtd mean, 0.8950
+MTF20 (LW/PH) Wtd mean,  1009.5
+LSF PW50 (pxl) Wtd mean, 1.1282
+CA (area %) Wtd mean,     NaN
+CA (crossing %) Wtd mean,     NaN
+CA (R-G Pxls) Wtd mean, 0.00000
+CA (B-G Pxls) Wtd mean, 0.00000
+MTF30 Wtd mean,    0.75687
+
+MTF50 (Cy/Pxl) std/mean, 0.5288
+R1090 (pxl) std/mean, 0.2768
+CA (pxl) std/mean, 0.0000
+MTF50 (LW/PH) std/mean,     0.5
+R1090 (/PH) std/mean,     0.3
+Peak MTF std/mean, 0.0000
+MTF50P (Cy/Pxl)) std/mean, 0.5288
+MTF50P (LW/PH) std/mean,     0.5
+MTF20 (Cy/Pxl) std/mean, 0.7000
+MTF20 (LW/PH) std/mean,     0.7
+LSF PW50 (pxl) std/mean, 0.3875
+CA (area %) std/mean, 0.00000
+CA (crossing %) std/mean, 0.00000
+CA (R-G Pxls) std/mean, 0.00000
+CA (B-G Pxls) std/mean, 0.00000
+MTF30 std/mean,    0.73099
+
+MTF50 (Cy/Pxl) min/max, 0.3248
+R1090 (pxl) min/max, 0.4682
+CA (pxl) min/max, 0.0000
+MTF50 (LW/PH) min/max,     0.3
+R1090 (/PH) min/max,     0.5
+Peak MTF min/max, 1.0000
+MTF50P (Cy/Pxl)) min/max, 0.3248
+MTF50P (LW/PH) min/max,     0.3
+MTF20 (Cy/Pxl) min/max, 0.2355
+MTF20 (LW/PH) min/max,     0.2
+LSF PW50 (pxl) min/max, 0.3598
+CA (area %) min/max, 0.00000
+CA (crossing %) min/max, 0.00000
+CA (R-G Pxls) min/max, 0.00000
+CA (B-G Pxls) min/max, 0.00000
+MTF30 min/max,    0.23552
+
+MTF50 (Cy/Pxl) mean outer, 0.2234
+R1090 (pxl) mean outer, 2.4321
+CA (pxl) mean outer, 0.0000
+MTF50 (LW/PH) mean outer,   252.0
+R1090 (/PH) mean outer,   238.7
+Peak MTF mean outer, 1.0000
+MTF50P (Cy/Pxl)) mean outer, 0.2234
+MTF50P (LW/PH) mean outer,   252.0
+MTF20 (Cy/Pxl) mean outer, 0.5292
+MTF20 (LW/PH) mean outer,   596.9
+LSF PW50 (pxl) mean outer, 1.7450
+CA (area %) mean outer,     NaN
+CA (crossing %) mean outer,     NaN
+CA (R-G Pxls) mean outer, 0.00000
+CA (B-G Pxls) mean outer, 0.00000
+MTF30 mean outer,    0.29396
+
+MTF50 (Cy/Pxl) min outer, 0.1748
+R1090 (pxl) min outer, 0.0000
+CA (pxl) min outer, 0.0000
+MTF50 (LW/PH) min outer,   197.2
+R1090 (/PH) min outer,     0.0
+Peak MTF min outer, 0.0000
+MTF50P (Cy/Pxl)) min outer, 0.1748
+MTF50P (LW/PH) min outer,     0.0
+MTF20 (Cy/Pxl) min outer, 0.2768
+MTF20 (LW/PH) min outer,     0.0
+LSF PW50 (pxl) min outer, 0.0000
+CA (area %) min outer,     NaN
+CA (crossing %) min outer,     NaN
+CA (R-G Pxls) min outer, 0.00000
+CA (B-G Pxls) min outer, 0.00000
+MTF30 min outer,    0.23277
+
+MTF50 (Cy/Pxl) max outer, 0.3182
+R1090 (pxl) max outer, 0.0000
+CA (pxl) max outer, 0.0000
+MTF50 (LW/PH) max outer,   359.0
+R1090 (/PH) max outer,     0.0
+Peak MTF max outer, 0.0000
+MTF50P (Cy/Pxl)) max outer, 0.3182
+MTF50P (LW/PH) max outer,     0.0
+MTF20 (Cy/Pxl) max outer, 1.1757
+MTF20 (LW/PH) max outer,     0.0
+LSF PW50 (pxl) max outer, 0.0000
+CA (area %) max outer,     NaN
+CA (crossing %) max outer,     NaN
+CA (R-G Pxls) max outer, 0.00000
+CA (B-G Pxls) max outer, 0.00000
+MTF30 max outer,    0.39484
