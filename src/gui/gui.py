@@ -98,11 +98,13 @@ def gui():
         sg.OptionMenu(
             values=list(constants.LIGHTS_MODELS.keys()),
             key="selected_lights_model",
+            default_value='test' if constants.DEBUG_MODE else list(constants.LIGHTS_MODELS.keys())[0],
             size=(22, 1)
         ),
         sg.OptionMenu(
             values=list(constants.LUXMETERS_MODELS.keys()),
             key="selected_luxmeter_model",
+            default_value='test' if constants.DEBUG_MODE else list(constants.LUXMETERS_MODELS.keys())[0],
             size=(22, 1)
         ),
         sg.Button(
