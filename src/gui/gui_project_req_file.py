@@ -22,39 +22,69 @@ def gui_project_req_file(proj_req=None, return_val=False):
     # Lists Data
     test_modules_list = list(constants.IMATEST_TEST_TYPES.keys())
     light_types_list = constants.AVAILABLE_LIGHTS[1] # TODO: pass light num so that we show relevant stuff
+
+    # Parameters
     params_list = ['R_pixel_mean', 'G_pixel_mean', 'B_pixel_mean']
+    imatest_params_file = open(os.path.join(constants.DATA_DIR, 'imatest_params.json'))
+    imatest_params = json.load(imatest_params_file)
+
+    params_list = list(imatest_params[test_modules_list[0]].keys())
 
     left_col = [[tree]]
 
     excel_formats = "".join(f"*.{w} " for w in constants.EXCEL_FILETYPES).rstrip(' ')
+
+    top_left_col = [
+        [sg.FileBrowse(
+            button_text='Import',
+            key='import_btn',
+            file_types=(
+                ("Proj Req", "*.projreq"),
+                ('Microsoft Excel', excel_formats),
+            ),
+            enable_events=True,
+            target='import_btn',
+            size=(10, 1)
+        )],
+        [sg.SaveAs(
+            button_text='Export',
+            key='export_btn',
+            file_types=(("Proj Req", "*.projreq"),),
+            enable_events=True,
+            target='export_btn',
+            size=(10, 1)
+        )]
+    ]
+    top_right_col = [
+        [sg.B('Fetch New\nImatest\nParameters', key='update_params_btn', size=(11, 3))]
+    ]
+
+    min_max_left = [
+        [
+            sg.Text('Min: ', size=(4, 1)),
+            sg.InputText(key='param_min_value', size=(10, 1))
+        ],
+        [
+            sg.Text('Max: ', size=(4, 1)),
+            sg.InputText(key='param_max_value', size=(10, 1))
+        ]
+    ]
+    min_max_right = [
+        [sg.B('Add\nMin,Max', key='add_min_max_btn', size=(10, 3))]
+    ]
+
     right_col = [
         [
-            sg.Text('', visible=False, key='import_dir'),
-            sg.FileBrowse(
-                button_text='Import',
-                key='import_btn',
-                file_types=(
-                    ("Proj Req", "*.projreq"),
-                    ('Microsoft Excel', excel_formats),
-                ),
-                enable_events=True,
-                target='import_btn'
-            ),
-            sg.SaveAs(
-                button_text='Export',
-                key='export_btn',
-                file_types=(("Proj Req", "*.projreq"),),
-                enable_events=True,
-                target='export_btn'
-            )
+            sg.Column(top_left_col),
+            sg.T(' - - '),
+            sg.Column(top_right_col),
         ],
         [sg.HorizontalSeparator()],
-        [sg.T('Currently loaded: ')],
+        [sg.T('Currently loaded: ', size=(18, 1)),sg.B('Save', key='save_btn', disabled=True, size=(10, 1))],
         [sg.T('New requirements file', key='current_filename_label', size=(30, 1))],
-        [sg.B('Save', key='save_btn', disabled=True, size=(12, 1))],
         [sg.HorizontalSeparator()],
         [
-            sg.Combo(test_modules_list, key='add_type_value', size=(15, 1), default_value=test_modules_list[0]),
+            sg.Combo(test_modules_list, key='add_type_value', size=(15, 1), default_value=test_modules_list[0], enable_events=True),
             sg.B('Add Type', key='add_type_btn', size=(10, 1)),
         ],
         [sg.HorizontalSeparator()],
@@ -68,22 +98,14 @@ def gui_project_req_file(proj_req=None, return_val=False):
         ],
         [sg.HorizontalSeparator()],
         [
-
+            sg.Combo(params_list, key='add_param_value', size=(32, 1), default_value=params_list[0])
         ],
         [
-            sg.Combo(params_list, key='add_param_value', size=(15, 1), default_value=params_list[0]),
-            sg.B('Add Param', key='add_param_btn', size=(10, 1)),
-            sg.B('Update', key='update_params_btn', size=(10, 1)),
+            sg.B('Add Param', key='add_param_btn', size=(30, 1))
         ],
         [
-            sg.Text('Min: ', size=(12, 1)),
-            sg.InputText(key='param_min_value', size=(15, 1))
+            sg.Column(min_max_left), sg.Column(min_max_right),
         ],
-        [
-            sg.Text('Max: ', size=(12, 1)),
-            sg.InputText(key='param_max_value', size=(15, 1))
-        ],
-        [sg.B('Add Min,Max', key='add_min_max_btn', size=(27, 2))],
         [sg.HorizontalSeparator()],
         [
             sg.B('/\\', key='mv_up_btn', size=(4, 2)),
@@ -92,8 +114,9 @@ def gui_project_req_file(proj_req=None, return_val=False):
         ],
         [sg.HorizontalSeparator()],
         [
-            sg.B('Expand', key='expand_btn', size=(12, 1)),
-            sg.B('Collapse', key='collapse_btn', size=(12, 1)),
+            sg.B('Expand', key='expand_btn', size=(10, 1)),
+            sg.B('Collapse', key='collapse_btn', size=(10, 1)),
+            sg.B('Clear', key='clear_btn', size=(6, 1)),
         ],
         [sg.HorizontalSeparator()],
         [
@@ -119,7 +142,25 @@ def gui_project_req_file(proj_req=None, return_val=False):
     while True:
         event, values = window.read(timeout=100)
 
-        # This does not work, when file is passed, it does not get seen until an event occurs -> workaround is timeout
+        if event == sg.WIN_CLOSED or event == 'Close' or event == 'go_templ_btn':  # if user closes window or clicks cancel
+            if event == 'go_templ_btn':
+                go_templ_btn_clicked = True
+            break
+
+        # current = tree.where()
+        # curr_sel_test_type = current
+
+        # while(tree.get_text(curr_sel_test_type) not in list(constants.IMATEST_TEST_TYPES.keys())):
+        #     curr_sel_test_type = tree.treedata.tree_dict[curr_sel_test_type].parent
+        #
+        # current_test_type = tree.get_text(curr_sel_test_type)
+        #
+        # print(f'now at {current_test_type} test type ')
+
+        selected = tree.where()
+        selected_text = tree.get_text(selected)
+
+        # This does not work - when file is passed, it does not get seen until an event occurs -> current workaround is timeout
         if not done:
             done = True
             if proj_req is not None:
@@ -128,15 +169,19 @@ def gui_project_req_file(proj_req=None, return_val=False):
             if return_val:
                 window['go_templ_btn'].Update(visible=True)
 
+        if event == 'add_type_value':
+            params_list = list(imatest_params[values['add_type_value']].keys())
+            window['add_param_value'].Update(values=params_list)
+        elif isinstance(selected_text, str) and selected_text.lower() in list(imatest_params.keys()):
+            params_list = list(imatest_params[selected_text.lower()].keys())
+            window['add_param_value'].Update(values=params_list)
 
+        print('vals', values)  # Debugging
+        print('event', event)  # Debugging
 
-        if event == sg.WIN_CLOSED or event == 'Close' or event == 'go_templ_btn':  # if user closes window or clicks cancel
-            if event == 'go_templ_btn':
-                go_templ_btn_clicked = True
-            break
-
-        # print('vals', values)  # Debugging
-        # print('event', event)  # Debugging
+        if event == 'clear_btn':
+            if sg.popup_yes_no('Are you sure you want to remove all entries?') == 'Yes':
+                tree.delete_all_nodes()
 
         if event == 'add_type_btn':
             tree.insert_node('', f"{values['add_type_value']}", values['add_type_value'])
@@ -228,7 +273,16 @@ def gui_project_req_file(proj_req=None, return_val=False):
                 current_file = import_templ(values['import_btn'], tree)
 
         if event == 'update_params_btn':
-            update_imatest_params()
+            if sg.popup_yes_no('Are you sure you want to refetch params from Imatest?\n'
+                               'This will do actual tests and parse their results,\n'
+                               'so keep in mind it takes time.') == 'Yes':
+                # Parse to file (Update file)
+                update_imatest_params()
+
+                # Reload params from file
+                imatest_params = json.load(imatest_params_file)
+
+                # window['add_param_value'].Update(values=params_list)
 
         if current_file is not None:
             window['current_filename_label'].Update(current_file.split(os.path.sep)[-1])
