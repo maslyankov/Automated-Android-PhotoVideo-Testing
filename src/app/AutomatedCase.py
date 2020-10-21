@@ -35,7 +35,6 @@ def parse_lights_xml_seq(seq_xml):
         return
 
     root = tree.getroot()
-    counter = 0
     for elem in root:
         for subelem in elem:
             if subelem.tag == 'sequence':
@@ -44,15 +43,12 @@ def parse_lights_xml_seq(seq_xml):
                 for data in subelem:
                     # Each LUX value
                     seq[subelem.attrib["color_temp"]].append(int(data.text.strip()))  # Add lux to list for light temp
-
-                counter += 1
             elif subelem.tag == 'name':
                 seq_name = subelem.text  # Seq Name
             elif subelem.tag == 'description':
                 seq_desc = subelem.text  # Seq Description
             else:
                 print(f"{subelem.tag}: ", subelem.text)  # Print if there is sth else
-
     return seq_name, seq_desc, seq
 
 
@@ -183,12 +179,12 @@ class AutomatedCase(threading.Thread):
         elif pull_files_bool and pull_files_location == '':
             self.output_gui('Files destination is mandatory!', msg_type='error')
             return
-        # TODO add checks for luxmeter and lights
         results = {}
         self.is_running = True
         self.pull_files_location = pull_files_location
 
         if lights_seq_in is None:
+            # Parse lights seq XML
             lights_seq_xml = os.path.join(constants.ROOT_DIR, 'lights_seq', f'{lights_seq_xml}.xml')
 
             lights_seq = parse_lights_xml_seq(lights_seq_xml)
