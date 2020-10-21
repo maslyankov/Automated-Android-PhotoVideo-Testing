@@ -1,5 +1,7 @@
 import json
 import os
+import threading
+
 import PySimpleGUI as sg
 
 import src.constants as constants
@@ -186,13 +188,6 @@ def gui_project_req_file(proj_req=None, return_val=False):
             if return_val:
                 window['go_templ_btn'].Update(visible=True)
 
-        # if event == 'add_type_value':
-        #     params_list = list(imatest_params[values['add_type_value']].keys())
-        #     window['add_param_value'].Update(values=params_list)
-        # elif isinstance(selected_text, str) and selected_text.lower() in list(imatest_params.keys()):
-        #     params_list = list(imatest_params[selected_text.lower()].keys())
-        #     window['add_param_value'].Update(values=params_list)
-
         print('vals', values)  # Debugging
         print('event', event)  # Debugging
 
@@ -294,23 +289,11 @@ def gui_project_req_file(proj_req=None, return_val=False):
                                'This will do actual tests and parse their results,\n'
                                'so keep in mind it takes some time.') == 'Yes':
                 # Parse to file (Update file)
-                Report.update_imatest_params_threaded(window, 'params_updater')
-
-                cur_progress = 0
-                while(cur_progress != 100):
-                    try:
-                        values['params_updater']['progress']
-                    except KeyError:
-                        pass
-                    else:
-                        cur_progress = values['params_updater']['progress']
-                    sg.OneLineProgressMeter('My Meter', cur_progress, 100, 'key', 'Fetching parameters from Imatest...')
+                Report.update_imatest_params()
 
                 # Reload params from file
                 imatest_params_file = open(imatest_params_file_location)
                 imatest_params = json.load(imatest_params_file)
-
-                # window['add_param_value'].Update(values=params_list)
 
         if current_file is not None:
             window['current_filename_label'].Update(current_file.split(os.path.sep)[-1])

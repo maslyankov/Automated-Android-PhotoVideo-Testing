@@ -145,7 +145,7 @@ class Report:
                 yield (key, value)
 
     @staticmethod
-    def update_imatest_params(window=None, event_name=None):
+    def update_imatest_params():
         report_obj = Report()
         images_dict = {'test_serial': []}
         tests_params = {}
@@ -171,13 +171,6 @@ class Report:
             }
 
             tests_list.append(new_dict)
-
-            if window is not None:
-                curr_progress += prog_step
-                window.write_event_value(event_name, {
-                    'progress': curr_progress
-                })
-
 
         result = report_obj.analyze_images_parallel(images_dict, ini_file)
         # open output file for writing
@@ -206,26 +199,15 @@ class Report:
                     else:
                         tests_params[current_type][key] = val_type
 
-            if window is not None:
-                curr_progress += prog_step
-                window.write_event_value(event_name, {
-                    'progress': curr_progress
-                })
-
         # open output file for writing
         params_out_file = os.path.join(constants.DATA_DIR, 'imatest_params.json')
         with open(params_out_file, 'w') as outfile:
             json.dump(tests_params, outfile)
-        if window is not None:
-            curr_progress = 100
-            window.write_event_value(event_name, {
-                'progress': curr_progress
-            })
 
     @staticmethod
-    def update_imatest_params_threaded(window, event_name):
+    def update_imatest_params_threaded():
         threading.Thread(target=Report.update_imatest_params,
-                         args=(window, event_name),
+                         args=(),
                          daemon=True).start()
 
     @staticmethod
