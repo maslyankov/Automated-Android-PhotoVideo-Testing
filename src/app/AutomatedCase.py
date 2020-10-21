@@ -334,60 +334,60 @@ class AutomatedCase(threading.Thread):
     def _execute_req_template(self,
                               requirements_dict, files_destination,
                               reports_bool: bool, reports_pdf_bool: bool, specific_device=None):
-        # if requirements_dict == '':
-        #     self.output_gui('Requirements file is mandatory!', msg_type='error')
-        #     return
-        # elif files_destination == '':
-        #     self.output_gui('Files destination is mandatory!', msg_type='error')
-        #     return
+        if requirements_dict == '':
+            self.output_gui('Requirements file is mandatory!', msg_type='error')
+            return
+        elif files_destination == '':
+            self.output_gui('Files destination is mandatory!', msg_type='error')
+            return
 
         self.current_action = 'starting'
         template_data = requirements_dict
         lights_seqs = Report.generate_lights_seqs(template_data)
         print("Lights Seq: ", lights_seqs)
-        # files_to_analyze = {}
-        #
-        # # Add filenames to template_data afterwards
-        # self.template_data = template_data
-        #
-        # # Allocate lists for devices' results data
-        # if specific_device:
-        #     files_to_analyze[specific_device] = []
-        # else:
-        #     for device_serial in self.attached_devices:
-        #         files_to_analyze[device_serial] = []
-        #
-        # # Execute cases and persist data
-        # for lights_seq in lights_seqs:
-        #     if self.stop_signal:
-        #         self.output_gui('Received stop command! Stopping lights sequences...')
-        #         break
-        #     seq_files_dict = self._execute(
-        #         None,
-        #         True, files_destination,
-        #         photo_bool=True, video_bool=False, specific_device=specific_device,
-        #         folders=[lights_seq['test_type']],
-        #         filename_prefix=lights_seq['test_type'],
-        #         lights_seq_in=lights_seq['lights_seq'],
-        #         seq_name=lights_seq['test_type'])
-        #     if seq_files_dict is not None:
-        #         for device_serial in seq_files_dict.keys():
-        #             files_to_analyze[device_serial].append(
-        #                 {
-        #                     'analysis_type': lights_seq['test_type'],
-        #                     'image_files': seq_files_dict[device_serial]
-        #                 }
-        #             )
-        #     else:
-        #         print(lights_seq['test_type'], ' is empty, skipping it')
-        #     self.output_gui(f'Test cases for {lights_seq["test_type"]} finished.', 'success')
-        #     self.progress = 0
-        #
-        # print("New files to analyze from template:\n", files_to_analyze)
-        # print(f'Template data: \n{template_data}')
+        files_to_analyze = {}
 
-        test_template_data = {'eSFR ISO': {'D65': {20: {'params': {'mtf30': {'min': 0.3, 'max': 0.8}, 'oversharpening': {'min': 0, 'max': 30}}, 'filename': 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\eSFR ISO\\D65\\eSFR ISO_D65_20.jpg'}, 80: {'params': {'mtf30': {'min': 0.3, 'max': 0.8}, 'oversharpening': {'min': 0, 'max': 30}, 'ER': {'min': 0, 'max': 0.1}}, 'filename': 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\eSFR ISO\\D65\\eSFR ISO_D65_80.jpg'}, 200: {'params': {'mtf30': {'min': 0.3, 'max': 0.8}, 'oversharpening': {'min': 0, 'max': 30}, 'ER': {'min': 0, 'max': 0.1}}, 'filename': 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\eSFR ISO\\D65\\eSFR ISO_D65_200.jpg'}}}, 'Random': {'D75': {20: {'params': {'Texture Acutance': {'min': 0.7, 'max': 1}}, 'filename': 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Random\\D75\\Random_D75_20.jpg'}, 80: {'params': {'Texture Acutance': {'min': 0.7, 'max': 1}}, 'filename': 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Random\\D75\\Random_D75_80.jpg'}, 200: {'params': {'Texture Acutance': {'min': 0.7, 'max': 1}}, 'filename': 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Random\\D75\\Random_D75_200.jpg'}}}, 'ITDR-36Chart': {}, 'Colorcheck': {'D75': {80: {'params': {'accuracy max': {'min': None, 'max': None}, 'accuracy mean': {'min': None, 'max': None}, 'saturation': {'min': 85, 'max': 135}, 'white balance': {'min': None, 'max': None}}, 'filename': 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Colorcheck\\D75\\Colorcheck_D75_80.jpg'}}, 'D65': {20: {'params': {'SNR': {'min': 30, 'max': 100}, 'TNR': {'min': 30, 'max': 100}}, 'filename': 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Colorcheck\\D65\\Colorcheck_D65_20.jpg'}, 80: {'params': {'exposure': {'min': 92, 'max': 162}, 'SNR': {'min': 33, 'max': 100}, 'TNR': {'min': 33, 'max': 100}}, 'filename': 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Colorcheck\\D65\\Colorcheck_D65_80.jpg'}, 200: {'params': {'accuracy max': {'min': None, 'max': None}, 'accuracy mean': {'min': None, 'max': None}, 'saturation': {'min': 85, 'max': 135}, 'white balance': {'min': None, 'max': None}, 'exposure': {'min': 92, 'max': 162}, 'gamma': {'min': 0.4, 'max': 0.75}, 'SNR': {'min': 38, 'max': 100}, 'TNR': {'min': 38, 'max': 100}}, 'filename': 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Colorcheck\\D65\\Colorcheck_D65_200.jpg'}, 1000: {'params': {'exposure': {'min': 92, 'max': 162}}, 'filename': 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Colorcheck\\D65\\Colorcheck_D65_1000.jpg'}}}, 'Distortion': {'D65': {80: {'params': {'35 to 45 deg': {'min': 0, 'max': 6}, '46 to 65': {'min': 0, 'max': 10}, 65: {'min': 0, 'max': 14}}, 'filename': 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Distortion\\D65\\Distortion_D65_80.jpg'}}}, 'Uniformity': {'D65': {80: {'params': {'Relative Illumination': {'min': 70, 'max': 100}}, 'filename': 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Uniformity\\D65\\Uniformity_D65_80.jpg'}, 200: {'params': {'Color uniformity': {'min': 0, 'max': 10}, 'Veiling glare': {'min': 0, 'max': 10}}, 'filename': 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Uniformity\\D65\\Uniformity_D65_200.jpg'}}}}
-        testdict = {'Type1000123456': [{'analysis_type': 'eSFR ISO', 'image_files': ['C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\eSFR ISO\\D65\\eSFR ISO_D65_20.jpg', 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\eSFR ISO\\D65\\eSFR ISO_D65_80.jpg', 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\eSFR ISO\\D65\\eSFR ISO_D65_200.jpg']}, {'analysis_type': 'Random', 'image_files': ['C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Random\\D75\\Random_D75_20.jpg', 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Random\\D75\\Random_D75_80.jpg', 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Random\\D75\\Random_D75_200.jpg']}, {'analysis_type': 'Colorcheck', 'image_files': ['C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Colorcheck\\D75\\Colorcheck_D75_80.jpg', 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Colorcheck\\D65\\Colorcheck_D65_20.jpg', 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Colorcheck\\D65\\Colorcheck_D65_80.jpg', 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Colorcheck\\D65\\Colorcheck_D65_200.jpg', 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Colorcheck\\D65\\Colorcheck_D65_1000.jpg']}, {'analysis_type': 'Distortion', 'image_files': ['C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Distortion\\D65\\Distortion_D65_80.jpg']}, {'analysis_type': 'Uniformity', 'image_files': ['C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Uniformity\\D65\\Uniformity_D65_80.jpg', 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY\\Uniformity\\D65\\Uniformity_D65_200.jpg']}]}
+        # Add filenames to template_data afterwards
+        self.template_data = template_data
+
+        # Allocate lists for devices' results data
+        if specific_device:
+            files_to_analyze[specific_device] = []
+        else:
+            for device_serial in self.attached_devices:
+                files_to_analyze[device_serial] = []
+
+        # Execute cases and persist data
+        for lights_seq in lights_seqs:
+            if self.stop_signal:
+                self.output_gui('Received stop command! Stopping lights sequences...')
+                break
+            seq_files_dict = self._execute(
+                None,
+                True, files_destination,
+                photo_bool=True, video_bool=False, specific_device=specific_device,
+                folders=[lights_seq['test_type']],
+                filename_prefix=lights_seq['test_type'],
+                lights_seq_in=lights_seq['lights_seq'],
+                seq_name=lights_seq['test_type'])
+            if seq_files_dict is not None:
+                for device_serial in seq_files_dict.keys():
+                    files_to_analyze[device_serial].append(
+                        {
+                            'analysis_type': lights_seq['test_type'],
+                            'image_files': seq_files_dict[device_serial]
+                        }
+                    )
+            else:
+                print(lights_seq['test_type'], ' is empty, skipping it')
+            self.output_gui(f'Test cases for {lights_seq["test_type"]} finished.', 'success')
+            self.progress = 0
+
+        print("New files to analyze from template:\n", files_to_analyze)
+        print(f'Template data: \n{self.template_data}')
+
+        test_template_data = {'blemish': {'D65': {20: {'params': {'mean_input_pixel_level': {'min': 1.0, 'max': 6.0}}, 'filename': 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY-example\\blemish\\D65\\blemish_D65_20.jpg'}, 40: {'params': {'mean_input_pixel_level': {'min': 1.0, 'max': 6.0}}, 'filename': 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY-example\\blemish\\D65\\blemish_D65_40.jpg'}}, 'D75': {60: {'params': {'deadThreshold': {'min': 2.0, 'max': 12.0}, 'nDeadPixels': {'min': 2.0, 'max': 12.0}}, 'filename': 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY-example\\blemish\\D75\\blemish_D75_60.jpg'}, 80: {'params': {'Optical_center_pixels': {'min': 2.0, 'max': 12.0}, 'hotThreshold': {'min': 1.0, 'max': 10.0}}, 'filename': 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY-example\\blemish\\D75\\blemish_D75_80.jpg'}}}, 'checkerboard': {'INCA': {80: {'params': {}, 'filename': 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY-example\\checkerboard\\INCA\\checkerboard_INCA_80.jpg'}, 160: {'params': {'pixel_level_ratio_mean': {'min': 2.0, 'max': 12.0}}, 'filename': 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY-example\\checkerboard\\INCA\\checkerboard_INCA_160.jpg'}}, 'TL84': {100: {'params': {}, 'filename': 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY-example\\checkerboard\\TL84\\checkerboard_TL84_100.jpg'}, 200: {'params': {'bayer_error': {'min': 1.0, 'max': 5.0}, 'worst_geometric_distortion_pct': {'min': 1.0, 'max': 5.0}}, 'filename': 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY-example\\checkerboard\\TL84\\checkerboard_TL84_200.jpg'}}}, 'esfriso': {'D65': {200: {'params': {'Max_Delta_Hue': {'min': 11.0, 'max': 20.0}, 'Mean_Delta_Hue': {'min': 4.0, 'max': 6.0}}, 'filename': 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY-example\\esfriso\\D65\\esfriso_D65_200.jpg'}, 400: {'params': {'Max_Delta_Chroma': {'min': -1.0, 'max': -5.0}, 'Mean_Delta_Chroma': {'min': -14.0, 'max': -17.0}}, 'filename': 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY-example\\esfriso\\D65\\esfriso_D65_400.jpg'}, 600: {'params': {'Mean_Delta_L': {'min': 13.0, 'max': 16.0}}, 'filename': 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY-example\\esfriso\\D65\\esfriso_D65_600.jpg'}}}}
+        testdict = {'Type1000123456': [{'analysis_type': 'blemish', 'image_files': ['C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY-example\\blemish\\D65\\blemish_D65_20.jpg', 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY-example\\blemish\\D65\\blemish_D65_40.jpg', 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY-example\\blemish\\D75\\blemish_D75_60.jpg', 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY-example\\blemish\\D75\\blemish_D75_80.jpg']}, {'analysis_type': 'checkerboard', 'image_files': ['C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY-example\\checkerboard\\INCA\\checkerboard_INCA_80.jpg', 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY-example\\checkerboard\\INCA\\checkerboard_INCA_160.jpg', 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY-example\\checkerboard\\TL84\\checkerboard_TL84_100.jpg', 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY-example\\checkerboard\\TL84\\checkerboard_TL84_200.jpg']}, {'analysis_type': 'esfriso', 'image_files': ['C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY-example\\esfriso\\D65\\esfriso_D65_200.jpg', 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY-example\\esfriso\\D65\\esfriso_D65_400.jpg', 'C:\\Users\\mms00519\\Desktop\\template_testing\\CHINABOY-example\\esfriso\\D65\\esfriso_D65_600.jpg']}]}
         print(f'test dict: \n{testdict}')
         ini_file = os.path.normpath(r"C:\Program Files\Imatest\v2020.2\IT\samples\python\ini_file\imatest-v2.ini")
 
@@ -400,16 +400,17 @@ class AutomatedCase(threading.Thread):
 
             self.current_action = 'Analyzing Images'
             self.output_gui('Analyzing images...')
-            # report = Report()
-            # images_analysis_readable = report.analyze_images_parallel(testdict, ini_file, num_processes=4)  # Returns (<class 'str'>)
-            #
-            # # open output file for writing
-            # with open('imatest_results.json', 'w') as outfile:
-            #     json.dump(images_analysis_readable, outfile)
+            report = Report()
+            images_analysis_readable = report.analyze_images_parallel(testdict, ini_file, num_processes=4)  # Returns (<class 'str'>)
+            # This returns only some of the results, will have to use .json files for each image
 
-            # Load data from file to save time while debugging
-            with open('imatest_results.json') as json_file:
-                images_analysis_readable = json.load(json_file)
+            # open output file for writing
+            with open('imatest_results.json', 'w') as outfile:
+                json.dump(images_analysis_readable, outfile)
+
+            # # Load data from file to save time while debugging
+            # with open('imatest_results.json') as json_file:
+            #     images_analysis_readable = json.load(json_file)
 
             # print(f'Analysis Results of type ({type(images_analysis)}):\n', images_analysis)
             print('Parsed:\n', images_analysis_readable)
@@ -424,8 +425,9 @@ class AutomatedCase(threading.Thread):
             print('result keys: ', images_analysis_readable[0]['data'].keys())
 
             for test_results in images_analysis_readable:
-                print('data>title:\n', test_results['data']['title'])
-                jsons_dict[test_results['data']['title'].split('.')[0]] = test_results['data']
+                print(test_results)
+                # print('data>title:\n', test_results['data']['title'])
+                # jsons_dict[test_results['data']['title'].split('.')[0]] = test_results['data']
             print('jsons dict starts:\n', jsons_dict,'\n\n\n----')
 
             for test_type in test_template_data.keys():
