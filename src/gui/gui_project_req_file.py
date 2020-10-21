@@ -288,12 +288,26 @@ def gui_project_req_file(proj_req=None, return_val=False):
             if sg.popup_yes_no('Are you sure you want to refetch params from Imatest?\n'
                                'This will do actual tests and parse their results,\n'
                                'so keep in mind it takes some time.') == 'Yes':
+                # Save stuff just in case
+                if current_file is not None:
+                    dump_dict = tree.dump_tree_dict()
+                    # open output file for writing
+                    xml = convert_dict_to_xml(dump_dict, 'projreq_file')
+                    print("Out XML:\n", xml)
+                    with open(current_file, 'wb') as outfile:
+                        outfile.write(xml)
+
                 # Parse to file (Update file)
                 Report.update_imatest_params()
 
                 # Reload params from file
                 imatest_params_file = open(imatest_params_file_location)
                 imatest_params = json.load(imatest_params_file)
+
+                sg.popup_ok('Dumped successfully! Will close window now.'
+                            '\nRestart app (GUI scaling gets messed up).')
+
+                break
 
         if current_file is not None:
             window['current_filename_label'].Update(current_file.split(os.path.sep)[-1])

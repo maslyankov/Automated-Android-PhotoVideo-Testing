@@ -137,12 +137,13 @@ class Report:
 
     # Static Methods
     @staticmethod
-    def recursive_items(dictionary):
-        for key, value in dictionary.items():
-            if type(value) is dict:
-                yield from Report.recursive_items(value)
-            else:
-                yield (key, value)
+    def recurse_dict(d, keys=()):
+        if type(d) == dict:
+            for k in d:
+                for rv in Report.recurse_dict(d[k], keys + (k,)):
+                    yield rv
+        else:
+            yield (keys, d)
 
     @staticmethod
     def update_imatest_params():
@@ -172,32 +173,44 @@ class Report:
 
             tests_list.append(new_dict)
 
-        result = report_obj.analyze_images_parallel(images_dict, ini_file)
-        # open output file for writing
+        # result = report_obj.analyze_images_parallel(images_dict, ini_file)
+        # # open output file for writing
         result_out_file = os.path.join(constants.DATA_DIR, 'imatest_all_tests_results.json')
-        with open(result_out_file, 'w') as outfile:
-            json.dump(result, outfile)
+        # with open(result_out_file, 'w') as outfile:
+        #     json.dump(result, outfile)
+        with open(result_out_file) as json_file:
+            images_analysis_readable = json.load(json_file)
+
 
         # Parse received list to params file
-        filter_params = ['build', 'EXIF_results', 'errorID', 'errorMessage', 'errorReport']
-        for res_dict in result:
+        filter_params = [
+            'image_path_name',
+            'build', 'EXIF_results',
+            'errorID', 'errorMessage', 'errorReport',
+            '_ArrayType_', '_ArraySize_', '_ArrayData_'
+        ]
+        #for res_dict in result:
+        for res_dict in images_analysis_readable:
             current_type = None
-            for key, value in Report.recursive_items(res_dict):
+            for key, value in Report.recurse_dict(res_dict['data']):
                 if current_type is None:
-                    if key == 'title':
+                    print('key: ', key)
+                    print('value: ', value)
+                    if key[0] == 'title':
                         current_type = value.split('_')[0]
                 else:
+                    param_name = '>'.join(key)
                     val_type = type(value).__name__
-                    if val_type == type(str).__name__ or key in filter_params:
+                    if val_type == type(str).__name__ or key[-1] in filter_params:
                         # Skip string params
                         continue
                     try:
                         tests_params[current_type]
                     except KeyError:
                         tests_params[current_type] = {}
-                        tests_params[current_type][key] = val_type
+                        tests_params[current_type][param_name] = val_type
                     else:
-                        tests_params[current_type][key] = val_type
+                        tests_params[current_type][param_name] = val_type
 
         # open output file for writing
         params_out_file = os.path.join(constants.DATA_DIR, 'imatest_params.json')
