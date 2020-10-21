@@ -367,7 +367,14 @@ def update_imatest_params():
 
     tests_list = images_dict['test_serial']
     for test_name in constants.IMATEST_TEST_TYPES.keys():
-        img_file = os.path.join(constants.ROOT_DIR, 'images', 'imatest', f'{test_name}_example.jpg')
+        img_file = os.path.join(constants.ROOT_DIR, 'images', 'imatest', f'{test_name}_example')
+        if os.path.exists(img_file+'.jpg'):
+            img_file += '.jpg'
+        elif os.path.exists(img_file+'.png'):
+            img_file += '.png'
+        else:
+            continue
+
         new_dict = {
             'analysis_type': test_name,
             'image_files': [img_file]
@@ -381,6 +388,7 @@ def update_imatest_params():
     with open(result_out_file, 'w') as outfile:
         json.dump(result, outfile)
 
+    filter_params = ['build', 'EXIF_results', 'errorID', 'errorMessage', 'errorReport']
     for res_dict in result:
         current_type = None
         for key, value in recursive_items(res_dict):
@@ -389,7 +397,7 @@ def update_imatest_params():
                     current_type = value.split('_')[0]
             else:
                 val_type = type(value).__name__
-                if val_type == type(str).__name__:
+                if val_type == type(str).__name__ or key in filter_params:
                     # Skip string params
                     continue
                 try:
