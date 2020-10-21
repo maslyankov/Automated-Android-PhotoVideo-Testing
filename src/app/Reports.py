@@ -1,5 +1,6 @@
 import json
 import os
+import threading
 
 from openpyxl import Workbook, load_workbook
 from openpyxl import cell as xlcell, worksheet
@@ -133,7 +134,100 @@ class Report:
         print("Terminating Imatest Library")
         # When finished terminate the library
         self.imatest.terminate_library()
+
     # Static Methods
+    @staticmethod
+    def recursive_items(dictionary):
+        for key, value in dictionary.items():
+            if type(value) is dict:
+                yield from Report.recursive_items(value)
+            else:
+                yield (key, value)
+
+    @staticmethod
+    def update_imatest_params(window=None, event_name=None):
+        report_obj = Report()
+        images_dict = {'test_serial': []}
+        tests_params = {}
+        curr_progress = 0
+        ini_file = os.path.join(constants.ROOT_DIR, 'images', 'imatest', 'ini_file', 'imatest-v2.ini')
+
+        prog_step = 100/len(constants.IMATEST_TEST_TYPES.keys())/3
+
+        # Prepare list for passing to image analyzer
+        tests_list = images_dict['test_serial']
+        for test_name in constants.IMATEST_TEST_TYPES.keys():
+            img_file = os.path.join(constants.ROOT_DIR, 'images', 'imatest', f'{test_name}_example')
+            if os.path.exists(img_file + '.jpg'):
+                img_file += '.jpg'
+            elif os.path.exists(img_file + '.png'):
+                img_file += '.png'
+            else:
+                continue
+
+            new_dict = {
+                'analysis_type': test_name,
+                'image_files': [img_file]
+            }
+
+            tests_list.append(new_dict)
+
+            if window is not None:
+                curr_progress += prog_step
+                window.write_event_value(event_name, {
+                    'progress': curr_progress
+                })
+
+
+        result = report_obj.analyze_images_parallel(images_dict, ini_file)
+        # open output file for writing
+        result_out_file = os.path.join(constants.DATA_DIR, 'imatest_all_tests_results.json')
+        with open(result_out_file, 'w') as outfile:
+            json.dump(result, outfile)
+
+        # Parse received list to params file
+        filter_params = ['build', 'EXIF_results', 'errorID', 'errorMessage', 'errorReport']
+        for res_dict in result:
+            current_type = None
+            for key, value in Report.recursive_items(res_dict):
+                if current_type is None:
+                    if key == 'title':
+                        current_type = value.split('_')[0]
+                else:
+                    val_type = type(value).__name__
+                    if val_type == type(str).__name__ or key in filter_params:
+                        # Skip string params
+                        continue
+                    try:
+                        tests_params[current_type]
+                    except KeyError:
+                        tests_params[current_type] = {}
+                        tests_params[current_type][key] = val_type
+                    else:
+                        tests_params[current_type][key] = val_type
+
+            if window is not None:
+                curr_progress += prog_step
+                window.write_event_value(event_name, {
+                    'progress': curr_progress
+                })
+
+        # open output file for writing
+        params_out_file = os.path.join(constants.DATA_DIR, 'imatest_params.json')
+        with open(params_out_file, 'w') as outfile:
+            json.dump(tests_params, outfile)
+        if window is not None:
+            curr_progress = 100
+            window.write_event_value(event_name, {
+                'progress': curr_progress
+            })
+
+    @staticmethod
+    def update_imatest_params_threaded(window, event_name):
+        threading.Thread(target=Report.update_imatest_params,
+                         args=(window, event_name),
+                         daemon=True).start()
+
     @staticmethod
     def xls_to_xlsx(xls_file) -> str:
         excel = win32.gencache.EnsureDispatch('Excel.Application')

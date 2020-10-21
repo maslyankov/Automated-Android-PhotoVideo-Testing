@@ -24,8 +24,8 @@ def gui_project_req_file(proj_req=None, return_val=False):
     light_types_list = constants.AVAILABLE_LIGHTS[1] # TODO: pass light num so that we show relevant stuff
 
     # Parameters
-    params_list = ['R_pixel_mean', 'G_pixel_mean', 'B_pixel_mean']
-    imatest_params_file = open(os.path.join(constants.DATA_DIR, 'imatest_params.json'))
+    imatest_params_file_location = os.path.join(constants.DATA_DIR, 'imatest_params.json')
+    imatest_params_file = open(imatest_params_file_location)
     imatest_params = json.load(imatest_params_file)
 
     params_list = list(imatest_params[test_modules_list[0]].keys())
@@ -147,15 +147,32 @@ def gui_project_req_file(proj_req=None, return_val=False):
                 go_templ_btn_clicked = True
             break
 
-        # current = tree.where()
-        # curr_sel_test_type = current
+        if event == '-TREE-':
+            # When selecting item check for what test type it is in
+            current = tree.where()
+            curr_sel_test_type = current
 
-        # while(tree.get_text(curr_sel_test_type) not in list(constants.IMATEST_TEST_TYPES.keys())):
-        #     curr_sel_test_type = tree.treedata.tree_dict[curr_sel_test_type].parent
-        #
-        # current_test_type = tree.get_text(curr_sel_test_type)
-        #
-        # print(f'now at {current_test_type} test type ')
+            while(curr_sel_test_type and tree.get_text(curr_sel_test_type) != '' and str(tree.get_text(curr_sel_test_type)).lower() not in list(constants.IMATEST_TEST_TYPES.keys())):
+                curr_sel_test_type = tree.treedata.tree_dict[curr_sel_test_type].parent
+                print(tree.get_text(curr_sel_test_type))
+
+            try:
+                current_test_type
+            except NameError:
+                current_test_type = str(tree.get_text(curr_sel_test_type)).lower()
+                # Update list accordingly
+                params_list = list(imatest_params[current_test_type].keys())
+                window['add_param_value'].Update(params_list[0], values=params_list)
+                print(f'now at {current_test_type} test type ')
+            else:
+                if str(tree.get_text(curr_sel_test_type)).lower() != current_test_type:
+                    current_test_type = str(tree.get_text(curr_sel_test_type)).lower()
+                    # Update list accordingly
+                    if current_test_type == 'root':
+                        continue
+                    params_list = list(imatest_params[current_test_type].keys())
+                    window['add_param_value'].Update(params_list[0], values=params_list)
+                    print(f'now at {current_test_type} test type ')
 
         selected = tree.where()
         selected_text = tree.get_text(selected)
@@ -169,12 +186,12 @@ def gui_project_req_file(proj_req=None, return_val=False):
             if return_val:
                 window['go_templ_btn'].Update(visible=True)
 
-        if event == 'add_type_value':
-            params_list = list(imatest_params[values['add_type_value']].keys())
-            window['add_param_value'].Update(values=params_list)
-        elif isinstance(selected_text, str) and selected_text.lower() in list(imatest_params.keys()):
-            params_list = list(imatest_params[selected_text.lower()].keys())
-            window['add_param_value'].Update(values=params_list)
+        # if event == 'add_type_value':
+        #     params_list = list(imatest_params[values['add_type_value']].keys())
+        #     window['add_param_value'].Update(values=params_list)
+        # elif isinstance(selected_text, str) and selected_text.lower() in list(imatest_params.keys()):
+        #     params_list = list(imatest_params[selected_text.lower()].keys())
+        #     window['add_param_value'].Update(values=params_list)
 
         print('vals', values)  # Debugging
         print('event', event)  # Debugging
@@ -275,11 +292,22 @@ def gui_project_req_file(proj_req=None, return_val=False):
         if event == 'update_params_btn':
             if sg.popup_yes_no('Are you sure you want to refetch params from Imatest?\n'
                                'This will do actual tests and parse their results,\n'
-                               'so keep in mind it takes time.') == 'Yes':
+                               'so keep in mind it takes some time.') == 'Yes':
                 # Parse to file (Update file)
-                update_imatest_params()
+                Report.update_imatest_params_threaded(window, 'params_updater')
+
+                cur_progress = 0
+                while(cur_progress != 100):
+                    try:
+                        values['params_updater']['progress']
+                    except KeyError:
+                        pass
+                    else:
+                        cur_progress = values['params_updater']['progress']
+                    sg.OneLineProgressMeter('My Meter', cur_progress, 100, 'key', 'Fetching parameters from Imatest...')
 
                 # Reload params from file
+                imatest_params_file = open(imatest_params_file_location)
                 imatest_params = json.load(imatest_params_file)
 
                 # window['add_param_value'].Update(values=params_list)
@@ -349,66 +377,3 @@ def import_templ(templ_in, tree):
     else:
         pass
     return None
-
-
-def recursive_items(dictionary):
-    for key, value in dictionary.items():
-        if type(value) is dict:
-            yield from recursive_items(value)
-        else:
-            yield (key, value)
-
-
-def update_imatest_params():
-    report_obj = Report()
-    images_dict = {'test_serial': []}
-    tests_params = {}
-    ini_file = os.path.join(constants.ROOT_DIR, 'images', 'imatest', 'ini_file', 'imatest-v2.ini')
-
-    tests_list = images_dict['test_serial']
-    for test_name in constants.IMATEST_TEST_TYPES.keys():
-        img_file = os.path.join(constants.ROOT_DIR, 'images', 'imatest', f'{test_name}_example')
-        if os.path.exists(img_file+'.jpg'):
-            img_file += '.jpg'
-        elif os.path.exists(img_file+'.png'):
-            img_file += '.png'
-        else:
-            continue
-
-        new_dict = {
-            'analysis_type': test_name,
-            'image_files': [img_file]
-        }
-
-        tests_list.append(new_dict)
-
-    result = report_obj.analyze_images_parallel(images_dict, ini_file)
-    # open output file for writing
-    result_out_file = os.path.join(constants.DATA_DIR, 'imatest_all_tests_results.json')
-    with open(result_out_file, 'w') as outfile:
-        json.dump(result, outfile)
-
-    filter_params = ['build', 'EXIF_results', 'errorID', 'errorMessage', 'errorReport']
-    for res_dict in result:
-        current_type = None
-        for key, value in recursive_items(res_dict):
-            if current_type is None:
-                if key == 'title':
-                    current_type = value.split('_')[0]
-            else:
-                val_type = type(value).__name__
-                if val_type == type(str).__name__ or key in filter_params:
-                    # Skip string params
-                    continue
-                try:
-                    tests_params[current_type]
-                except KeyError:
-                    tests_params[current_type] = {}
-                    tests_params[current_type][key] = val_type
-                else:
-                    tests_params[current_type][key] = val_type
-
-    # open output file for writing
-    params_out_file = os.path.join(constants.DATA_DIR, 'imatest_params.json')
-    with open(params_out_file, 'w') as outfile:
-        json.dump(tests_params, outfile)
