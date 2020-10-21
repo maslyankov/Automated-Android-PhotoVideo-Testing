@@ -100,7 +100,7 @@ def gui_project_req_file(proj_req=None, return_val=False):
         ],
         [sg.HorizontalSeparator()],
         [
-            sg.Combo(params_list, key='add_param_value', size=(32, 1), default_value=params_list[0])
+            sg.Combo(params_list, key='add_param_value', size=(32, 1), default_value=params_list[0], enable_events=True)
         ],
         [
             sg.B('Add Param', key='add_param_btn', size=(30, 1))
