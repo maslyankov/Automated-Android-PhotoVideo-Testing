@@ -174,17 +174,18 @@ class Report:
 
             tests_list.append(new_dict)
 
+        print('Created images dict:\n', images_dict)
         result = report_obj.analyze_images_parallel(images_dict, ini_file)
         # open output file for writing
         result_out_file = os.path.join(constants.DATA_DIR, 'imatest_all_tests_results.json')
         with open(result_out_file, 'w') as outfile:
             json.dump(result, outfile)
-        # with open(result_out_file) as json_file:
-        #     images_analysis_readable = json.load(json_file)
 
+        print('Analysis Result:\n', result)
 
         # Parse received list to params file
         filter_params = [
+            'dateRun', 'ini_time_size', 'version', 'build', 'title', 'image_file'
             'image_path_name',
             'build', 'EXIF_results',
             'errorID', 'errorMessage', 'errorReport',
@@ -195,15 +196,14 @@ class Report:
             current_type = None
             for key, value in Report.recurse_dict(res_dict['data']):
                 if current_type is None:
-                    print('key: ', key)
-                    print('value: ', value)
-                    if key[0] == 'title':
+                    # First find the title
+                    if key[0] == 'title' or key[0] == 'image_file':
                         current_type = value.split('_')[0]
                 else:
                     param_name = '>'.join(key)
                     val_type = type(value).__name__
                     if val_type == type(str).__name__ or key[-1] in filter_params:
-                        # Skip string params
+                        # Skip string or filtered params
                         continue
                     try:
                         tests_params[current_type]
