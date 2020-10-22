@@ -401,19 +401,19 @@ class AutomatedCase(threading.Thread):
             self.current_action = 'Analyzing Images'
             self.output_gui('Analyzing images...')
             report = Report()
-            images_analysis_readable = report.analyze_images_parallel(testdict, ini_file, num_processes=4)  # Returns (<class 'str'>)
-            # This returns only some of the results, will have to use .json files for each image
-
-            # open output file for writing
-            with open('imatest_results.json', 'w') as outfile:
-                json.dump(images_analysis_readable, outfile)
+            # images_analysis_readable = report.analyze_images_parallel(testdict, ini_file, num_processes=4)  # Returns (<class 'str'>)
+            # # This returns only some of the results, will have to use .json files for each image
+            #
+            # # open output file for writing
+            # with open('imatest_results.json', 'w') as outfile:
+            #     json.dump(images_analysis_readable, outfile)
 
             # # Load data from file to save time while debugging
             # with open('imatest_results.json') as json_file:
             #     images_analysis_readable = json.load(json_file)
 
             # print(f'Analysis Results of type ({type(images_analysis)}):\n', images_analysis)
-            print('Parsed:\n', images_analysis_readable)
+            # print('Parsed:\n', images_analysis_readable)
 
             self.current_action = 'Generating Report'
             self.output_gui('Generating report...')
@@ -422,19 +422,62 @@ class AutomatedCase(threading.Thread):
             print('Converting jsons list to dict')
             jsons_dict = {}
 
-            print('result keys: ', images_analysis_readable[0]['data'].keys())
+            # print('result keys: ', images_analysis_readable[0]['data'].keys())
 
-            for test_results in images_analysis_readable:
-                print(test_results)
-                # print('data>title:\n', test_results['data']['title'])
-                # jsons_dict[test_results['data']['title'].split('.')[0]] = test_results['data']
-            print('jsons dict starts:\n', jsons_dict,'\n\n\n----')
+            # for test_results in images_analysis_readable:
+            #     print(test_results)
+            #     # print('data>title:\n', test_results['data']['title'])
+            #     # jsons_dict[test_results['data']['title'].split('.')[0]] = test_results['data']
+            # print('jsons dict starts:\n', jsons_dict,'\n\n\n----')
 
             for test_type in test_template_data.keys():
                 for light_temp in test_template_data[test_type].keys():
                     for lux in test_template_data[test_type][light_temp].keys():
+                        img_file_path = test_template_data[test_type][light_temp][lux]['filename']
+                        img_file_name = os.path.basename(img_file_path)
+                        img_results_path = os.path.join(os.path.dirname(img_file_path), 'Results')
+                        img_json_filename = [f for f in os.listdir(img_results_path) if f.startswith(img_file_name.split('.')[0]) and f.endswith('.json')]
+
+                        if len(img_json_filename) < 1:
+                            continue
+
+                        img_json_file = os.path.join(img_results_path, img_json_filename[0])
+
+                        print('img jsonfile: ', img_json_file)
+
+                        print('Now at img: ', img_file_name)
+
+                        with open(img_json_file) as json_file:
+                            image_analysis_readable = json.load(json_file)
+                        image_analysis_readable = image_analysis_readable[list(image_analysis_readable.keys())[0]]
+
                         for param in test_template_data[test_type][light_temp][lux]['params'].keys():
-                            print(jsons_dict[f'{test_type}_{light_temp}_{lux}'][param])
+                            params_depth = param.split('>')
+                            for num, param_piece in enumerate(params_depth):
+                                if num == 0:
+                                    # At beginning set equal to parent of param (possibly)
+                                    param_val = image_analysis_readable[param_piece]
+                                elif num != len(params_depth) - 1:
+                                    # If not at end yet and not at beginning
+                                    param_val = param_val[param_piece]
+
+                                if num == len(params_depth) - 1:
+                                    # If last one -> return
+                                    # Full name of param: param,
+                                    # last part of param: param_piece,
+                                    # param value: param_val
+                                    param_val_calc = report.get_list_average(param_val)
+                                    param_req_min = test_template_data[test_type][light_temp][lux]["params"][param]["min"]
+                                    param_req_max = test_template_data[test_type][light_temp][lux]["params"][param]["max"]
+                                    print(f'param {param} is: ', param_val)
+                                    print(f'calculated value is: {param_val_calc}')
+                                    print(f'min is: {param_req_min}')
+                                    print(f'max is: {param_req_max}')
+                                    if param_val_calc > param_req_min and param_val_calc < param_req_max:
+                                        print('PASS!\n')
+                                    else:
+                                        print('FAIL!\n')
+
                             # if test_results["data"]["image_path_name"] == test_template_data[test_type][light_temp]['filename']:
                             #     for param in test_results["data"]
 

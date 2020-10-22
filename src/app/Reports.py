@@ -416,3 +416,19 @@ class Report:
                     lights_list[len(lights_list) - 1]['lights_seq'][light_type].append(lux)
 
         return lights_list
+
+    @staticmethod
+    def get_list_average(list_in: list):
+        if not isinstance(list_in, list):
+            return
+
+        result = 0
+
+        for item in list_in:
+            if isinstance(item, float) or isinstance(item, int) or (isinstance(item, str) and item.isdigit()):
+                if isinstance(item, str) and item.isdigit():
+                    result += int(item)
+                    continue
+                result += item
+
+        return result
