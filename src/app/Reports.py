@@ -164,6 +164,7 @@ class Report:
             elif os.path.exists(img_file + '.png'):
                 img_file += '.png'
             else:
+                print('FAILED TO FIND IMAGE FOR', img_file)
                 continue
 
             new_dict = {
@@ -173,13 +174,13 @@ class Report:
 
             tests_list.append(new_dict)
 
-        # result = report_obj.analyze_images_parallel(images_dict, ini_file)
-        # # open output file for writing
+        result = report_obj.analyze_images_parallel(images_dict, ini_file)
+        # open output file for writing
         result_out_file = os.path.join(constants.DATA_DIR, 'imatest_all_tests_results.json')
-        # with open(result_out_file, 'w') as outfile:
-        #     json.dump(result, outfile)
-        with open(result_out_file) as json_file:
-            images_analysis_readable = json.load(json_file)
+        with open(result_out_file, 'w') as outfile:
+            json.dump(result, outfile)
+        # with open(result_out_file) as json_file:
+        #     images_analysis_readable = json.load(json_file)
 
 
         # Parse received list to params file
@@ -189,8 +190,8 @@ class Report:
             'errorID', 'errorMessage', 'errorReport',
             '_ArrayType_', '_ArraySize_', '_ArrayData_'
         ]
-        #for res_dict in result:
-        for res_dict in images_analysis_readable:
+        for res_dict in result:
+        #for res_dict in images_analysis_readable:
             current_type = None
             for key, value in Report.recurse_dict(res_dict['data']):
                 if current_type is None:

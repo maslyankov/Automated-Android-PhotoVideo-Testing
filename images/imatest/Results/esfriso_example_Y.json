@@ -1,14 +1,14 @@
 {
 	"esfrisoResults": {
-		"dateRun": "21-Oct-2020 19:24:11",
-		"ini_file_name": "C:\\Users\\mms00519\\AppData\\Local\\Temp\\tpb528362b_d0e3_4b4a_b375_5fcec9f041d9rp11008\\a\\tpb252ac0e_2948_4dd3_99d4_1660b2d2c0b0\\imatest-v2.ini",
-		"ini_time_size": "21-Oct-2020 19:23:51 23100B  MD5 = 2754f4e046edc880c943d9733bcb290f",
+		"dateRun": "22-Oct-2020 17:07:50",
+		"ini_file_name": "C:\\Users\\mms00519\\AppData\\Local\\Temp\\tp4b2d06db_119a_40e4_a938_f72caaed090drp18860\\a\\tp2453342c_90e6_4355_a93a_1ce18c7cae1f\\imatest-v2.ini",
+		"ini_time_size": "22-Oct-2020 17:07:27 23100B  MD5 = 2754f4e046edc880c943d9733bcb290f",
 		"file_ini_version": " ",
 		"version": "Imatest 2020.2.0  esfriso_a",
 		"build": "2020-09-30",
 		"memory_display": [
-				"Memory: Array max/total = 7524/7524MB;  MemUsedMATLAB = 1563;  System = 7524MB",
-				"   Virtual: avail/total = 134205497/134217728MB;  Physical: avail/total = 7060/16192MB"
+				"Memory: Array max/total = 7271/7271MB;  MemUsedMATLAB = 1559;  System = 7271MB",
+				"   Virtual: avail/total = 134205449/134217728MB;  Physical: avail/total = 6194/16192MB"
 		],
 		"title": "esfriso_example.jpg",
 		"image_path_name": "C:\\Users\\mms00519\\PycharmProjects\\automated_cases\\images\\imatest\\esfriso_example.jpg",
