@@ -423,12 +423,15 @@ class Report:
             return
 
         result = 0
+        divider = 0
 
         for item in list_in:
             if isinstance(item, float) or isinstance(item, int) or (isinstance(item, str) and item.isdigit()):
                 if isinstance(item, str) and item.isdigit():
                     result += int(item)
+                    divider += 1
                     continue
                 result += item
+                divider += 1
 
-        return result
+        return result/divider
