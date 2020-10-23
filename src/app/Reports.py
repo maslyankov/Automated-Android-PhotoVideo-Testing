@@ -2,11 +2,15 @@ import json
 import os
 import threading
 
+# Excel
 from openpyxl import Workbook, load_workbook
 from openpyxl import cell as xlcell, worksheet
 import win32com.client as win32
+
+# Imatest
 from imatest.it import ImatestLibrary, ImatestException
 
+# Local
 import src.constants as constants
 from src.app.utils import kelvin_to_illumenant, only_digits, only_chars
 
@@ -436,3 +440,59 @@ class Report:
                 divider += 1
 
         return result/divider
+
+    @staticmethod
+    def analyze_images_test_results(test_template_data):
+        for test_type in test_template_data.keys():
+            for light_temp in test_template_data[test_type].keys():
+                for lux in test_template_data[test_type][light_temp].keys():
+                    img_file_path = test_template_data[test_type][light_temp][lux]['filename']
+                    img_file_name = os.path.basename(img_file_path)
+                    img_results_path = os.path.join(os.path.dirname(img_file_path), 'Results')
+                    img_json_filename = [f for f in os.listdir(img_results_path) if
+                                         f.startswith(img_file_name.split('.')[0]) and f.endswith('.json')]
+
+                    if len(img_json_filename) < 1:
+                        continue
+
+                    img_json_file = os.path.join(img_results_path, img_json_filename[0])
+
+                    print('img jsonfile: ', img_json_file)
+
+                    print('Now at img: ', img_file_name)
+
+                    with open(img_json_file) as json_file:
+                        image_analysis_readable = json.load(json_file)
+                    image_analysis_readable = image_analysis_readable[list(image_analysis_readable.keys())[0]]
+
+                    for param in test_template_data[test_type][light_temp][lux]['params'].keys():
+                        params_depth = param.split('>')
+                        for num, param_piece in enumerate(params_depth):
+                            if num == 0:
+                                # At beginning set equal to parent of param (possibly)
+                                param_val = image_analysis_readable[param_piece]
+                            elif num != len(params_depth) - 1:
+                                # If not at end yet and not at beginning
+                                param_val = param_val[param_piece]
+
+                            if num == len(params_depth) - 1:
+                                # If last one -> return
+                                # Full name of param: param,
+                                # last part of param: param_piece,
+                                # param value: param_val
+                                curr_param_dict = test_template_data[test_type][light_temp][lux]["params"][param]
+                                param_val_calc = Report.get_list_average(param_val)
+                                curr_param_dict['result'] = param_val
+                                curr_param_dict['result_calculated'] = param_val_calc
+
+                                print(f'param {param} is: ', param_val)
+                                print(f'calculated value is: {param_val_calc}')
+                                print(f'min is: {curr_param_dict["min"]}')
+                                print(f'max is: {curr_param_dict["max"]}')
+                                if param_val_calc > curr_param_dict["min"] and param_val_calc < curr_param_dict["max"]:
+                                    curr_param_dict['result_pass_bool'] = True
+                                    print('PASS!\n')
+                                else:
+                                    curr_param_dict['result_pass_bool'] = False
+                                    print('FAIL!\n')
+        return test_template_data
