@@ -1,6 +1,7 @@
 import json
 import os
 import threading
+import time
 
 import PySimpleGUI as sg
 
@@ -86,16 +87,16 @@ def gui_project_req_file(proj_req=None, return_val=False):
         [sg.T('New requirements file', key='current_filename_label', size=(30, 1))],
         [sg.HorizontalSeparator()],
         [
-            sg.Combo(test_modules_list, key='add_type_value', size=(15, 1), default_value=test_modules_list[0], enable_events=True),
+            sg.Combo(test_modules_list, key='add_type_value', size=(18, 1), pad=(7,2), default_value=test_modules_list[0], enable_events=True),
             sg.B('Add Type', key='add_type_btn', size=(10, 1)),
         ],
         [sg.HorizontalSeparator()],
         [
-            sg.Combo(light_types_list, key='add_light_temp_value', size=(15, 1), default_value=light_types_list[0]),
+            sg.Combo(light_types_list, key='add_light_temp_value', size=(18, 1), pad=(7,2), default_value=light_types_list[0]),
             sg.B('Add Temp', key='add_light_temp_btn', size=(10, 1)),
         ],
         [
-            sg.Spin([i for i in range(10, 1000)], initial_value=20, key='add_lux_value', size=(15, 1)),
+            sg.Spin([i for i in range(10, 1000)], initial_value=20, key='add_lux_value', size=(19, 1)),
             sg.B('Add LUX', key='add_lux_btn', size=(10, 1)),
         ],
         [sg.HorizontalSeparator()],
@@ -239,9 +240,6 @@ def gui_project_req_file(proj_req=None, return_val=False):
             print(f'Move down {values["-TREE-"]}')
             tree.move_down()
 
-        if event == 'search_btn':
-            print(f'Current key is: {tree.get_value(tree.where())}')
-
         if event == 'delete_btn':
             print(f"Delete {tree.get_text(values['-TREE-'][0])}")
             print("Action was successful: ", tree.delete_node(values["-TREE-"][0]))
@@ -288,6 +286,8 @@ def gui_project_req_file(proj_req=None, return_val=False):
             if sg.popup_yes_no('Are you sure you want to refetch params from Imatest?\n'
                                'This will do actual tests and parse their results,\n'
                                'so keep in mind it takes some time.') == 'Yes':
+                sg.popup_auto_close("Loading... Please wait.", non_blocking=True, no_titlebar=True)
+
                 # Save stuff just in case
                 if current_file is not None:
                     dump_dict = tree.dump_tree_dict()
@@ -298,16 +298,14 @@ def gui_project_req_file(proj_req=None, return_val=False):
                         outfile.write(xml)
 
                 # Parse to file (Update file)
-                Report.update_imatest_params()
+                # Report.update_imatest_params()
+                #
+                # # Reload params from file
+                # imatest_params_file = open(imatest_params_file_location)
+                # imatest_params = json.load(imatest_params_file)
 
-                # Reload params from file
-                imatest_params_file = open(imatest_params_file_location)
-                imatest_params = json.load(imatest_params_file)
+                sg.popup_ok('All Imatest parameters were dumped successfully!')
 
-                sg.popup_ok('Dumped successfully! Will close window now.'
-                            '\nRestart app (GUI scaling gets messed up).')
-
-                break
 
         if current_file is not None:
             window['current_filename_label'].Update(current_file.split(os.path.sep)[-1])

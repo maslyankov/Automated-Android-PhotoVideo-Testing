@@ -2,6 +2,8 @@ import json
 import os
 import threading
 
+from openpyxl import Workbook
+
 # Excel
 from openpyxl import Workbook, load_workbook
 from openpyxl import cell as xlcell, worksheet
@@ -189,25 +191,29 @@ class Report:
 
         # Parse received list to params file
         filter_params = [
-            'dateRun', 'ini_time_size', 'version', 'build', 'title', 'image_file'
-            'image_path_name',
-            'build', 'EXIF_results',
+            'dateRun', 'ini_time_size', 'version', 'buildDate', 'title',
+            'image_file', 'image_path_name', 'build', 'EXIF_results',
             'errorID', 'errorMessage', 'errorReport',
             '_ArrayType_', '_ArraySize_', '_ArrayData_'
         ]
+
         for res_dict in result:
         #for res_dict in images_analysis_readable:
             current_type = None
             for key, value in Report.recurse_dict(res_dict['data']):
                 if current_type is None:
                     # First find the title
-                    if key[0] == 'title' or key[0] == 'image_file':
-                        current_type = value.split('_')[0]
+                    # Turns out dotpattern has neither title, nor image_file keys..
+                    # if key[0] == 'title' or key[0] == 'image_file':
+                    #     current_type = value.split('_')[0]
+                    if key[0] == 'version':
+                        current_type = value.split('  ')[-1].split('_')[0].replace(' ', '').lower()
                 else:
                     param_name = '>'.join(key)
                     val_type = type(value).__name__
                     if val_type == type(str).__name__ or key[-1] in filter_params:
                         # Skip string or filtered params
+                        print(f'Skipping {key[-1]} because it is a string or in filter!')
                         continue
                     try:
                         tests_params[current_type]
@@ -496,3 +502,7 @@ class Report:
                                     curr_param_dict['result_pass_bool'] = False
                                     print('FAIL!\n')
         return test_template_data
+
+    @staticmethod
+    def export_to_excel_file(test_template_data):
+        print('exporting to excel...')
