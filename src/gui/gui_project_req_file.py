@@ -16,6 +16,7 @@ is_excel = False
 def gui_project_req_file(proj_req=None, return_val=False):
     global is_excel
     go_templ_btn_clicked = False
+    file_is_new = True
 
     tree = Tree(
         headings=['LUX No', ],
@@ -186,6 +187,9 @@ def gui_project_req_file(proj_req=None, return_val=False):
             if proj_req is not None:
                 print('Proj Req: ', proj_req)
                 current_file = import_templ(proj_req, tree)
+                return_val = True
+                if current_file is not None:
+                    file_is_new = False
             if return_val:
                 window['go_templ_btn'].Update(visible=True)
 
@@ -252,36 +256,6 @@ def gui_project_req_file(proj_req=None, return_val=False):
             tree.collapse_all()
             print('expanding nodes')
 
-        if event == 'save_btn':
-            if current_file is not None:
-                dump_dict = tree.dump_tree_dict()
-                # open output file for writing
-                xml = convert_dict_to_xml(dump_dict, 'projreq_file')
-                print("Out XML:\n", xml)
-                with open(current_file, 'wb') as outfile:
-                    outfile.write(xml)
-
-        if event == 'export_btn':
-            if values['export_btn'].endswith('.projreq'):
-                current_file = os.path.normpath(values['export_btn'])
-                dump_dict = tree.dump_tree_dict()
-                # open output file for writing
-                xml = convert_dict_to_xml(dump_dict, 'projreq_file', bool(current_file))
-                print("Out XML:\n", xml)
-                with open(current_file, 'wb') as outfile:
-                    outfile.write(xml)
-            elif values['export_btn'] == '':
-                pass
-            else:
-                sg.popup_error('Wrong file format!')
-
-        if event == 'import_btn':
-            # Import file
-            if values['import_btn'] == '':
-                pass
-            else:
-                current_file = import_templ(values['import_btn'], tree)
-
         if event == 'update_params_btn':
             if sg.popup_yes_no('Are you sure you want to refetch params from Imatest?\n'
                                'This will do actual tests and parse their results,\n'
@@ -298,14 +272,44 @@ def gui_project_req_file(proj_req=None, return_val=False):
                         outfile.write(xml)
 
                 # Parse to file (Update file)
-                # Report.update_imatest_params()
-                #
-                # # Reload params from file
-                # imatest_params_file = open(imatest_params_file_location)
-                # imatest_params = json.load(imatest_params_file)
+                Report.update_imatest_params()
+
+                # Reload params from file
+                imatest_params_file = open(imatest_params_file_location)
+                imatest_params = json.load(imatest_params_file)
 
                 sg.popup_ok('All Imatest parameters were dumped successfully!')
 
+        if event == 'import_btn':
+            file_is_new = False
+            # Import file
+            if values['import_btn'] == '':
+                pass
+            else:
+                current_file = import_templ(values['import_btn'], tree)
+
+        if event == 'save_btn':
+            if current_file is not None:
+                dump_dict = tree.dump_tree_dict()
+                # open output file for writing
+                xml = convert_dict_to_xml(dump_dict, 'projreq_file', file_is_new)
+                print("Out XML:\n", xml)
+                with open(current_file, 'wb') as outfile:
+                    outfile.write(xml)
+
+        if event == 'export_btn':
+            if values['export_btn'].endswith('.projreq'):
+                current_file = os.path.normpath(values['export_btn'])
+                dump_dict = tree.dump_tree_dict()
+                # open output file for writing
+                xml = convert_dict_to_xml(dump_dict, 'projreq_file', file_is_new)
+                print("Out XML:\n", xml)
+                with open(current_file, 'wb') as outfile:
+                    outfile.write(xml)
+            elif values['export_btn'] == '':
+                pass
+            else:
+                sg.popup_error('Wrong file format!')
 
         if current_file is not None:
             window['current_filename_label'].Update(current_file.split(os.path.sep)[-1])

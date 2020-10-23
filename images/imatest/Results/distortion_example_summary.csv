@@ -1,6 +1,6 @@
 Imatest,2020.2.0, , Distortion
 File,distortion_example.jpg
-Run date,23-Oct-2020 16:38:32,,Build 2020-09-30
+Run date,23-Oct-2020 17:30:19,,Build 2020-09-30
 
 ROI, 28, 42, 1565, 1189, UL(x y) LR(x y)
 vstr.sz_orig, 1200, 1600

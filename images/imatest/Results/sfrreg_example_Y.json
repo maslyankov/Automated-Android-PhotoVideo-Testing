@@ -1,14 +1,14 @@
 {
 	"sfrplusResults": {
-		"dateRun": "23-Oct-2020 16:39:16",
-		"ini_file_name": "C:\\Users\\mms00519\\AppData\\Local\\Temp\\tp45cf64a9_2bc2_4247_8fb5_7b71b814f4derp13832\\a\\tp8ccf9e4c_080f_4a79_b4ed_9659b45d7a54\\imatest-v2.ini",
-		"ini_time_size": "23-Oct-2020 16:39:11 23100B  MD5 = dce2c1405fa882ba4e8b84cba3253069",
+		"dateRun": "23-Oct-2020 17:31:09",
+		"ini_file_name": "C:\\Users\\mms00519\\AppData\\Local\\Temp\\tpb1ab5d69_dfea_491b_bd4c_999f077f6250rp18328\\a\\tpa8a494b8_f8d4_4752_814c_1f28ab069116\\imatest-v2.ini",
+		"ini_time_size": "23-Oct-2020 17:31:01 23100B  MD5 = dce2c1405fa882ba4e8b84cba3253069",
 		"file_ini_version": " ",
 		"version": "Imatest 2020.2.0  SFRreg_a",
 		"build": "2020-09-30",
 		"memory_display": [
-				"Memory: Array max/total = 4391/4391MB;  MemUsedMATLAB = 1657;  System = 4391MB",
-				"   Virtual: avail/total = 134205053/134217728MB;  Physical: avail/total = 5216/16192MB"
+				"Memory: Array max/total = 4235/4235MB;  MemUsedMATLAB = 1648;  System = 4235MB",
+				"   Virtual: avail/total = 134205237/134217728MB;  Physical: avail/total = 4906/16192MB"
 		],
 		"title": "sfrreg_example.jpg",
 		"image_path_name": "C:\\Users\\mms00519\\PycharmProjects\\automated_cases\\images\\imatest\\sfrreg_example.jpg",

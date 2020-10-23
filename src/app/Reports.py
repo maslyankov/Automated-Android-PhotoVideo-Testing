@@ -2,11 +2,11 @@ import json
 import os
 import threading
 
-from openpyxl import Workbook
-
 # Excel
 from openpyxl import Workbook, load_workbook
 from openpyxl import cell as xlcell, worksheet
+from openpyxl.utils import get_column_letter
+from openpyxl.styles import PatternFill, Font, Border, Alignment
 import win32com.client as win32
 
 # Imatest
@@ -448,11 +448,11 @@ class Report:
         return result/divider
 
     @staticmethod
-    def analyze_images_test_results(test_template_data):
-        for test_type in test_template_data.keys():
-            for light_temp in test_template_data[test_type].keys():
-                for lux in test_template_data[test_type][light_temp].keys():
-                    img_file_path = test_template_data[test_type][light_temp][lux]['filename']
+    def analyze_images_test_results(template_data):
+        for test_type in template_data.keys():
+            for light_temp in template_data[test_type].keys():
+                for lux in template_data[test_type][light_temp].keys():
+                    img_file_path = template_data[test_type][light_temp][lux]['filename']
                     img_file_name = os.path.basename(img_file_path)
                     img_results_path = os.path.join(os.path.dirname(img_file_path), 'Results')
                     img_json_filename = [f for f in os.listdir(img_results_path) if
@@ -471,7 +471,7 @@ class Report:
                         image_analysis_readable = json.load(json_file)
                     image_analysis_readable = image_analysis_readable[list(image_analysis_readable.keys())[0]]
 
-                    for param in test_template_data[test_type][light_temp][lux]['params'].keys():
+                    for param in template_data[test_type][light_temp][lux]['params'].keys():
                         params_depth = param.split('>')
                         for num, param_piece in enumerate(params_depth):
                             if num == 0:
@@ -486,7 +486,7 @@ class Report:
                                 # Full name of param: param,
                                 # last part of param: param_piece,
                                 # param value: param_val
-                                curr_param_dict = test_template_data[test_type][light_temp][lux]["params"][param]
+                                curr_param_dict = template_data[test_type][light_temp][lux]["params"][param]
                                 param_val_calc = Report.get_list_average(param_val)
                                 curr_param_dict['result'] = param_val
                                 curr_param_dict['result_calculated'] = param_val_calc
@@ -501,8 +501,179 @@ class Report:
                                 else:
                                     curr_param_dict['result_pass_bool'] = False
                                     print('FAIL!\n')
-        return test_template_data
+
+        return template_data
 
     @staticmethod
-    def export_to_excel_file(test_template_data):
+    def export_to_excel_file(template_data, dest_file):
+        # Pass template data with analysis results and requirements
         print('exporting to excel...')
+        workbook = Workbook()
+        sheet = workbook.active
+
+        center = Alignment(horizontal='center', vertical='center')
+
+        print(template_data)
+
+        # Add title,, date, header etc
+
+        columns = {
+            'test_type':        ['Test Target'],
+            'image':            ['Image', '', 20],
+            'light_temp':       ['Light'],
+            'lux':              ['Lux Level'],
+            'param':            ['Parameter'],
+            'param_min':        ['Min'],
+            'param_max':        ['Max'],
+            'param_calc':       ['Result'],
+            'param_passfail':   ['Pass/Fail'],
+        }
+
+        current_row = 1
+
+        columns_count = 0
+        current_col = 1
+        # Add table header
+        for val in columns.values():
+            try:
+                val[1] = current_col
+            except IndexError:
+                val.append(current_col)
+
+            cell = sheet.cell(current_row, val[1])
+            cell.value = val[0]
+            cell.font = Font(bold=True)
+
+            current_col += 1
+
+        current_row += 1
+
+        print('Columns are', columns)
+
+        for test_type in list(template_data.keys()):
+            for light_color in list(template_data[test_type].keys()):
+                for lux in list(template_data[test_type][light_color].keys()):
+                    for param in list(template_data[test_type][light_color][lux]['params'].keys()):
+                        current_col = 1
+                        # Write row of param
+                        param_templ_data = template_data[test_type][light_color][lux]['params'][param]
+
+                        # Add test type name
+                        sheet.cell(current_row, columns['test_type'][1], test_type).alignment = center
+                        data_len = len(str(test_type))
+                        try:
+                            if columns['test_type'][2] < data_len:
+                                columns['test_type'][2] = data_len
+                        except IndexError:
+                            columns['test_type'].append(data_len)
+                        current_col += 1
+
+                        # Add image
+                        sheet.cell(current_row, columns['image'][1], 'image').alignment = center
+                        current_col += 1
+
+                        # Add light color
+                        sheet.cell(current_row, columns['light_temp'][1], light_color).alignment = center
+                        data_len = len(str(light_color))
+                        try:
+                            if columns['light_temp'][2] < data_len:
+                                columns['light_temp'][2] = data_len
+                        except IndexError:
+                            columns['light_temp'].append(data_len)
+                        current_col += 1
+
+                        # Add lux
+                        sheet.cell(current_row, columns['lux'][1], lux).alignment = center
+                        data_len = len(str(lux))
+                        try:
+                            if columns['lux'][2] < data_len:
+                                columns['lux'][2] = data_len
+                        except IndexError:
+                            columns['lux'].append(data_len)
+                        current_col += 1
+
+                        # Add param
+                        sheet.cell(current_row, columns['param'][1], param).alignment = center
+                        data_len = len(str(param))
+                        try:
+                            if columns['param'][2] < data_len:
+                                columns['param'][2] = data_len
+                        except IndexError:
+                            columns['param'].append(data_len)
+                        current_col += 1
+
+                        # Add param min
+                        sheet.cell(current_row, columns['param_min'][1], param_templ_data['min']).alignment = center
+                        data_len = len(str(param_templ_data['min']))
+                        try:
+                            if columns['param_min'][2] < data_len:
+                                columns['param_min'][2] = data_len
+                        except IndexError:
+                            columns['param_min'].append(data_len)
+                        current_col += 1
+
+                        # Add param max
+                        sheet.cell(current_row, columns['param_max'][1], param_templ_data['max']).alignment = center
+                        data_len = len(str(param_templ_data['max']))
+                        try:
+                            if columns['param_max'][2] < data_len:
+                                columns['param_max'][2] = data_len
+                        except IndexError:
+                            columns['param_max'].append(data_len)
+                        current_col += 1
+                        current_col += 1
+
+                        # Add param result value
+                        try:
+                            sheet.cell(current_row, columns['param_calc'][1], param_templ_data['result_calculated']).alignment = center
+                        except KeyError:
+                            print(f'Missing result at {test_type}>{light_color}>{lux}>{param} -> {param_templ_data}')
+                            continue
+                        current_col += 1
+
+                        # Add param Pass/Fail
+                        pass_fail_cell = sheet.cell(current_row, columns['param_passfail'][1])
+                        pass_fail_cell.alignment = center
+                        if param_templ_data['result_pass_bool']:
+                            # Passed
+                            print('pass')
+                            pass_fail_cell.fill = PatternFill(fgColor="00FF00", fill_type = "solid")
+                            pass_fail_cell.value = 'Pass'
+                        else:
+                            # Failed
+                            print('fail')
+                            pass_fail_cell.fill = PatternFill(fgColor="FF0000", fill_type = "solid")
+                            pass_fail_cell.value = 'Fail'
+                        data_len = len(str(pass_fail_cell.value))
+                        try:
+                            if columns['param_passfail'][2] < data_len:
+                                columns['param_passfail'][2] = data_len
+                        except IndexError:
+                            columns['param_passfail'].append(data_len)
+
+                        # After each param
+                        print(f'\t\t\tparam done (col: {current_col}, row: {current_row}): ', param)
+                        current_row += 1
+                    # After each lux
+                    print('\t\tlux done: ', lux)
+                    current_row += 1
+                # After each color temp
+                print('\tcolor_temp done: ', light_color)
+                #current_row += 1
+            # After each Test Type
+            print('test_type done: ', test_type)
+            current_row += 2
+
+            # Add sep between types
+
+        for col_key in columns.values():
+            sheet.column_dimensions[get_column_letter(col_key[1])].width = col_key[2]
+            # sheet.column_dimensions[get_column_letter(col_key[1])].bestFit = True
+            # sheet.column_dimensions[get_column_letter(col_key[1])].auto_size = True
+
+
+        workbook.save(filename=dest_file)
+
+    @staticmethod
+    def col_len(value, ):
+        pass

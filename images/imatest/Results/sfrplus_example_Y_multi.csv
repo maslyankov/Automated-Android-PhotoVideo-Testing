@@ -1,7 +1,7 @@
 Imatest,2020.2.0, , sfrplus_a
 File,sfrplus_example.jpg
-Run date,23-Oct-2020 16:39:05,,Build 2020-09-30
-INI file,C:\Users\mms00519\AppData\Local\Temp\tp37142ea2_92cf_47d8_9858_5e978771df6crp6248\a\tp8ccf9e4c_080f_4a79_b4ed_9659b45d7a54\imatest-v2.ini
+Run date,23-Oct-2020 17:30:53,,Build 2020-09-30
+INI file,C:\Users\mms00519\AppData\Local\Temp\tpacf3e91d_2df5_4051_81e6_41a191d1df55rp1892\a\tpa8a494b8_f8d4_4752_814c_1f28ab069116\imatest-v2.ini
 
 Table details: Origin for X & Y at upper left. H/V and Tan/sag orientation are for MTF-- normal to edge.
 N,Distance %,Direction,X1,Y1,X2,Y2,Width,Height,Region,Edge ID,X px from ctr,Y px from ctr,Edge angle degs,H/V(MTF),Tan/sag(MTF),CSV summary file
@@ -53,7 +53,7 @@ N,MTF50 (Cy/Pxl),R1090 (pxl),CA area(pxl),MTF50 (LW/PH),R1090 (/PH),Peak MTF,MTF
 4, 0.3509, 1.3486, 0.070,  1819.3,  1921.9, 1.0626, 0.3440,  1783.4,   0.3988,   0.0000,  5.97, 13.51,   NaN, 0.035,   NaN, 0.000, 0.000, 0.342,   0.0000
 5, 0.3524, 1.3687, 0.092,  1826.9,  1893.7, 1.0477, 0.3470,  1798.7,   0.4016,   0.0000,  4.36, 12.68,   NaN, 0.075,   NaN, 0.000, 0.000, 0.083,   0.0000
 
-Summary,23-Oct-2020 16:39:05,,sfrplus_example.jpg
+Summary,23-Oct-2020 17:30:53,,sfrplus_example.jpg
 5,Regions,1,Center,2,Part way,2,Corner,4,Outer (Ptwy+Corner: >30%)
  ,MTF50 (Cy/Pxl),R1090 (pxl),CA (pxl),MTF50 (LW/PH),R1090 (/PH),Peak MTF,MTF50P (Cy/Pxl),MTF50P (LW/PH),MTF20 (Cy/Pxl),MTF20 (LW/PH),LSF PW50 (pxl),CA(area)%,CA(crossing)%,CA(R-G)Pxls,CA(B-G)Pxls%,MTF30,,x R-G pxl shift,x B-G pxl shift,y R-G pxl shift,y B-G pxl shift,
 Mean Ctr, 0.3377, 1.4604, 0.0277, 1750.39, 1774.87, 1.0379, 0.3336, 1729.56, 0.4093, 2121.61, 1.7371,     NaN,     NaN,-0.01989, 0.03620,    0.38245,    0.00000, 0.02,-0.04, 0.00, 0.00
@@ -342,7 +342,7 @@ Center,1
 Part way,2
 Corner,2
 
-Date,23-Oct-2020 16:39:05
+Date,23-Oct-2020 17:30:53
 File,sfrplus_example.jpg
 Plot title
 
