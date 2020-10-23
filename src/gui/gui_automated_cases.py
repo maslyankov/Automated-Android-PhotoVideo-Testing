@@ -76,20 +76,25 @@ def configurable_tab_logic(window, values, event,
 def template_tab_logic(window, values, event,
                        cases, auto_cases_event):
     window['generate_reports_pdf_bool'].Update(disabled=not values['generate_reports_bool'])
+    window['generate_reports_excel_bool'].Update(disabled=not values['generate_reports_bool'])
 
     if event == 'run_template_automation_btn':
         if not cases.is_running:
             # If cases are NOT running then button should start them
 
-            template_data = gui_project_req_file(values['template_browse_btn'] if values['template_browse_btn'] != '' else None, return_val=True)
+            template_data = gui_project_req_file(
+                values['template_browse_btn'] if values['template_browse_btn'] != '' else None, return_val=True)
             print('template_data: ', template_data)
 
             if template_data is not None:
                 try:
-                    cases.execute_req_template(template_data, values['save_location_output_browse_btn'],
-                                               values['generate_reports_bool'], values['generate_reports_pdf_bool'],
-                                               specific_device=None if values['use_all_devices_bool'] else values[
-                                                   'selected_device'])
+                    cases.execute_req_template(
+                        template_data, values['save_location_output_browse_btn'],
+                        values['generate_reports_bool'],
+                        values['generate_reports_excel_bool'], values['generate_reports_pdf_bool'],
+                        specific_device=None if values['use_all_devices_bool'] else values[
+                            'selected_device']
+                    )
                 except ValueError as e:
                     cases.stop_signal = True
                     sg.popup_error(e)
@@ -201,10 +206,15 @@ def gui_automated_cases(adb, selected_lights_model, selected_luxmeter_model):
         ]
     ]
 
-    checklist_frame = [[
-        sg.Checkbox('Generate Report', default=True, key='generate_reports_bool', enable_events=True),
-        sg.Checkbox('Generate PDF', default=True, key='generate_reports_pdf_bool'),
-    ]]
+    checklist_frame = [
+        [
+            sg.Checkbox('Generate Report', default=True, key='generate_reports_bool', enable_events=True)
+        ],
+        [
+            sg.Checkbox('Generate Excel', default=True, key='generate_reports_excel_bool'),
+            sg.Checkbox('Generate PDF', default=True, key='generate_reports_pdf_bool'),
+        ]
+    ]
 
     destination_frame = [[
         sg.Text('Save Location:', size=(11, 1)),
@@ -233,7 +243,8 @@ def gui_automated_cases(adb, selected_lights_model, selected_luxmeter_model):
 
             place(sg.VerticalSeparator(pad=None)),
 
-            place(sg.Text('', key='progress_curr_module', size=(35, 1), pad=(2, 0), visible=True, justification='right')),
+            place(
+                sg.Text('', key='progress_curr_module', size=(35, 1), pad=(2, 0), visible=True, justification='right')),
             place(sg.Text('0 %', key='progress_value', size=(4, 1), visible=True, justification='right')),
         ]
     ]

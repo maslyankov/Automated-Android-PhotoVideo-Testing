@@ -333,7 +333,7 @@ class AutomatedCase(threading.Thread):
 
     def _execute_req_template(self,
                               requirements_dict, files_destination,
-                              reports_bool: bool, reports_pdf_bool: bool, specific_device=None):
+                              reports_bool: bool, reports_excel_bool: bool, reports_pdf_bool: bool, specific_device=None):
         if requirements_dict == '':
             self.output_gui('Requirements file is mandatory!', msg_type='error')
             return
@@ -343,9 +343,11 @@ class AutomatedCase(threading.Thread):
 
         self.current_action = 'starting'
         self.template_data = requirements_dict
+        files_destination = os.path.normpath(files_destination)
+        files_to_analyze = {}
+
         lights_seqs = Report.generate_lights_seqs(self.template_data)
         print("Lights Seq: ", lights_seqs)
-        files_to_analyze = {}
 
         # Allocate lists for devices' results data
         if specific_device:
@@ -420,14 +422,15 @@ class AutomatedCase(threading.Thread):
             report.analyze_images_test_results(test_template_data) # self.template_data
             print('returned: ', test_template_data)
 
-            #if reports_excel_bool:
-            # Convert to Excel
+            if reports_excel_bool:
+                # Export report to Excel
+                excel_filename = os.path.join(files_destination, )
 
 
-            if reports_pdf_bool:
-                # Convert report to pdf
-                self.current_action = 'Converting Report to PDF'
-                self.output_gui('Converting report to PDF...')
+                if reports_pdf_bool:
+                    # Convert report to pdf
+                    self.current_action = 'Converting Report to PDF'
+                    self.output_gui('Converting report to PDF...')
 
         self.template_data = None
         self.current_action = 'Finished'
@@ -435,11 +438,13 @@ class AutomatedCase(threading.Thread):
 
     def execute_req_template(self,
                              requirements_dict, files_destination,
-                             reports_bool: bool, reports_pdf_bool: bool, specific_device=None):
+                             reports_bool: bool, reports_excel_bool: bool, reports_pdf_bool: bool,
+                             specific_device=None):
         self.stop_signal = False
         threading.Thread(target=self._execute_req_template,
                          args=(requirements_dict, files_destination,
-                               reports_bool, reports_pdf_bool, specific_device),
+                               reports_bool, reports_excel_bool, reports_pdf_bool,
+                               specific_device),
                          daemon=True).start()
         print('After thread exec in func')
 
