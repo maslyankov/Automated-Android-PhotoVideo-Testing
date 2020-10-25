@@ -6,7 +6,7 @@ import threading
 from openpyxl import Workbook, load_workbook
 from openpyxl import cell as xlcell, worksheet
 from openpyxl.utils import get_column_letter
-from openpyxl.styles import PatternFill, Font, Border, Alignment
+from openpyxl.styles import PatternFill, Font, Border, Alignment, Side
 import win32com.client as win32
 
 # Imatest
@@ -510,29 +510,60 @@ class Report:
         print('exporting to excel...')
         workbook = Workbook()
         sheet = workbook.active
+        current_row = 1
+        # Add title,, date, header etc
 
+
+        current_row += 1
+        current_row = Report.xls_draw_results_table(
+            template_data,
+            sheet,
+            2,
+            current_row,
+            primary_bg_color=constants.MID_COLOR.strip('#'),
+            secondary_bg_color=constants.ALTERNATE_COLOR.strip('#'),
+            font_color=constants.TEXT_COLOR.strip('#')
+        )[1][0]
+
+        workbook.save(filename=dest_file)
+
+    @staticmethod
+    def xls_draw_results_table(template_data, sheet, start_col, start_row,
+                               primary_bg_color=constants.MID_COLOR, secondary_bg_color=constants.ALTERNATE_COLOR,
+                               font_color=constants.TEXT_COLOR,
+                               add_border_bool=True):
+        """
+
+        :param template_data:
+        :param sheet:
+        :param start_row:
+        :param primary_bg_color:
+        :param secondary_bg_color:
+        :param font_color:
+        :param add_border_bool:
+        :return: (start_col, start_row), (end_col, end_row)
+        """
         center = Alignment(horizontal='center', vertical='center')
 
         print(template_data)
 
-        # Add title,, date, header etc
-
         columns = {
-            'test_type':        ['Test Target'],
-            'image':            ['Image', '', 20],
-            'light_temp':       ['Light'],
-            'lux':              ['Lux Level'],
-            'param':            ['Parameter'],
-            'param_min':        ['Min'],
-            'param_max':        ['Max'],
-            'param_calc':       ['Result'],
-            'param_passfail':   ['Pass/Fail'],
+            'test_type': ['Test Target'],
+            'image': ['Image', '', 20],
+            'light_temp': ['Light'],
+            'lux': ['Lux Level'],
+            'param': ['Parameter'],
+            'param_min': ['Min'],
+            'param_max': ['Max'],
+            'param_calc': ['Result'],
+            'param_passfail': ['Pass/Fail'],
         }
 
-        current_row = 1
+        current_row = start_row
+        end_col = len(columns)-1 + start_col
 
         columns_count = 0
-        current_col = 1
+        current_col = start_col
         # Add table header
         for val in columns.values():
             try:
@@ -543,6 +574,14 @@ class Report:
             cell = sheet.cell(current_row, val[1])
             cell.value = val[0]
             cell.font = Font(bold=True)
+            cell.alignment = center
+
+            data_len = len(str(val[0]))
+            try:
+                if val[2] < data_len:
+                    val[2] = data_len
+            except IndexError:
+                val.append(data_len)
 
             current_col += 1
 
@@ -550,11 +589,20 @@ class Report:
 
         print('Columns are', columns)
 
-        for test_type in list(template_data.keys()):
-            for light_color in list(template_data[test_type].keys()):
-                for lux in list(template_data[test_type][light_color].keys()):
-                    for param in list(template_data[test_type][light_color][lux]['params'].keys()):
-                        current_col = 1
+        secondary_fill = PatternFill(fgColor=f"FF{secondary_bg_color}", fill_type="solid")
+
+        test_types_list = list(template_data.keys())
+        for type_num, test_type in enumerate(test_types_list):
+            type_start_row = current_row
+            light_colors_list = list(template_data[test_type].keys())
+            for light_color_num, light_color in enumerate(light_colors_list):
+                color_start_row = current_row
+                luxes = list(template_data[test_type][light_color].keys())
+                for lux_num, lux in enumerate(luxes):
+                    lux_start_row = current_row
+                    params = list(template_data[test_type][light_color][lux]['params'].keys())
+                    for param in params:
+                        current_col = start_col
                         # Write row of param
                         param_templ_data = template_data[test_type][light_color][lux]['params'][param]
 
@@ -625,7 +673,14 @@ class Report:
 
                         # Add param result value
                         try:
-                            sheet.cell(current_row, columns['param_calc'][1], param_templ_data['result_calculated']).alignment = center
+                            sheet.cell(current_row, columns['param_calc'][1],
+                                       param_templ_data['result_calculated']).alignment = center
+                            data_len = len(str(param_templ_data['result_calculated']))
+                            try:
+                                if columns['param_calc'][2] < data_len:
+                                    columns['param_calc'][2] = data_len
+                            except IndexError:
+                                columns['param_calc'].append(data_len)
                         except KeyError:
                             print(f'Missing result at {test_type}>{light_color}>{lux}>{param} -> {param_templ_data}')
                             continue
@@ -637,12 +692,12 @@ class Report:
                         if param_templ_data['result_pass_bool']:
                             # Passed
                             print('pass')
-                            pass_fail_cell.fill = PatternFill(fgColor="00FF00", fill_type = "solid")
+                            pass_fail_cell.fill = PatternFill(fgColor="00FF00", fill_type="solid")
                             pass_fail_cell.value = 'Pass'
                         else:
                             # Failed
                             print('fail')
-                            pass_fail_cell.fill = PatternFill(fgColor="FF0000", fill_type = "solid")
+                            pass_fail_cell.fill = PatternFill(fgColor="FF0000", fill_type="solid")
                             pass_fail_cell.value = 'Fail'
                         data_len = len(str(pass_fail_cell.value))
                         try:
@@ -652,28 +707,87 @@ class Report:
                             columns['param_passfail'].append(data_len)
 
                         # After each param
-                        print(f'\t\t\tparam done (col: {current_col}, row: {current_row}): ', param)
                         current_row += 1
+                        print(f'\t\t\tparam done (col: {current_col}, row: {current_row}): ', param)
+
+                        # Merge cells
+                        # sheet.merge_cells(start_column=columns['lux'][1], start_row=lux_start_row,
+                        #                   end_column=columns['lux'][1], end_row=current_row - 1)
+                        # sheet.merge_cells(start_column=columns['light_temp'][1], start_row=color_start_row,
+                        #                   end_column=columns['light_temp'][1], end_row=current_row - 1)
+                        # sheet.merge_cells(start_column=columns['test_type'][1], start_row=type_start_row,
+                        #                   end_column=columns['test_type'][1], end_row=current_row - 1)
+
+
                     # After each lux
+                    if lux_num == len(luxes)-1:
+                        # If last one
+                        pass
                     print('\t\tlux done: ', lux)
-                    current_row += 1
+                    # current_row += 1
                 # After each color temp
+                if light_color_num == len(light_colors_list)-1:
+                    # If last one
+                    pass
+
                 print('\tcolor_temp done: ', light_color)
-                #current_row += 1
+                # current_row += 1
             # After each Test Type
+            if type_num == len(test_types_list) - 1:
+                # If last one
+                pass
+            else:
+                Report.xls_set_border(sheet, start_col, type_start_row, current_row-1, end_col)
+                Report.xls_fill_cells(sheet, start_col, current_row, end_col, current_row, secondary_fill)
+                current_row += 1
+
             print('test_type done: ', test_type)
-            current_row += 2
 
-            # Add sep between types
+        print('columns after: ', columns)
 
+        # Set columns' widths
         for col_key in columns.values():
             sheet.column_dimensions[get_column_letter(col_key[1])].width = col_key[2]
             # sheet.column_dimensions[get_column_letter(col_key[1])].bestFit = True
             # sheet.column_dimensions[get_column_letter(col_key[1])].auto_size = True
 
+        Report.xls_set_border(sheet, start_col, start_row, end_col, current_row, 'thick')
 
-        workbook.save(filename=dest_file)
+        return (start_col, start_row), (end_col, current_row)
 
     @staticmethod
-    def col_len(value, ):
-        pass
+    def xls_fill_cells(ws, start_col, start_row, end_col, end_row, fill):
+        for row in ws.iter_rows(start_row, end_row, start_col, end_col):
+            for cell in row:
+                cell.fill = fill
+
+
+    @staticmethod
+    def xls_set_border(ws, start_col, start_row, end_col, end_row, size='thin', color="FF000000"):
+        cell_range = f"{get_column_letter(start_col)}{start_row}:{get_column_letter(end_col)}{end_row}"
+        rows = ws[cell_range]
+        side = Side(border_style=size, color=color)
+
+        rows = list(rows)  # we convert iterator to list for simplicity, but it's not memory efficient solution
+        max_y = len(rows) - 1  # index of the last row
+        for pos_y, cells in enumerate(rows):
+            max_x = len(cells) - 1  # index of the last cell
+            for pos_x, cell in enumerate(cells):
+                border = Border(
+                    left=cell.border.left,
+                    right=cell.border.right,
+                    top=cell.border.top,
+                    bottom=cell.border.bottom
+                )
+                if pos_x == 0:
+                    border.left = side
+                if pos_x == max_x:
+                    border.right = side
+                if pos_y == 0:
+                    border.top = side
+                if pos_y == max_y:
+                    border.bottom = side
+
+                # set new border only if it's one of the edge cells
+                if pos_x == 0 or pos_x == max_x or pos_y == 0 or pos_y == max_y:
+                    cell.border = border
