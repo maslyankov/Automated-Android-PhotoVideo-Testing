@@ -6,7 +6,11 @@ import threading
 from openpyxl import Workbook, load_workbook
 from openpyxl import cell as xlcell, worksheet
 from openpyxl.utils import get_column_letter
+from openpyxl.utils.units import pixels_to_EMU
 from openpyxl.styles import PatternFill, Font, Border, Alignment, Side
+from openpyxl.drawing.xdr import XDRPositiveSize2D as xdr_size
+from openpyxl.drawing.image import Image as xls_image
+from PIL import Image
 import win32com.client as win32
 
 # Imatest
@@ -285,8 +289,8 @@ class Report:
             'min': "min",
             'max': "max"
         }
-        conf_min_col = 1
-        conf_min_row = 4
+        conf_min_col = 2
+        conf_min_row = 2
         conf_max_row = 77
         filter_str = 'functional'
         # Config end
@@ -305,7 +309,8 @@ class Report:
 
         tests_seq = {}
 
-        header = list(ws.rows)[1]
+        header = list(ws.rows)[conf_min_row-1]
+        print(list(ws.rows))
 
         test_type_col = None
         light_temp_col = None
@@ -315,6 +320,9 @@ class Report:
         max_col = None
 
         for cell in header:
+            if cell.column < conf_min_col:
+                continue
+            print('value is: ', cell.value)
             if header_mapping['test_type'] in cell.value.lower():
                 test_type_col = cell.column_letter
 
@@ -341,12 +349,14 @@ class Report:
         current_lux = None
         current_param = None
 
-        for row in ws.iter_rows(min_col=conf_min_col, min_row=conf_min_row, max_row=conf_max_row):
+        for row in ws.iter_rows(min_col=conf_min_col, min_row=conf_min_row+1, max_row=conf_max_row):
             for cell in row:
                 value = Report.get_cell_val(ws, cell)
                 # print(value, only_chars(cell.coordinate))  # Debugging
                 # print(f'curr temp: {current_temp}, curr lux: {current_lux}, current param: {current_param}')  # Debugging
-                if value is not None and isinstance(value, str) and filter_str in value.lower():
+                if value is None:
+                    break
+                elif isinstance(value, str) and filter_str in value.lower():
                     break
 
                 col = only_chars(cell.coordinate)
@@ -368,6 +378,8 @@ class Report:
                             tests_seq[current_tt][current_temp]
                         except KeyError:
                             tests_seq[current_tt][current_temp] = {}
+
+                            print('value:', value)
                         print('Light Temp: ' + current_temp)
                     else:
                         current_temp = None
@@ -562,6 +574,8 @@ class Report:
         current_row = start_row
         end_col = len(columns)-1 + start_col
 
+        secondary_fill = PatternFill(fgColor=f"FF{secondary_bg_color}", fill_type="solid")
+
         columns_count = 0
         current_col = start_col
         # Add table header
@@ -574,7 +588,10 @@ class Report:
             cell = sheet.cell(current_row, val[1])
             cell.value = val[0]
             cell.font = Font(bold=True)
+            cell.fill = secondary_fill
             cell.alignment = center
+
+            Report.xls_set_border(sheet, current_col, current_row, current_col, current_row, 'thick')
 
             data_len = len(str(val[0]))
             try:
@@ -584,23 +601,25 @@ class Report:
                 val.append(data_len)
 
             current_col += 1
+        sheet.row_dimensions[current_row].height = 25
 
         current_row += 1
 
         print('Columns are', columns)
 
-        secondary_fill = PatternFill(fgColor=f"FF{secondary_bg_color}", fill_type="solid")
-
         test_types_list = list(template_data.keys())
         for type_num, test_type in enumerate(test_types_list):
             type_start_row = current_row
             light_colors_list = list(template_data[test_type].keys())
+
             for light_color_num, light_color in enumerate(light_colors_list):
                 color_start_row = current_row
                 luxes = list(template_data[test_type][light_color].keys())
+
                 for lux_num, lux in enumerate(luxes):
                     lux_start_row = current_row
                     params = list(template_data[test_type][light_color][lux]['params'].keys())
+
                     for param in params:
                         current_col = start_col
                         # Write row of param
@@ -616,8 +635,7 @@ class Report:
                             columns['test_type'].append(data_len)
                         current_col += 1
 
-                        # Add image
-                        sheet.cell(current_row, columns['image'][1], 'image').alignment = center
+                        # Skip image
                         current_col += 1
 
                         # Add light color
@@ -669,7 +687,6 @@ class Report:
                         except IndexError:
                             columns['param_max'].append(data_len)
                         current_col += 1
-                        current_col += 1
 
                         # Add param result value
                         try:
@@ -708,50 +725,77 @@ class Report:
 
                         # After each param
                         current_row += 1
-                        print(f'\t\t\tparam done (col: {current_col}, row: {current_row}): ', param)
-
-                        # Merge cells
-                        # sheet.merge_cells(start_column=columns['lux'][1], start_row=lux_start_row,
-                        #                   end_column=columns['lux'][1], end_row=current_row - 1)
-                        # sheet.merge_cells(start_column=columns['light_temp'][1], start_row=color_start_row,
-                        #                   end_column=columns['light_temp'][1], end_row=current_row - 1)
-                        # sheet.merge_cells(start_column=columns['test_type'][1], start_row=type_start_row,
-                        #                   end_column=columns['test_type'][1], end_row=current_row - 1)
-
 
                     # After each lux
+                    # Add image
+                    img_cell = sheet.cell(lux_start_row, columns['image'][1])
+                    img_file = template_data[test_type][light_color][lux]['filename']
+                    print('img: ', img_file)
+
+                    img = xls_image(img_file)
+                    ratio = img.width / img.height
+                    img.width = 150
+                    img.height = int(img.width / ratio)
+
+                    # size = xdr_size(pixels_to_EMU(img.width), pixels_to_EMU(img.height))
+
+                    img.anchor = img_cell.coordinate
+                    sheet.add_image(img)
+                    sheet.row_dimensions[lux_start_row].height = 70
+                    if lux_start_row < current_row - 1:
+                        sheet.merge_cells(start_column=columns['image'][1], start_row=lux_start_row,
+                                          end_column=columns['image'][1], end_row=current_row - 1)
+
+                    print(f"{test_type}>{light_color}>{lux}")
+                    print('islast: ', (lux_num == len(luxes)-1))
+                    print('merge cells would be: ')
+                    print(f"start_col: {columns['lux'][1]}, start_row: {lux_start_row}")
+                    print(f"end_col: {columns['lux'][1]}, end_row: {current_row}")
                     if lux_num == len(luxes)-1:
                         # If last one
                         pass
-                    print('\t\tlux done: ', lux)
-                    # current_row += 1
+                    print(f'after lux {lux}\nmerging cells: ')
+                    print(f"start_column={columns['lux'][1]}, start_row={lux_start_row}, end_column= {columns['lux'][1]}, end_row= {current_row}")
+                    if lux_start_row < current_row - 1:
+                        sheet.merge_cells(start_column=columns['lux'][1], start_row=lux_start_row,
+                                          end_column=columns['lux'][1], end_row=current_row-1)
+                        sheet.merge_cells(start_column=columns['image'][1], start_row=lux_start_row,
+                                          end_column=columns['image'][1], end_row=current_row - 1)
+
                 # After each color temp
                 if light_color_num == len(light_colors_list)-1:
                     # If last one
                     pass
+                print(f'after light color {light_color}\nmerging cells: ')
+                print(
+                        f"start_column={columns['light_temp'][1]}, start_row={color_start_row}, end_column= {columns['light_temp'][1]}, end_row= {current_row - 1}")
 
-                print('\tcolor_temp done: ', light_color)
-                # current_row += 1
+                # Merge cells
+                if color_start_row < current_row-1:
+                    sheet.merge_cells(start_column=columns['light_temp'][1], start_row=color_start_row,
+                                          end_column=columns['light_temp'][1], end_row=current_row-1)
+
             # After each Test Type
+            sheet.merge_cells(start_column=columns['test_type'][1], start_row=type_start_row,
+                              end_column=columns['test_type'][1], end_row=current_row - 1)
+            Report.xls_set_border(sheet, start_col, type_start_row, end_col, current_row - 1, 'thick')
+
             if type_num == len(test_types_list) - 1:
                 # If last one
+                # Merge cells
                 pass
             else:
-                Report.xls_set_border(sheet, start_col, type_start_row, current_row-1, end_col)
+                # Add filled space
                 Report.xls_fill_cells(sheet, start_col, current_row, end_col, current_row, secondary_fill)
                 current_row += 1
-
-            print('test_type done: ', test_type)
 
         print('columns after: ', columns)
 
         # Set columns' widths
         for col_key in columns.values():
             sheet.column_dimensions[get_column_letter(col_key[1])].width = col_key[2]
-            # sheet.column_dimensions[get_column_letter(col_key[1])].bestFit = True
-            # sheet.column_dimensions[get_column_letter(col_key[1])].auto_size = True
 
-        Report.xls_set_border(sheet, start_col, start_row, end_col, current_row, 'thick')
+        Report.xls_set_border(sheet, start_col, start_row, end_col, current_row-1, 'thick')
 
         return (start_col, start_row), (end_col, current_row)
 
@@ -760,7 +804,6 @@ class Report:
         for row in ws.iter_rows(start_row, end_row, start_col, end_col):
             for cell in row:
                 cell.fill = fill
-
 
     @staticmethod
     def xls_set_border(ws, start_col, start_row, end_col, end_row, size='thin', color="FF000000"):

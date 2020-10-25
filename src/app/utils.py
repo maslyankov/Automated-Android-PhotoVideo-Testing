@@ -9,10 +9,13 @@ def kelvin_to_illumenant(kelvins):
     if isinstance(kelvins, str):
         if kelvins == '':
             return
+        elif kelvins in list(constants.KELVINS_TABLE.keys()):
+            return kelvins
         try:
             kelvins = int(''.join(filter(lambda x: x.isdigit(), kelvins)))
         except ValueError:
             print('Error is because of: ', kelvins)
+            return
 
     if isinstance(kelvins, int):
         for temp in constants.KELVINS_TABLE:
