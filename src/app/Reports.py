@@ -6,11 +6,10 @@ import threading
 from openpyxl import Workbook, load_workbook
 from openpyxl import cell as xlcell, worksheet
 from openpyxl.utils import get_column_letter
-from openpyxl.utils.units import pixels_to_EMU
 from openpyxl.styles import PatternFill, Font, Border, Alignment, Side
-from openpyxl.drawing.xdr import XDRPositiveSize2D as xdr_size
 from openpyxl.drawing.image import Image as xls_image
-from PIL import Image
+from openpyxl.utils.units import pixels_to_EMU
+from openpyxl.drawing.xdr import XDRPositiveSize2D as xdr_size
 import win32com.client as win32
 
 # Imatest
@@ -180,13 +179,23 @@ class Report:
         #for res_dict in images_analysis_readable:
             current_type = None
             for key, value in Report.recurse_dict(res_dict['data']):
-                if current_type is None:
+                if current_type is None or key[0] == 'title' or key[0] == 'image_file':
                     # First find the title
                     # Turns out dotpattern has neither title, nor image_file keys..
                     # if key[0] == 'title' or key[0] == 'image_file':
                     #     current_type = value.split('_')[0]
                     if key[0] == 'version':
                         current_type = value.split('  ')[-1].split('_')[0].replace(' ', '').lower()
+                    elif key[0] == 'title' or key[0] == 'image_file':
+                        last_type_name = None
+                        if current_type in list(tests_params.keys()):
+                            last_type_name = current_type
+                        current_type = value.split('_')[0]
+
+                        if last_type_name:
+                            tests_params[current_type] = tests_params[last_type_name]
+                            del tests_params[last_type_name]
+                            print(f'moved and deleted params from {last_type_name} to {current_type}')
                 else:
                     param_name = '>'.join(key)
                     val_type = type(value).__name__
