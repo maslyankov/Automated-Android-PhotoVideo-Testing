@@ -53,39 +53,9 @@ class Report:
         print('Input list: ', input_files)
 
         test_type_call = None
-        if test_type == 'sfr':
-            test_type_call = self.imatest.sfr_json
-        elif test_type == 'sfrplus':
-            test_type_call = self.imatest.sfrplus_json
-        elif test_type == 'star':
-            test_type_call = self.imatest.star_json
-        elif test_type == 'colorcheck':
-            test_type_call = self.imatest.colorcheck_json
-        elif test_type == 'stepchart':
-            test_type_call = self.imatest.stepchart_json
-        elif test_type == 'wedge':
-            test_type_call = self.imatest.wedge_json
-        elif test_type == 'uniformity':
-            test_type_call = self.imatest.uniformity_json
-        elif test_type == 'distortion':
-            test_type_call = self.imatest.distortion_json
-        elif test_type == 'esfriso':
-            test_type_call = self.imatest.esfriso_json
-        elif test_type == 'blemish':
-            test_type_call = self.imatest.blemish_json
-        elif test_type == 'dotpattern':
-            test_type_call = self.imatest.dotpattern_json
-        elif test_type == 'color_tone':
-            test_type_call = self.imatest.color_tone_json
-        elif test_type == 'checkerboard':
-            test_type_call = self.imatest.checkerboard_json
-        elif test_type == 'random':
-            test_type_call = self.imatest.random_json
-        elif test_type == 'sfrreg':
-            test_type_call = self.imatest.sfrreg_json
-        elif test_type == 'logfc':
-            test_type_call = self.imatest.logfc_json
+
         # Only other modules are "Arbitrary Charts" and "OIS" - they want different arguments
+        test_type_call = self.imatest_analysis_type(test_type, parallel=False)
 
         # Call to esfriso using Op Mode Standard, with ini file argument and JSON output
         # with multiple files.
@@ -129,14 +99,19 @@ class Report:
 
         return json.loads(result)  # Return readable json object
 
-    def imatest_analysis_type(self, test_type):
+    def imatest_analysis_type(self, test_type, parallel=True):
         # Filter out special characters and spaces
         test_type = ''.join(filter(str.isalnum, test_type.lower()))
 
-        for tt in constants.IMATEST_TEST_TYPES.keys():
+        if parallel:
+            test_types_dict = constants.IMATEST_PARALLEL_TEST_TYPES
+        else:
+            test_types_dict = constants.IMATEST_TEST_TYPES
+
+        for tt in test_types_dict.keys():
             if test_type == tt:
-                print(f'For analysis type {test_type} we found {getattr(self.imatest, constants.IMATEST_TEST_TYPES[tt])}')  # DEBUG PRINT
-                return getattr(self.imatest, constants.IMATEST_TEST_TYPES[tt])
+                print(f'For analysis type {test_type} we found {getattr(self.imatest, test_types_dict[tt])}')  # DEBUG PRINT
+                return getattr(self.imatest, test_types_dict[tt])
         # if it still hasn't returned, then will come through here
         print('Analysis Type not found in IMATEST_TEST_TYPES: ', test_type)
 
@@ -163,11 +138,11 @@ class Report:
         curr_progress = 0
         ini_file = os.path.join(constants.ROOT_DIR, 'images', 'imatest', 'ini_file', 'imatest-v2.ini')
 
-        prog_step = 100/len(constants.IMATEST_TEST_TYPES.keys())/3
+        prog_step = 100 / len(constants.IMATEST_PARALLEL_TEST_TYPES.keys()) / 3
 
         # Prepare list for passing to image analyzer
         tests_list = images_dict['test_serial']
-        for test_name in constants.IMATEST_TEST_TYPES.keys():
+        for test_name in constants.IMATEST_PARALLEL_TEST_TYPES.keys():
             img_file = os.path.join(constants.ROOT_DIR, 'images', 'imatest', f'{test_name}_example')
             if os.path.exists(img_file + '.jpg'):
                 img_file += '.jpg'
@@ -591,7 +566,7 @@ class Report:
             cell.fill = secondary_fill
             cell.alignment = center
 
-            Report.xls_set_border(sheet, current_col, current_row, current_col, current_row, 'thick')
+            Report.xls_set_border(sheet, current_col, current_row, current_col, current_row)
 
             data_len = len(str(val[0]))
             try:
@@ -731,17 +706,8 @@ class Report:
                     img_cell = sheet.cell(lux_start_row, columns['image'][1])
                     img_file = template_data[test_type][light_color][lux]['filename']
                     print('img: ', img_file)
-
-                    img = xls_image(img_file)
-                    ratio = img.width / img.height
-                    img.width = 150
-                    img.height = int(img.width / ratio)
-
-                    # size = xdr_size(pixels_to_EMU(img.width), pixels_to_EMU(img.height))
-
-                    img.anchor = img_cell.coordinate
-                    sheet.add_image(img)
-                    sheet.row_dimensions[lux_start_row].height = 70
+                    Report.xls_import_image(img_file, sheet, img_cell)
+                    # Merge image rows
                     if lux_start_row < current_row - 1:
                         sheet.merge_cells(start_column=columns['image'][1], start_row=lux_start_row,
                                           end_column=columns['image'][1], end_row=current_row - 1)
@@ -834,3 +800,15 @@ class Report:
                 # set new border only if it's one of the edge cells
                 if pos_x == 0 or pos_x == max_x or pos_y == 0 or pos_y == max_y:
                     cell.border = border
+
+    @staticmethod
+    def xls_import_image(img_file, sheet, img_cell):
+        img = xls_image(img_file)
+        ratio = img.width / img.height
+        img.width = 150
+        img.height = int(img.width / ratio)
+
+        # size = xdr_size(pixels_to_EMU(img.width), pixels_to_EMU(img.height))
+
+        img.anchor = img_cell.coordinate
+        sheet.add_image(img)

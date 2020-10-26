@@ -100,7 +100,7 @@ EXCEL_FILETYPES = [
 ]
 
 # Imatest
-IMATEST_TEST_TYPES = {
+IMATEST_PARALLEL_TEST_TYPES = {
     'blemish': 'BLEMISH_ANALYSIS',
     'checkerboard': 'CHECKERBOARD_ANALYSIS',
     'colorcheck': 'COLORCHECK_ANALYSIS',
@@ -115,6 +115,44 @@ IMATEST_TEST_TYPES = {
     'star': 'STAR_ANALYSIS',
     'uniformity': 'UNIFORMITY_ANALYSIS',
     'wedge': 'WEDGE_ANALYSIS'
+}
+
+IMATEST_TEST_TYPES = {
+    'sfr': 'sfr_json',
+    'sfrplus': 'sfrplus_json',
+    'star': 'star_json',
+    'colorcheck': 'colorcheck_json',
+    'stepchart': 'stepchart_json',
+    'wedge': 'wedge_json',
+    'uniformity': 'uniformity_json',
+    'distortion': 'distortion_json',
+    'esfriso': 'esfriso_json',
+    'blemish': 'blemish_json',
+    'dotpattern': 'dotpattern_json',
+    'colortone': 'color_tone_json',
+    'checkerboard': 'checkerboard_json',
+    'random': 'random_json',
+    'sfrreg': 'sfrreg_json',
+    'logfc': 'logfc_json'
+}
+
+IMATEST_TEST_TYPES_FRIENDLY = {
+    'blemish': 'Blemish',
+    'checkerboard': 'Checkerboard',
+    'colorcheck': 'Colorcheck',
+    'distortion': 'Distortion',
+    'dotpattern': 'Dotpattern',
+    'esfriso': 'eSFR ISO',
+    'colortone': 'Color/Tone',
+    'random': 'Random',
+    'sfr': 'SFR',
+    'sfrplus': 'SFRPlus',
+    'sfrreg': 'SFR Reg',
+    'star': 'Star',
+    'uniformity': 'Uniformity',
+    'wedge': 'Wedge',
+    'logfc': 'LogFC',
+    'stepchart': 'Stepchart',
 }
 
 # DEBUG

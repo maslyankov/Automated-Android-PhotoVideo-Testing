@@ -24,7 +24,7 @@ def gui_project_req_file(proj_req=None, return_val=False):
         key='-TREE-', )
 
     # Lists Data
-    test_modules_list = list(constants.IMATEST_TEST_TYPES.keys())
+    test_modules_list = list(constants.IMATEST_PARALLEL_TEST_TYPES.keys())
     light_types_list = constants.AVAILABLE_LIGHTS[1] # TODO: pass light num so that we show relevant stuff
 
     # Parameters
@@ -156,7 +156,7 @@ def gui_project_req_file(proj_req=None, return_val=False):
             current = tree.where()
             curr_sel_test_type = current
 
-            while(curr_sel_test_type and tree.get_text(curr_sel_test_type) != '' and str(tree.get_text(curr_sel_test_type)).lower() not in list(constants.IMATEST_TEST_TYPES.keys())):
+            while(curr_sel_test_type and tree.get_text(curr_sel_test_type) != '' and str(tree.get_text(curr_sel_test_type)).lower() not in list(constants.IMATEST_PARALLEL_TEST_TYPES.keys())):
                 curr_sel_test_type = tree.treedata.tree_dict[curr_sel_test_type].parent
                 print(tree.get_text(curr_sel_test_type))
 
