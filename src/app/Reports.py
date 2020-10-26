@@ -601,8 +601,9 @@ class Report:
                         param_templ_data = template_data[test_type][light_color][lux]['params'][param]
 
                         # Add test type name
-                        sheet.cell(current_row, columns['test_type'][1], test_type).alignment = center
-                        data_len = len(str(test_type))
+                        test_type_pretty = constants.IMATEST_TEST_TYPES_FRIENDLY[test_type]
+                        sheet.cell(current_row, columns['test_type'][1], test_type_pretty).alignment = center
+                        data_len = len(test_type_pretty)
                         try:
                             if columns['test_type'][2] < data_len:
                                 columns['test_type'][2] = data_len
