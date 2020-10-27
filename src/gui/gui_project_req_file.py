@@ -77,7 +77,7 @@ def gui_project_req_file(proj_req=None, return_val=False):
         ]
     ]
     min_max_right = [
-        [sg.B('Add\nMin,Max', key='add_min_max_btn', size=(10, 3))]
+        [sg.B('Add\nMin,Max', key='add_min_max_btn', size=(10, 2))]
     ]
 
     # ##
@@ -112,7 +112,14 @@ def gui_project_req_file(proj_req=None, return_val=False):
         ],
         [
             sg.Column(min_max_left), sg.Column(min_max_right),
+        ],
+        [
+            sg.I(key='params_search_filter', size=(34, 1), pad=(3,0))
+        ],
+        [
+            sg.Listbox(values=[1, 2, 3], key='params_search_list', size=(32, 5), pad=(3,0))
         ]
+
     ]
 
     right_col = [
