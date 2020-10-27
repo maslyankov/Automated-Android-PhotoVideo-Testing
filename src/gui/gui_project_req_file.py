@@ -39,7 +39,7 @@ def gui_project_req_file(proj_req=None, return_val=False):
     excel_formats = "".join(f"*.{w} " for w in constants.EXCEL_FILETYPES).rstrip(' ')
 
     # Collapsables
-    opened_impexp, opened_tt, opened_temp, opened_lux, opened_param = False, False, False, False, False
+    opened_impexp, opened_tt, opened_temp, opened_lux, opened_params = False, False, False, False, False
 
     top_left_col = [
         [sg.FileBrowse(
@@ -87,51 +87,23 @@ def gui_project_req_file(proj_req=None, return_val=False):
         sg.Column(top_right_col),
     ]]
 
-    temp_section = [
-        [
+    temp_section = [[
             sg.Combo(light_types_list, key='add_light_temp_value', size=(18, 1), pad=(7,2), default_value=light_types_list[0]),
             sg.B('Add Temp', key='add_light_temp_btn', size=(10, 1)),
-        ]
-    ]
+        ]]
 
-    tt_section = [
-        [
+    tt_section = [[
             sg.Combo(test_modules_list, key='add_type_value', size=(18, 1), pad=(7, 2),
                      default_value=test_modules_list[0], enable_events=True),
             sg.B('Add Type', key='add_type_btn', size=(10, 1)),
-        ]
-    ]
+        ]]
 
-    lux_section = [
-        [
+    lux_section = [[
             sg.Spin([i for i in range(10, 1000)], initial_value=20, key='add_lux_value', size=(19, 1)),
             sg.B('Add LUX', key='add_lux_btn', size=(10, 1)),
-        ]
-    ]
+        ]]
 
-    right_col = [
-        [sg.T('Currently loaded: ', size=(18, 1)), sg.B('Save', key='save_btn', disabled=True, size=(10, 1))],
-        [sg.T('New requirements file', key='current_filename_label', size=(30, 1))],
-        [sg.HorizontalSeparator()],
-
-            [sg.T(SYMBOL_DOWN if opened_impexp else SYMBOL_UP, enable_events=True, k='-OPEN SEC_IMPEXP-', text_color='yellow'),
-             sg.T('Import / Export', enable_events=True, text_color='yellow', k='-OPEN SEC_IMPEXP-TEXT')],
-            [collapse(expimp_section, '-SEC_IMPEXP-', visible=opened_temp)],
-
-        [sg.HorizontalSeparator()],
-            [sg.T(SYMBOL_DOWN if opened_tt else SYMBOL_UP, enable_events=True, k='-OPEN SEC_TT-', text_color='yellow'),
-             sg.T('Test Type', enable_events=True, text_color='yellow', k='-OPEN SEC_TT-TEXT')],
-            [collapse(tt_section, '-SEC_TT-', visible=opened_tt)],
-
-            [sg.T(SYMBOL_DOWN if opened_temp else SYMBOL_UP, enable_events=True, k='-OPEN SEC_TEMP-', text_color='yellow'),
-             sg.T('Color Temp', enable_events=True, text_color='yellow', k='-OPEN SEC_TEMP-TEXT')],
-            [collapse(temp_section, '-SEC_TEMP-', visible=opened_temp)],
-
-            [sg.T(SYMBOL_DOWN if opened_lux else SYMBOL_UP, enable_events=True, k='-OPEN SEC_LUX-', text_color='yellow'),
-             sg.T('Lux', enable_events=True, text_color='yellow', k='-OPEN SEC_LUX-TEXT')],
-            [collapse(temp_section, '-SEC_LUX-', visible=opened_lux)],
-
-        [sg.HorizontalSeparator()],
+    params_section = [
         [
             sg.Combo(params_list, key='add_param_value', size=(32, 1), default_value=params_list[0], enable_events=True)
         ],
@@ -140,18 +112,44 @@ def gui_project_req_file(proj_req=None, return_val=False):
         ],
         [
             sg.Column(min_max_left), sg.Column(min_max_right),
-        ],
+        ]
+    ]
+
+    right_col = [
+        [sg.T('Currently loaded: ', size=(18, 1)), sg.B('Save', key='save_btn', disabled=True, size=(10, 1))],
+        [sg.T('New requirements file', key='current_filename_label', size=(30, 1))],
+        [sg.HorizontalSeparator()],
+
+            [sg.T(SYMBOL_DOWN if opened_impexp else SYMBOL_UP, enable_events=True, k='-OPEN SEC_IMPEXP-', text_color=constants.PRIMARY_COLOR),
+             sg.T('Import / Export', enable_events=True, text_color=constants.PRIMARY_COLOR, k='-OPEN SEC_IMPEXP-TEXT')],
+            [collapse(expimp_section, '-SEC_IMPEXP-', visible=opened_temp)],
+
+        [sg.HorizontalSeparator()],
+
+            [sg.T(SYMBOL_DOWN if opened_tt else SYMBOL_UP, enable_events=True, k='-OPEN SEC_TT-', text_color=constants.PRIMARY_COLOR),
+             sg.T('Test Type', enable_events=True, text_color=constants.PRIMARY_COLOR, k='-OPEN SEC_TT-TEXT')],
+            [collapse(tt_section, '-SEC_TT-', visible=opened_tt)],
+
+            [sg.T(SYMBOL_DOWN if opened_temp else SYMBOL_UP, enable_events=True, k='-OPEN SEC_TEMP-', text_color=constants.PRIMARY_COLOR),
+             sg.T('Color Temp', enable_events=True, text_color=constants.PRIMARY_COLOR, k='-OPEN SEC_TEMP-TEXT')],
+            [collapse(temp_section, '-SEC_TEMP-', visible=opened_temp)],
+
+            [sg.T(SYMBOL_DOWN if opened_lux else SYMBOL_UP, enable_events=True, k='-OPEN SEC_LUX-', text_color=constants.PRIMARY_COLOR),
+             sg.T('Lux', enable_events=True, text_color=constants.PRIMARY_COLOR, k='-OPEN SEC_LUX-TEXT')],
+            [collapse(lux_section, '-SEC_LUX-', visible=opened_lux)],
+
+            [sg.T(SYMBOL_DOWN if opened_params else SYMBOL_UP, enable_events=True, k='-OPEN SEC_PARAMS-', text_color=constants.PRIMARY_COLOR),
+             sg.T('Parameters', enable_events=True, text_color=constants.PRIMARY_COLOR, k='-OPEN SEC_PARAMS-TEXT')],
+            [collapse(params_section, '-SEC_PARAMS-', visible=opened_params)],
+
         [sg.HorizontalSeparator()],
         [
-            sg.B('/\\', key='mv_up_btn', size=(4, 2)),
-            sg.B('\\/', key='mv_down_btn', size=(4, 2)),
-            sg.B('X', key='delete_btn', size=(4, 2)),
-        ],
-        [sg.HorizontalSeparator()],
-        [
-            sg.B('Expand', key='expand_btn', size=(10, 1)),
-            sg.B('Collapse', key='collapse_btn', size=(10, 1)),
-            sg.B('Clear', key='clear_btn', size=(6, 1)),
+            sg.B('/\\', key='mv_up_btn', size=(3, 2)),
+            sg.B('\\/', key='mv_down_btn', size=(3, 2)),
+            sg.B('X', key='delete_btn', size=(3, 2)),
+            sg.B('EXP', key='expand_btn', size=(4, 2)),
+            sg.B('COLL', key='collapse_btn', size=(4, 2)),
+            sg.B('CLR', key='clear_btn', size=(4, 2)),
         ],
         [sg.HorizontalSeparator()],
         [
@@ -185,18 +183,39 @@ def gui_project_req_file(proj_req=None, return_val=False):
         # Sections
         if event.startswith('-OPEN SEC_IMPEXP-'):
             opened_impexp = not opened_impexp
-            window['-OPEN SEC_IMPEXP-'].update(SYMBOL_DOWN if opened_temp else SYMBOL_UP)
-            window['-SEC_IMPEXP-'].update(visible=opened_impexp)
+            opened_tt, opened_temp, opened_lux, opened_params = False, False, False, False
+
+        if event.startswith('-OPEN SEC_TT-'):
+            opened_tt = not opened_tt
+            opened_impexp, opened_temp, opened_lux, opened_params = False, False, False, False
 
         if event.startswith('-OPEN SEC_TEMP-'):
             opened_temp = not opened_temp
-            window['-OPEN SEC_TEMP-'].update(SYMBOL_DOWN if opened_temp else SYMBOL_UP)
-            window['-SEC_TEMP-'].update(visible=opened_temp)
+            opened_impexp, opened_tt, opened_lux, opened_params = False, False, False, False
 
         if event.startswith('-OPEN SEC_LUX-'):
             opened_lux = not opened_lux
-            window['-OPEN SEC_LUX-'].update(SYMBOL_DOWN if opened_lux else SYMBOL_UP)
-            window['-SEC_LUX-'].update(visible=opened_lux)
+            opened_impexp, opened_tt, opened_temp, opened_params = False, False, False, False
+
+        if event.startswith('-OPEN SEC_PARAMS-'):
+            opened_params = not opened_params
+            opened_impexp, opened_tt, opened_temp, opened_lux = False, False, False, False
+
+        # Update UI elements
+        window['-OPEN SEC_IMPEXP-'].update(SYMBOL_DOWN if opened_temp else SYMBOL_UP)
+        window['-SEC_IMPEXP-'].update(visible=opened_impexp)
+
+        window['-OPEN SEC_TT-'].update(SYMBOL_DOWN if opened_tt else SYMBOL_UP)
+        window['-SEC_TT-'].update(visible=opened_tt)
+
+        window['-OPEN SEC_TEMP-'].update(SYMBOL_DOWN if opened_temp else SYMBOL_UP)
+        window['-SEC_TEMP-'].update(visible=opened_temp)
+
+        window['-OPEN SEC_LUX-'].update(SYMBOL_DOWN if opened_lux else SYMBOL_UP)
+        window['-SEC_LUX-'].update(visible=opened_lux)
+
+        window['-OPEN SEC_PARAMS-'].update(SYMBOL_DOWN if opened_params else SYMBOL_UP)
+        window['-SEC_PARAMS-'].update(visible=opened_params)
 
         if event == '-TREE-':
             # When selecting item check for what test type it is in
