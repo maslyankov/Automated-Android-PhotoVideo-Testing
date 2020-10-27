@@ -29,6 +29,20 @@ def place(elem):
     """
     return sg.Column([[elem]], pad=(0, 0))
 
+SYMBOL_UP =    '▲'
+SYMBOL_DOWN =  '▼'
+
+
+def collapse(layout, key, visible=False):
+    """
+    Helper function that creates a Column that can be later made hidden, thus appearing "collapsed"
+    :param layout: The layout for the section
+    :param key: Key used to make this seciton visible / invisible
+    :return: A pinned column that can be placed directly into your layout
+    :rtype: sg.pin
+    """
+    return sg.pin(sg.Column(layout, key=key, visible=visible))
+
 
 class Tree(sg.Tree):
     """

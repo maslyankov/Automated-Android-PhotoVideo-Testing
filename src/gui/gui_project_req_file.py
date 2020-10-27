@@ -7,7 +7,7 @@ import PySimpleGUI as sg
 
 import src.constants as constants
 from src.app.utils import convert_dict_to_xml, convert_xml_to_dict
-from src.gui.utils_gui import Tree, place
+from src.gui.utils_gui import Tree, place, collapse, SYMBOL_DOWN, SYMBOL_UP
 from src.app.Reports import Report
 
 is_excel = False
@@ -37,6 +37,9 @@ def gui_project_req_file(proj_req=None, return_val=False):
     left_col = [[tree]]
 
     excel_formats = "".join(f"*.{w} " for w in constants.EXCEL_FILETYPES).rstrip(' ')
+
+    # Collapsables
+    opened_impexp, opened_tt, opened_temp, opened_lux, opened_param = False, False, False, False, False
 
     top_left_col = [
         [sg.FileBrowse(
@@ -77,29 +80,57 @@ def gui_project_req_file(proj_req=None, return_val=False):
         [sg.B('Add\nMin,Max', key='add_min_max_btn', size=(10, 3))]
     ]
 
-    right_col = [
-        [
-            sg.Column(top_left_col),
-            sg.T(' - - '),
-            sg.Column(top_right_col),
-        ],
-        [sg.HorizontalSeparator()],
-        [sg.T('Currently loaded: ', size=(18, 1)),sg.B('Save', key='save_btn', disabled=True, size=(10, 1))],
-        [sg.T('New requirements file', key='current_filename_label', size=(30, 1))],
-        [sg.HorizontalSeparator()],
-        [
-            sg.Combo(test_modules_list, key='add_type_value', size=(18, 1), pad=(7,2), default_value=test_modules_list[0], enable_events=True),
-            sg.B('Add Type', key='add_type_btn', size=(10, 1)),
-        ],
-        [sg.HorizontalSeparator()],
+    # ##
+    expimp_section = [[
+        sg.Column(top_left_col),
+        sg.T(' - - '),
+        sg.Column(top_right_col),
+    ]]
+
+    temp_section = [
         [
             sg.Combo(light_types_list, key='add_light_temp_value', size=(18, 1), pad=(7,2), default_value=light_types_list[0]),
             sg.B('Add Temp', key='add_light_temp_btn', size=(10, 1)),
-        ],
+        ]
+    ]
+
+    tt_section = [
+        [
+            sg.Combo(test_modules_list, key='add_type_value', size=(18, 1), pad=(7, 2),
+                     default_value=test_modules_list[0], enable_events=True),
+            sg.B('Add Type', key='add_type_btn', size=(10, 1)),
+        ]
+    ]
+
+    lux_section = [
         [
             sg.Spin([i for i in range(10, 1000)], initial_value=20, key='add_lux_value', size=(19, 1)),
             sg.B('Add LUX', key='add_lux_btn', size=(10, 1)),
-        ],
+        ]
+    ]
+
+    right_col = [
+        [sg.T('Currently loaded: ', size=(18, 1)), sg.B('Save', key='save_btn', disabled=True, size=(10, 1))],
+        [sg.T('New requirements file', key='current_filename_label', size=(30, 1))],
+        [sg.HorizontalSeparator()],
+
+            [sg.T(SYMBOL_DOWN if opened_impexp else SYMBOL_UP, enable_events=True, k='-OPEN SEC_IMPEXP-', text_color='yellow'),
+             sg.T('Import / Export', enable_events=True, text_color='yellow', k='-OPEN SEC_IMPEXP-TEXT')],
+            [collapse(expimp_section, '-SEC_IMPEXP-', visible=opened_temp)],
+
+        [sg.HorizontalSeparator()],
+            [sg.T(SYMBOL_DOWN if opened_tt else SYMBOL_UP, enable_events=True, k='-OPEN SEC_TT-', text_color='yellow'),
+             sg.T('Test Type', enable_events=True, text_color='yellow', k='-OPEN SEC_TT-TEXT')],
+            [collapse(tt_section, '-SEC_TT-', visible=opened_tt)],
+
+            [sg.T(SYMBOL_DOWN if opened_temp else SYMBOL_UP, enable_events=True, k='-OPEN SEC_TEMP-', text_color='yellow'),
+             sg.T('Color Temp', enable_events=True, text_color='yellow', k='-OPEN SEC_TEMP-TEXT')],
+            [collapse(temp_section, '-SEC_TEMP-', visible=opened_temp)],
+
+            [sg.T(SYMBOL_DOWN if opened_lux else SYMBOL_UP, enable_events=True, k='-OPEN SEC_LUX-', text_color='yellow'),
+             sg.T('Lux', enable_events=True, text_color='yellow', k='-OPEN SEC_LUX-TEXT')],
+            [collapse(temp_section, '-SEC_LUX-', visible=opened_lux)],
+
         [sg.HorizontalSeparator()],
         [
             sg.Combo(params_list, key='add_param_value', size=(32, 1), default_value=params_list[0], enable_events=True)
@@ -150,6 +181,22 @@ def gui_project_req_file(proj_req=None, return_val=False):
             if event == 'go_templ_btn':
                 go_templ_btn_clicked = True
             break
+
+        # Sections
+        if event.startswith('-OPEN SEC_IMPEXP-'):
+            opened_impexp = not opened_impexp
+            window['-OPEN SEC_IMPEXP-'].update(SYMBOL_DOWN if opened_temp else SYMBOL_UP)
+            window['-SEC_IMPEXP-'].update(visible=opened_impexp)
+
+        if event.startswith('-OPEN SEC_TEMP-'):
+            opened_temp = not opened_temp
+            window['-OPEN SEC_TEMP-'].update(SYMBOL_DOWN if opened_temp else SYMBOL_UP)
+            window['-SEC_TEMP-'].update(visible=opened_temp)
+
+        if event.startswith('-OPEN SEC_LUX-'):
+            opened_lux = not opened_lux
+            window['-OPEN SEC_LUX-'].update(SYMBOL_DOWN if opened_lux else SYMBOL_UP)
+            window['-SEC_LUX-'].update(visible=opened_lux)
 
         if event == '-TREE-':
             # When selecting item check for what test type it is in
