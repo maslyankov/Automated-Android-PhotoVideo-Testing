@@ -105,24 +105,20 @@ def gui_project_req_file(proj_req=None, return_val=False):
 
     params_section = [
         [
-            sg.Combo(params_list, key='add_param_value', size=(32, 1), default_value=params_list[0], enable_events=True)
+            sg.I(key='params_search_filter', size=(34, 1), pad=(3, 0), enable_events=True)
+        ],
+        [
+            sg.Listbox(
+                values=filter_params(imatest_params, ''),
+                key='params_search_list',
+                size=(32, 5), pad=(3, 0))
         ],
         [
             sg.B('Add Param', key='add_param_btn', size=(30, 1))
         ],
         [
             sg.Column(min_max_left), sg.Column(min_max_right),
-        ],
-        [
-            sg.I(key='params_search_filter', size=(34, 1), pad=(3,0), enable_events=True)
-        ],
-        [
-            sg.Listbox(
-                values=filter_params(imatest_params, ''),
-                key='params_search_list',
-                size=(32, 5), pad=(3,0))
         ]
-
     ]
 
     right_col = [
@@ -241,8 +237,6 @@ def gui_project_req_file(proj_req=None, return_val=False):
             if current_test_type is None:
                 current_test_type = str(tree.get_text(curr_sel_test_type)).lower()
                 # Update list accordingly
-                params_list = list(imatest_params[current_test_type].keys())
-                window['add_param_value'].Update(params_list[0], values=params_list)
                 print(f'now at {current_test_type} test type ')
             else:
                 if str(tree.get_text(curr_sel_test_type)).lower() != current_test_type:
@@ -250,9 +244,10 @@ def gui_project_req_file(proj_req=None, return_val=False):
                     # Update list accordingly
                     if current_test_type == 'root':
                         continue
-                    params_list = list(imatest_params[current_test_type].keys())
-                    window['add_param_value'].Update(params_list[0], values=params_list)
                     print(f'now at {current_test_type} test type ')
+
+            ret_vals = filter_params(imatest_params, values['params_search_filter'], current_test_type)
+            window['params_search_list'].Update(values=ret_vals)
 
         selected = tree.where()
         selected_text = tree.get_text(selected)
@@ -274,9 +269,7 @@ def gui_project_req_file(proj_req=None, return_val=False):
 
         if event == 'params_search_filter':
             ret_vals = filter_params(imatest_params, values['params_search_filter'], current_test_type)
-            print('Filters: ', values['params_search_filter'])
-            print('Search results: ', ret_vals)
-            window['params_search_list'].Update(values=filter_params(imatest_params, values['params_search_filter'], current_test_type))
+            window['params_search_list'].Update(values=ret_vals)
 
         if event == 'clear_btn':
             if sg.popup_yes_no('Are you sure you want to remove all entries?') == 'Yes':
@@ -288,16 +281,16 @@ def gui_project_req_file(proj_req=None, return_val=False):
         if event == 'add_param_btn':
             current = tree.where()
             if tree.get_text(values['-TREE-'][0]) == 'params':
-                tree.insert_node(current, f"{values['add_param_value']}", values['add_param_value'])
+                tree.insert_node(current, f"{values['params_search_list'][0]}", values['params_search_list'][0])
             else:
-                print('You can only add params to "params"')
+                sg.popup_ok('You can only add params to "params"!')
 
         if event == 'add_light_temp_btn':
             current = tree.where()
             if tree.get_text(values['-TREE-'][0]) in test_modules_list:
                 tree.insert_node(current, f"{values['add_light_temp_value']}", values['add_light_temp_value'])
             else:
-                print('You can only add light temps test type elements')
+                sg.popup_ok('You can only add light temps to test type elements!')
 
         if event == 'add_lux_btn':
             current = tree.where()
@@ -305,7 +298,7 @@ def gui_project_req_file(proj_req=None, return_val=False):
                 new_elem = tree.insert_node(current, values['add_lux_value'], values['add_lux_value'])
                 tree.insert_node(new_elem, 'params', 'params')
             else:
-                print('Select temp first')
+                sg.popup_ok('Select temp first')
 
         if event == 'add_min_max_btn':
             current = tree.where()
@@ -316,7 +309,7 @@ def gui_project_req_file(proj_req=None, return_val=False):
                 max = tree.insert_node(current, 'max', 'param-val')
                 tree.insert_node(max, values['param_max_value'], values['param_max_value'])
             else:
-                print("Trying to add min,max to invalid place. parent val: ", curr_parent_val)
+                sg.popup_ok("Trying to add min,max to invalid place. \nparent val: ", curr_parent_val)
 
         if event == 'mv_up_btn':
             print(f'Move up {values["-TREE-"]}')
@@ -416,15 +409,16 @@ def gui_project_req_file(proj_req=None, return_val=False):
 
 def filter_params(imatest_params, filter, current_test_type=None):
     out_list = []
-
+    print(f'filter params got: \n{imatest_params}\n, {filter}\n, {current_test_type}')
+    imatest_tests_list = list(imatest_params.keys())
     for key, value in imatest_params.items():
         for param in list(value.keys()):
             if (filter != '' and filter != None):
                 if filter in param.lower():
                     out_list.append(f'{key} > {param}')
-            elif current_test_type and current_test_type == key:
+            elif current_test_type == key:
                 out_list.append(f'{param}')
-            else:
+            elif current_test_type == None:
                 out_list.append(f'{key} > {param}')
 
     return out_list
