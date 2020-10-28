@@ -114,10 +114,13 @@ def gui_project_req_file(proj_req=None, return_val=False):
             sg.Column(min_max_left), sg.Column(min_max_right),
         ],
         [
-            sg.I(key='params_search_filter', size=(34, 1), pad=(3,0))
+            sg.I(key='params_search_filter', size=(34, 1), pad=(3,0), enable_events=True)
         ],
         [
-            sg.Listbox(values=[1, 2, 3], key='params_search_list', size=(32, 5), pad=(3,0))
+            sg.Listbox(
+                values=filter_params(imatest_params, ''),
+                key='params_search_list',
+                size=(32, 5), pad=(3,0))
         ]
 
     ]
@@ -180,7 +183,7 @@ def gui_project_req_file(proj_req=None, return_val=False):
     current_file = None
 
     while True:
-        event, values = window.read(timeout=100)
+        event, values = window.read() # timeout=100)
 
         if event == sg.WIN_CLOSED or event == 'Close' or event == 'go_templ_btn':  # if user closes window or clicks cancel
             if event == 'go_templ_btn':
@@ -224,6 +227,8 @@ def gui_project_req_file(proj_req=None, return_val=False):
         window['-OPEN SEC_PARAMS-'].update(SYMBOL_DOWN if opened_params else SYMBOL_UP)
         window['-SEC_PARAMS-'].update(visible=opened_params)
 
+        current_test_type = None
+
         if event == '-TREE-':
             # When selecting item check for what test type it is in
             current = tree.where()
@@ -233,9 +238,7 @@ def gui_project_req_file(proj_req=None, return_val=False):
                 curr_sel_test_type = tree.treedata.tree_dict[curr_sel_test_type].parent
                 print(tree.get_text(curr_sel_test_type))
 
-            try:
-                current_test_type
-            except NameError:
+            if current_test_type is None:
                 current_test_type = str(tree.get_text(curr_sel_test_type)).lower()
                 # Update list accordingly
                 params_list = list(imatest_params[current_test_type].keys())
@@ -268,6 +271,12 @@ def gui_project_req_file(proj_req=None, return_val=False):
 
         print('vals', values)  # Debugging
         print('event', event)  # Debugging
+
+        if event == 'params_search_filter':
+            ret_vals = filter_params(imatest_params, values['params_search_filter'], current_test_type)
+            print('Filters: ', values['params_search_filter'])
+            print('Search results: ', ret_vals)
+            window['params_search_list'].Update(values=filter_params(imatest_params, values['params_search_filter'], current_test_type))
 
         if event == 'clear_btn':
             if sg.popup_yes_no('Are you sure you want to remove all entries?') == 'Yes':
@@ -403,6 +412,22 @@ def gui_project_req_file(proj_req=None, return_val=False):
         return tree.dump_tree_dict()
     else:
         return None
+
+
+def filter_params(imatest_params, filter, current_test_type=None):
+    out_list = []
+
+    for key, value in imatest_params.items():
+        for param in list(value.keys()):
+            if (filter != '' and filter != None):
+                if filter in param.lower():
+                    out_list.append(f'{key} > {param}')
+            elif current_test_type and current_test_type == key:
+                out_list.append(f'{param}')
+            else:
+                out_list.append(f'{key} > {param}')
+
+    return out_list
 
 
 def import_templ(templ_in, tree):
