@@ -8,6 +8,7 @@ import src.constants as constants
 def gui_push_file(attached_devices, device_obj):
     file_destinations = [
         'sdcard/DCIM/',
+        'vendor/lib/',
         'vendor/lib/camera/'
     ]
 
@@ -29,7 +30,7 @@ def gui_push_file(attached_devices, device_obj):
         [
             sg.Text('File:', size=(9, 1)),
             sg.InputText(size=(35, 1), key='source_file', enable_events=True),
-            sg.FileBrowse()
+            sg.FilesBrowse()
         ],
         [sg.Button('Push File', size=(10, 2),
                    key='push_file_btn', disabled=True)]
@@ -56,14 +57,15 @@ def gui_push_file(attached_devices, device_obj):
 
         if event == 'push_file_btn':
             curr_device = device_obj[values['selected_device']]
-            file_dest = values['dest_folder']
-            filename = Path(values['source_file']).name
+            files_dest = values['dest_folder']
+
+            print(values['source_file'].split(';'))
 
             print("Remounting Device...")
             curr_device.remount()
 
             print("Pushing new file to device...")
 
-            curr_device.push_file(values['source_file'], file_dest + filename)
+            curr_device.push_files(values['source_file'], files_dest)
 
     window.close()

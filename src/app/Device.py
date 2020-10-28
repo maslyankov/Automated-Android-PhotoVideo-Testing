@@ -448,6 +448,12 @@ class Device:
         self.exec_shell('settings put global stay_on_while_plugged_in 1')
         self.exec_shell('settings put system screen_off_timeout 9999999')
 
+    def push_files(self, files_list, files_dest):
+        for file in files_list.split(';'):
+            print('pushing: ', file)
+            filename = os.path.basename(file)
+            self.push_file(os.path.normpath(file), files_dest + filename)
+
     def turn_on_and_unlock(self):
         state = self.is_sleeping()
         # print(f"predicate: {state[0] == 'false'}")
