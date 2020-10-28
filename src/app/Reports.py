@@ -13,7 +13,10 @@ from openpyxl.drawing.xdr import XDRPositiveSize2D as xdr_size
 import win32com.client as win32
 
 # Imatest
-from imatest.it import ImatestLibrary, ImatestException
+try:
+    from imatest.it import ImatestLibrary, ImatestException
+except RuntimeError:
+    print('Imatest Import error (Check MathLAB path)!')
 
 # Local
 import src.constants as constants

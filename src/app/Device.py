@@ -187,6 +187,30 @@ class Device:
             print("Remonut Output: ".format(stdout.decode()))
         remount.terminate()
 
+    def disable_verity(self):
+        """
+        Disabled verity of device
+        :return:None
+        """
+        print("Dis verity device serial: " + self.device_serial)
+        CREATE_NO_WINDOW = 0x08000000
+        self.adb.anticipate_root = True
+        disver = subprocess.Popen([constants.ADB, '-s', self.device_serial, 'disable-verity'],
+                                   stdin=subprocess.PIPE,
+                                   stdout=subprocess.PIPE,
+                                   stderr=subprocess.PIPE,
+                                   creationflags=CREATE_NO_WINDOW)
+        disver.stdin.close()
+        stdout, stderr = disver.communicate()
+        if stderr:
+            print("Dis verity Errors: ".format(stderr.decode()))
+        if stdout:
+            print("Dis verity Output: ".format(stdout.decode()))
+        disver.terminate()
+
+        print('Rebooting device after disabling verity!')
+        self.reboot()
+
     def exec_shell(self, cmd):
         """
         Execute a shell command on the device

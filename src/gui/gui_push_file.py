@@ -1,6 +1,5 @@
 import os
 import PySimpleGUI as sg
-from pathlib import Path
 
 import src.constants as constants
 
@@ -32,7 +31,9 @@ def gui_push_file(attached_devices, device_obj):
             sg.InputText(size=(35, 1), key='source_file', enable_events=True),
             sg.FilesBrowse()
         ],
-        [sg.Button('Push File', size=(10, 2),
+        [
+            sg.Button('Disable Verity', key='disable_verity_btn', size=(10, 2)),
+            sg.Button('Push File', size=(10, 2),
                    key='push_file_btn', disabled=True)]
     ]
 
@@ -55,6 +56,13 @@ def gui_push_file(attached_devices, device_obj):
         if event == 'source_file':
             window['push_file_btn'].Update(disabled=False)
 
+        if event == 'disable_verity_btn':
+            curr_device = device_obj[values['selected_device']]
+
+            curr_device.disable_verity()
+
+            sg.popup_ok('Verity Disabled!\nYou might need to reattach to device.')
+
         if event == 'push_file_btn':
             curr_device = device_obj[values['selected_device']]
             files_dest = values['dest_folder']
@@ -63,9 +71,10 @@ def gui_push_file(attached_devices, device_obj):
 
             print("Remounting Device...")
             curr_device.remount()
-
             print("Pushing new file to device...")
 
             curr_device.push_files(values['source_file'], files_dest)
+
+            sg.popup_ok('Files pushed!')
 
     window.close()
