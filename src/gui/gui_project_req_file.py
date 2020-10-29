@@ -94,8 +94,12 @@ def gui_project_req_file(proj_req=None, return_val=False):
             sg.B('Add Temp', key='add_light_temp_btn', size=(10, 1))
         ],
         [
-            sg.T(f'{constants.KELVINS_TABLE[light_types_list[0]][0]}K', key='add_light_temp_kelvins_label'),
-            sg.T(constants.KELVINS_TABLE[light_types_list[0]][1], key='add_light_temp_desc_label')
+            sg.T(
+                f'{constants.KELVINS_TABLE[light_types_list[0]][0]}K',
+                key='add_light_temp_kelvins_label', size=(8, 1)),
+            sg.T(
+                constants.KELVINS_TABLE[light_types_list[0]][1],
+                key='add_light_temp_desc_label', size=(20, 1))
         ]
     ]
 

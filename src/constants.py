@@ -79,7 +79,12 @@ LUXMETERS_MODELS = {
 
 # Light Temperatures
 KELVINS_TABLE = {
-    "INCA":    (2400, 'Standard Incandescent lamps'),
+    "LED_3000": (3000, 'Light Emitting Diode'),
+    "LED_5000": (5000, 'Light Emitting Diode'),
+    "LED_6000": (6000, 'Light Emitting Diode'),
+    "E27-Warm": (2700, 'Same as WW'),
+    "CFL":      (3500, 'Cool Flourescent Lights, same as TL835'),
+    "INCA":     (2400, 'Standard Incandescent lamps'),
     "INCA2":    (2550, 'Soft white Incandescent lamps'),
     "WW":       (2700, 'Warm White'),
     "A":        (2856, 'Incandescent - typical, domestic, tungsten-filament lighting'),
