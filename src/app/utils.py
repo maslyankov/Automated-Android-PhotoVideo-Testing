@@ -46,9 +46,15 @@ def only_chars(val: str) -> int:
 
 
 # Other utils
-def get_list_average(list_in: list):
+def get_list_average(list_in: list, min_index=None, max_index=None):
     if not isinstance(list_in, list):
         return
+
+    if min_index is not None:
+        if max_index is None:
+            list_in = [list_in[min_index]]
+        else:
+            list_in = list_in[min_index:max_index]
 
     result = 0
     divider = 0
@@ -104,7 +110,24 @@ def analyze_images_test_results(template_data):
                             # last part of param: param_piece,
                             # param value: param_val
                             curr_param_dict = template_data[test_type][light_temp][lux]["params"][param]
-                            param_val_calc = get_list_average(param_val)
+
+                            try:
+                                restrict_start = curr_param_dict['start_value']
+                            except KeyError:
+                                restrict_start = None
+
+                            try:
+                                restrict_end = curr_param_dict['end_value']
+                            except KeyError:
+                                restrict_end = None
+
+                            param_val_calc = get_list_average(
+                                param_val,
+                                restrict_start,
+                                restrict_end
+                            )
+
+
                             curr_param_dict['result'] = param_val
                             curr_param_dict['result_calculated'] = param_val_calc
 
