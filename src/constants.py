@@ -83,6 +83,7 @@ KELVINS_TABLE = {
     "LED_5000": (5000, 'Light Emitting Diode'),
     "LED_6000": (6000, 'Light Emitting Diode'),
     "E27-Warm": (2700, 'Same as WW'),
+    "E27 Cool": (5000, ''),
     "CFL":      (3500, 'Cool Flourescent Lights, same as TL835'),
     "INCA":     (2400, 'Standard Incandescent lamps'),
     "INCA2":    (2550, 'Soft white Incandescent lamps'),
