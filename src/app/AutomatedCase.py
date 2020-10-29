@@ -1,5 +1,4 @@
 from datetime import datetime
-import json
 import os
 import time
 import threading
@@ -425,7 +424,7 @@ class AutomatedCase(threading.Thread):
             self.output_gui('Generating report...')
 
             # Use images analysis data and insert it into self.template_data dict
-            report.analyze_images_test_results(self.template_data) # self.template_data
+            report.analyze_images_test_results(self.template_data)  # self.template_data
             print('returned: ', self.template_data)
 
             report_filename = (
@@ -444,7 +443,7 @@ class AutomatedCase(threading.Thread):
                     excel_filename
                 )
                 # Pass template data with analysis results and requirements
-                report.export_to_excel_file(self.template_data, excel_file_path)  # self.template_data
+                report.export_to_excel_file(self.template_data, excel_file_path, add_images_bool = False)  # self.template_data
                 self.output_gui(f'Excel file exported!\n{excel_file_path}', 'success')
 
                 if reports_pdf_bool:
@@ -458,7 +457,6 @@ class AutomatedCase(threading.Thread):
                         excel_filename
                     )
                     self.output_gui('PDF file exported!', 'success')
-
 
         self.template_data = None
         self.current_action = 'Finished'

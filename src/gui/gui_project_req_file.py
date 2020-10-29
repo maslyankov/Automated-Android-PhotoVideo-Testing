@@ -1,7 +1,5 @@
 import json
 import os
-import threading
-import time
 
 import PySimpleGUI as sg
 
@@ -25,7 +23,7 @@ def gui_project_req_file(proj_req=None, return_val=False):
 
     # Lists Data
     test_modules_list = list(constants.IMATEST_PARALLEL_TEST_TYPES.keys())
-    light_types_list = constants.AVAILABLE_LIGHTS[1] # TODO: pass light num so that we show relevant stuff
+    light_types_list = constants.AVAILABLE_LIGHTS[1]  # TODO: pass light num so that we show relevant stuff
 
     # Parameters
     imatest_params_file_location = os.path.join(constants.DATA_DIR, 'imatest_params.json')
@@ -88,25 +86,26 @@ def gui_project_req_file(proj_req=None, return_val=False):
     ]]
 
     temp_section = [[
-            sg.Combo(light_types_list, key='add_light_temp_value', size=(18, 1), pad=(7,2), default_value=light_types_list[0]),
-            sg.B('Add Temp', key='add_light_temp_btn', size=(10, 1)),
-        ]]
+        sg.Combo(light_types_list, key='add_light_temp_value', size=(18, 1), pad=(7, 2),
+                 default_value=light_types_list[0]),
+        sg.B('Add Temp', key='add_light_temp_btn', size=(10, 1)),
+    ]]
 
     tt_section = [[
-            sg.Combo(test_modules_list, key='add_type_value', size=(18, 1), pad=(7, 2),
-                     default_value=test_modules_list[0], enable_events=True),
-            sg.B('Add Type', key='add_type_btn', size=(10, 1)),
-        ]]
+        sg.Combo(test_modules_list, key='add_type_value', size=(18, 1), pad=(7, 2),
+                 default_value=test_modules_list[0], enable_events=True),
+        sg.B('Add Type', key='add_type_btn', size=(10, 1)),
+    ]]
 
     lux_section = [[
-            sg.Spin([i for i in range(10, 1000)], initial_value=20, key='add_lux_value', size=(19, 1)),
-            sg.B('Add LUX', key='add_lux_btn', size=(10, 1)),
-        ]]
+        sg.Spin([i for i in range(10, 1000)], initial_value=20, key='add_lux_value', size=(19, 1)),
+        sg.B('Add LUX', key='add_lux_btn', size=(10, 1)),
+    ]]
 
     params_section = [
         [
             sg.I(key='params_search_filter', size=(34, 1), pad=(3, 0), enable_events=True),
-            sg.Checkbox(text='', default=False, key='params_search_bool', pad=(0,0), enable_events=True)
+            sg.Checkbox(text='', default=False, key='params_search_bool', pad=(0, 0), enable_events=True)
         ],
         [
             sg.Listbox(
@@ -127,27 +126,32 @@ def gui_project_req_file(proj_req=None, return_val=False):
         [sg.T('New requirements file', key='current_filename_label', size=(30, 1))],
         [sg.HorizontalSeparator()],
 
-            [sg.T(SYMBOL_DOWN if opened_impexp else SYMBOL_UP, enable_events=True, k='-OPEN SEC_IMPEXP-', text_color=constants.PRIMARY_COLOR),
-             sg.T('Import / Export', enable_events=True, text_color=constants.PRIMARY_COLOR, k='-OPEN SEC_IMPEXP-TEXT')],
-            [collapse(expimp_section, '-SEC_IMPEXP-', visible=opened_temp)],
+        [sg.T(SYMBOL_DOWN if opened_impexp else SYMBOL_UP, enable_events=True, k='-OPEN SEC_IMPEXP-',
+              text_color=constants.PRIMARY_COLOR),
+         sg.T('Import / Export', enable_events=True, text_color=constants.PRIMARY_COLOR, k='-OPEN SEC_IMPEXP-TEXT')],
+        [collapse(expimp_section, '-SEC_IMPEXP-', visible=opened_temp)],
 
         [sg.HorizontalSeparator()],
 
-            [sg.T(SYMBOL_DOWN if opened_tt else SYMBOL_UP, enable_events=True, k='-OPEN SEC_TT-', text_color=constants.PRIMARY_COLOR),
-             sg.T('Test Type', enable_events=True, text_color=constants.PRIMARY_COLOR, k='-OPEN SEC_TT-TEXT')],
-            [collapse(tt_section, '-SEC_TT-', visible=opened_tt)],
+        [sg.T(SYMBOL_DOWN if opened_tt else SYMBOL_UP, enable_events=True, k='-OPEN SEC_TT-',
+              text_color=constants.PRIMARY_COLOR),
+         sg.T('Test Type', enable_events=True, text_color=constants.PRIMARY_COLOR, k='-OPEN SEC_TT-TEXT')],
+        [collapse(tt_section, '-SEC_TT-', visible=opened_tt)],
 
-            [sg.T(SYMBOL_DOWN if opened_temp else SYMBOL_UP, enable_events=True, k='-OPEN SEC_TEMP-', text_color=constants.PRIMARY_COLOR),
-             sg.T('Color Temp', enable_events=True, text_color=constants.PRIMARY_COLOR, k='-OPEN SEC_TEMP-TEXT')],
-            [collapse(temp_section, '-SEC_TEMP-', visible=opened_temp)],
+        [sg.T(SYMBOL_DOWN if opened_temp else SYMBOL_UP, enable_events=True, k='-OPEN SEC_TEMP-',
+              text_color=constants.PRIMARY_COLOR),
+         sg.T('Color Temp', enable_events=True, text_color=constants.PRIMARY_COLOR, k='-OPEN SEC_TEMP-TEXT')],
+        [collapse(temp_section, '-SEC_TEMP-', visible=opened_temp)],
 
-            [sg.T(SYMBOL_DOWN if opened_lux else SYMBOL_UP, enable_events=True, k='-OPEN SEC_LUX-', text_color=constants.PRIMARY_COLOR),
-             sg.T('Lux', enable_events=True, text_color=constants.PRIMARY_COLOR, k='-OPEN SEC_LUX-TEXT')],
-            [collapse(lux_section, '-SEC_LUX-', visible=opened_lux)],
+        [sg.T(SYMBOL_DOWN if opened_lux else SYMBOL_UP, enable_events=True, k='-OPEN SEC_LUX-',
+              text_color=constants.PRIMARY_COLOR),
+         sg.T('Lux', enable_events=True, text_color=constants.PRIMARY_COLOR, k='-OPEN SEC_LUX-TEXT')],
+        [collapse(lux_section, '-SEC_LUX-', visible=opened_lux)],
 
-            [sg.T(SYMBOL_DOWN if opened_params else SYMBOL_UP, enable_events=True, k='-OPEN SEC_PARAMS-', text_color=constants.PRIMARY_COLOR),
-             sg.T('Parameters', enable_events=True, text_color=constants.PRIMARY_COLOR, k='-OPEN SEC_PARAMS-TEXT')],
-            [collapse(params_section, '-SEC_PARAMS-', visible=opened_params)],
+        [sg.T(SYMBOL_DOWN if opened_params else SYMBOL_UP, enable_events=True, k='-OPEN SEC_PARAMS-',
+              text_color=constants.PRIMARY_COLOR),
+         sg.T('Parameters', enable_events=True, text_color=constants.PRIMARY_COLOR, k='-OPEN SEC_PARAMS-TEXT')],
+        [collapse(params_section, '-SEC_PARAMS-', visible=opened_params)],
 
         [sg.HorizontalSeparator()],
         [
@@ -180,9 +184,10 @@ def gui_project_req_file(proj_req=None, return_val=False):
     current_file = None
 
     while True:
-        event, values = window.read() # timeout=100)
+        event, values = window.read()  # timeout=100)
 
-        if event == sg.WIN_CLOSED or event == 'Close' or event == 'go_templ_btn':  # if user closes window or clicks cancel
+        if event == sg.WIN_CLOSED or event == 'Close' or event == 'go_templ_btn':
+            # if user closes window or clicks cancel
             if event == 'go_templ_btn':
                 go_templ_btn_clicked = True
             break
@@ -229,7 +234,10 @@ def gui_project_req_file(proj_req=None, return_val=False):
             current = tree.where()
             curr_sel_test_type = current
 
-            while(curr_sel_test_type and tree.get_text(curr_sel_test_type) != '' and str(tree.get_text(curr_sel_test_type)).lower() not in list(constants.IMATEST_PARALLEL_TEST_TYPES.keys())):
+            while (
+                    curr_sel_test_type and tree.get_text(curr_sel_test_type) != '' and
+                    str(tree.get_text(curr_sel_test_type)).lower()
+                    not in list(constants.IMATEST_PARALLEL_TEST_TYPES.keys())):
                 curr_sel_test_type = tree.treedata.tree_dict[curr_sel_test_type].parent
                 print(tree.get_text(curr_sel_test_type))
 
@@ -253,7 +261,8 @@ def gui_project_req_file(proj_req=None, return_val=False):
                 values['params_search_bool'])
             window['params_search_list'].Update(values=ret_vals)
 
-        # This does not work - when file is passed, it does not get seen until an event occurs -> current workaround is timeout
+        # This does not work - when file is passed,
+        # it does not get seen until an event occurs -> current workaround is timeout
         if not done:
             done = True
             if proj_req is not None:
@@ -301,10 +310,10 @@ def gui_project_req_file(proj_req=None, return_val=False):
             current = tree.where()
             curr_parent_val = tree.get_parent_value(current)
             if curr_parent_val == 'params':
-                min = tree.insert_node(current, 'min', 'param-val')
-                tree.insert_node(min, values['param_min_value'], values['param_min_value'])
-                max = tree.insert_node(current, 'max', 'param-val')
-                tree.insert_node(max, values['param_max_value'], values['param_max_value'])
+                min_node = tree.insert_node(current, 'min', 'param-val')
+                tree.insert_node(min_node, values['param_min_value'], values['param_min_value'])
+                max_node = tree.insert_node(current, 'max', 'param-val')
+                tree.insert_node(max_node, values['param_max_value'], values['param_max_value'])
             else:
                 sg.popup_ok("Trying to add min,max to invalid place. \nparent val: ", curr_parent_val)
 
@@ -404,24 +413,23 @@ def gui_project_req_file(proj_req=None, return_val=False):
         return None
 
 
-def filter_params(imatest_params: dict, filter: str, current_test_type: str=None, search_everywhere: bool=True):
+def filter_params(imatest_params: dict, fltr: str, current_test_type: str = None, search_everywhere: bool = True):
     out_list = []
     print(f'filter params got: \n{imatest_params}\n, {filter}\n, {current_test_type}')
-    imatest_tests_list = list(imatest_params.keys())
+
     for key, value in imatest_params.items():
         for param in list(value.keys()):
-            if (filter != '' and filter != None):
+            if fltr != '' and fltr is not None:
                 param = param.lower()
-                filter = filter.lower()
-                if search_everywhere or current_test_type == None and filter in param:
+                fltr = fltr.lower()
+                if search_everywhere or current_test_type is None and fltr in param:
                     out_list.append(f'{key} > {param}')
-                elif current_test_type == key and filter in param:
+                elif current_test_type == key and fltr in param:
                     out_list.append(f'{param}')
             elif current_test_type == key:
                 out_list.append(f'{param}')
-            elif current_test_type == None:
+            elif current_test_type is None:
                 out_list.append(f'{key} > {param}')
-
     return out_list
 
 

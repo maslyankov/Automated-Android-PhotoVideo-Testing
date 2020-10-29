@@ -6,7 +6,7 @@ import threading
 from openpyxl import Workbook, load_workbook
 from openpyxl import cell as xlcell, worksheet
 from openpyxl.utils import get_column_letter
-from openpyxl.styles import PatternFill, Font, Border, Alignment, Side
+from openpyxl.styles import NamedStyle, PatternFill, Font, Border, Alignment, Side
 from openpyxl.drawing.image import Image as xls_image
 from openpyxl.drawing.xdr import XDRPositiveSize2D as xdr_size
 from openpyxl.drawing.spreadsheet_drawing import AnchorMarker, OneCellAnchor
@@ -506,7 +506,7 @@ class Report:
         return template_data
 
     @staticmethod
-    def export_to_excel_file(template_data, dest_file):
+    def export_to_excel_file(template_data, dest_file, add_images_bool: bool):
         # Pass template data with analysis results and requirements
         print('exporting to excel...')
         workbook = Workbook()
@@ -522,19 +522,26 @@ class Report:
             2,
             current_row,
             primary_bg_color=constants.MID_COLOR.strip('#'),
+            primary_font_color='000000',
             secondary_bg_color=constants.ALTERNATE_COLOR.strip('#'),
-            font_color=constants.TEXT_COLOR.strip('#')
+            secondary_font_color=constants.BUTTON_TEXT_COLOR.strip('#'),
+            add_images_bool=add_images_bool
         )[1][0]
 
         workbook.save(filename=dest_file)
 
     @staticmethod
-    def xls_draw_results_table(template_data, sheet, start_col, start_row,
-                               primary_bg_color=constants.MID_COLOR, secondary_bg_color=constants.ALTERNATE_COLOR,
-                               font_color=constants.TEXT_COLOR,
-                               add_border_bool=True):
+    def xls_draw_results_table(template_data: dict, sheet, start_col: int, start_row: int,
+                               primary_bg_color=constants.MID_COLOR.strip('#'),
+                               secondary_bg_color=constants.ALTERNATE_COLOR.strip('#'),
+                               primary_font_color='000000',
+                               secondary_font_color=constants.BUTTON_TEXT_COLOR.strip('#'),
+                               add_images_bool=True, add_border_bool=True):
         """
 
+        :param secondary_font_color:
+        :param primary_font_color:
+        :param add_images_bool:
         :param template_data:
         :param sheet:
         :param start_row:
@@ -560,12 +567,34 @@ class Report:
             'param_passfail': ['Pass/Fail'],
         }
 
+        if not add_images_bool:
+            del columns['image']
+
         current_row = start_row
         end_col = len(columns)-1 + start_col
 
+        primary_fill = PatternFill(fgColor=f"FF{primary_bg_color}", fill_type="solid")
         secondary_fill = PatternFill(fgColor=f"FF{secondary_bg_color}", fill_type="solid")
 
-        columns_count = 0
+        # Styles ---
+
+        bd = Side(style='thin', color="000000")
+
+        header_cell_style = NamedStyle(name="header_cell")
+        header_cell_style.font = Font(bold=True, color=f'FF{secondary_font_color}')
+        header_cell_style.fill = secondary_fill
+        header_cell_style.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+        header_cell_style.alignment = center
+
+        cells_style = NamedStyle(name="data_cell")
+        cells_style.font = Font(bold=True, color=f'FF{primary_font_color}')
+        cells_style.fill = primary_fill
+        cells_style.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+        cells_style.alignment = center
+
+        # Styles ---
+
+
         current_col = start_col
         # Add table header
         for val in columns.values():
@@ -576,11 +605,7 @@ class Report:
 
             cell = sheet.cell(current_row, val[1])
             cell.value = val[0]
-            cell.font = Font(bold=True)
-            cell.fill = secondary_fill
-            cell.alignment = center
-
-            Report.xls_set_border(sheet, current_col, current_row, current_col, current_row)
+            cell.style = header_cell_style
 
             data_len = len(str(val[0]))
             try:
@@ -616,7 +641,7 @@ class Report:
 
                         # Add test type name
                         test_type_pretty = constants.IMATEST_TEST_TYPES_FRIENDLY[test_type]
-                        sheet.cell(current_row, columns['test_type'][1], test_type_pretty).alignment = center
+                        sheet.cell(current_row, columns['test_type'][1], test_type_pretty).style = cells_style
                         data_len = len(test_type_pretty)
                         try:
                             if columns['test_type'][2] < data_len:
@@ -625,11 +650,12 @@ class Report:
                             columns['test_type'].append(data_len)
                         current_col += 1
 
-                        # Skip image
-                        current_col += 1
+                        if add_images_bool:
+                            # Skip image
+                            current_col += 1
 
                         # Add light color
-                        sheet.cell(current_row, columns['light_temp'][1], light_color).alignment = center
+                        sheet.cell(current_row, columns['light_temp'][1], light_color).style = cells_style
                         data_len = len(str(light_color))
                         try:
                             if columns['light_temp'][2] < data_len:
@@ -639,7 +665,7 @@ class Report:
                         current_col += 1
 
                         # Add lux
-                        sheet.cell(current_row, columns['lux'][1], lux).alignment = center
+                        sheet.cell(current_row, columns['lux'][1], lux).style = cells_style
                         data_len = len(str(lux))
                         try:
                             if columns['lux'][2] < data_len:
@@ -649,7 +675,7 @@ class Report:
                         current_col += 1
 
                         # Add param
-                        sheet.cell(current_row, columns['param'][1], param).alignment = center
+                        sheet.cell(current_row, columns['param'][1], param).style = cells_style
                         data_len = len(str(param))
                         try:
                             if columns['param'][2] < data_len:
@@ -659,7 +685,7 @@ class Report:
                         current_col += 1
 
                         # Add param min
-                        sheet.cell(current_row, columns['param_min'][1], param_templ_data['min']).alignment = center
+                        sheet.cell(current_row, columns['param_min'][1], param_templ_data['min']).style = cells_style
                         data_len = len(str(param_templ_data['min']))
                         try:
                             if columns['param_min'][2] < data_len:
@@ -669,7 +695,7 @@ class Report:
                         current_col += 1
 
                         # Add param max
-                        sheet.cell(current_row, columns['param_max'][1], param_templ_data['max']).alignment = center
+                        sheet.cell(current_row, columns['param_max'][1], param_templ_data['max']).style = cells_style
                         data_len = len(str(param_templ_data['max']))
                         try:
                             if columns['param_max'][2] < data_len:
@@ -681,7 +707,7 @@ class Report:
                         # Add param result value
                         try:
                             sheet.cell(current_row, columns['param_calc'][1],
-                                       param_templ_data['result_calculated']).alignment = center
+                                       param_templ_data['result_calculated']).style = cells_style
                             data_len = len(str(param_templ_data['result_calculated']))
                             try:
                                 if columns['param_calc'][2] < data_len:
@@ -717,15 +743,16 @@ class Report:
                         current_row += 1
 
                     # After each lux
+                    if add_images_bool:
                     # Add image
-                    img_cell = sheet.cell(lux_start_row, columns['image'][1])
-                    img_file = template_data[test_type][light_color][lux]['filename']
-                    print('img: ', img_file)
-                    Report.xls_import_image(img_file, sheet, img_cell)
-                    # Merge image rows
-                    if lux_start_row < current_row - 1:
-                        sheet.merge_cells(start_column=columns['image'][1], start_row=lux_start_row,
-                                          end_column=columns['image'][1], end_row=current_row - 1)
+                        img_cell = sheet.cell(lux_start_row, columns['image'][1])
+                        img_file = template_data[test_type][light_color][lux]['filename']
+                        print('img: ', img_file)
+                        Report.xls_import_image(img_file, sheet, img_cell)
+                        # Merge image rows
+                        if lux_start_row < current_row - 1:
+                            sheet.merge_cells(start_column=columns['image'][1], start_row=lux_start_row,
+                                              end_column=columns['image'][1], end_row=current_row - 1)
 
                     print(f"{test_type}>{light_color}>{lux}")
                     print('islast: ', (lux_num == len(luxes)-1))
@@ -740,8 +767,6 @@ class Report:
                     if lux_start_row < current_row - 1:
                         sheet.merge_cells(start_column=columns['lux'][1], start_row=lux_start_row,
                                           end_column=columns['lux'][1], end_row=current_row-1)
-                        sheet.merge_cells(start_column=columns['image'][1], start_row=lux_start_row,
-                                          end_column=columns['image'][1], end_row=current_row - 1)
 
                 # After each color temp
                 if light_color_num == len(light_colors_list)-1:
@@ -759,7 +784,8 @@ class Report:
             # After each Test Type
             sheet.merge_cells(start_column=columns['test_type'][1], start_row=type_start_row,
                               end_column=columns['test_type'][1], end_row=current_row - 1)
-            Report.xls_set_border(sheet, start_col, type_start_row, end_col, current_row - 1, 'thick')
+            if add_border_bool:
+                Report.xls_set_border(sheet, start_col, type_start_row, end_col, current_row - 1, 'thick')
 
             if type_num == len(test_types_list) - 1:
                 # If last one
