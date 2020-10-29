@@ -380,7 +380,7 @@ def gui():
             )
 
             excel_filename = report_filename + '.xlsx'
-            excel_file_path = os.path.join(out_dir, os.path.pardir, report_filename)
+            excel_file_path = os.path.join(out_dir, os.path.pardir, excel_filename)
 
             export_to_excel_file(templ_data, excel_file_path, add_images_bool=False)
 

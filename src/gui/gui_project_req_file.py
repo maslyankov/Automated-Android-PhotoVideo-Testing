@@ -24,7 +24,8 @@ def gui_project_req_file(proj_req=None, return_val=False):
 
     # Lists Data
     test_modules_list = list(constants.IMATEST_PARALLEL_TEST_TYPES.keys())
-    light_types_list = constants.AVAILABLE_LIGHTS[1]  # TODO: pass light num so that we show relevant stuff
+    light_types_list = list(constants.KELVINS_TABLE.keys()) # constants.AVAILABLE_LIGHTS[1]  # TODO: pass light num so that we show relevant stuff
+    # TODO: Add more lights
 
     # Parameters
     imatest_params_file_location = os.path.join(constants.DATA_DIR, 'imatest_params.json')
@@ -86,11 +87,17 @@ def gui_project_req_file(proj_req=None, return_val=False):
         sg.Column(top_right_col),
     ]]
 
-    temp_section = [[
-        sg.Combo(light_types_list, key='add_light_temp_value', size=(18, 1), pad=(7, 2),
-                 default_value=light_types_list[0]),
-        sg.B('Add Temp', key='add_light_temp_btn', size=(10, 1)),
-    ]]
+    temp_section = [
+        [
+            sg.Combo(light_types_list, key='add_light_temp_value', size=(18, 1), pad=(7, 2),
+                     default_value=light_types_list[0], enable_events=True),
+            sg.B('Add Temp', key='add_light_temp_btn', size=(10, 1))
+        ],
+        [
+            sg.T(f'{constants.KELVINS_TABLE[light_types_list[0]][0]}K', key='add_light_temp_kelvins_label'),
+            sg.T(constants.KELVINS_TABLE[light_types_list[0]][1], key='add_light_temp_desc_label')
+        ]
+    ]
 
     tt_section = [[
         sg.Combo(test_modules_list, key='add_type_value', size=(18, 1), pad=(7, 2),
@@ -229,6 +236,10 @@ def gui_project_req_file(proj_req=None, return_val=False):
 
         window['-OPEN SEC_PARAMS-'].update(SYMBOL_DOWN if opened_params else SYMBOL_UP)
         window['-SEC_PARAMS-'].update(visible=opened_params)
+
+        if event == 'add_light_temp_value':
+            window['add_light_temp_kelvins_label'].Update(f"{constants.KELVINS_TABLE[values['add_light_temp_value']][0]}K")
+            window['add_light_temp_desc_label'].Update(f"{constants.KELVINS_TABLE[values['add_light_temp_value']][1]}")
 
         if event == '-TREE-':
             # When selecting item check for what test type it is in
@@ -419,15 +430,16 @@ def gui_project_req_file(proj_req=None, return_val=False):
 
 def filter_params(imatest_params: dict, fltr: str, current_test_type: str = None, search_everywhere: bool = True):
     out_list = []
-    print(f'filter params got: \n{imatest_params}\n, {filter}\n, {current_test_type}')
+    print(f'filter params got: \n{imatest_params}\n, {fltr}\n, {current_test_type}')
 
     for key, value in imatest_params.items():
         for param in list(value.keys()):
             if fltr != '' and fltr is not None:
                 param = param.lower()
                 fltr = fltr.lower()
-                if search_everywhere or current_test_type is None and fltr in param:
-                    out_list.append(f'{key} > {param}')
+                if search_everywhere or current_test_type is None:
+                    if fltr in param:
+                        out_list.append(f'{key} > {param}')
                 elif current_test_type == key and fltr in param:
                     out_list.append(f'{param}')
             elif current_test_type == key:
