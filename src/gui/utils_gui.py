@@ -505,7 +505,7 @@ class Tree(sg.Tree):
                     continue
 
                 if parent_name != key:
-                    if key == 'min' or key == 'max':
+                    if key == 'min' or key == 'max' or key == 'start_value' or key == 'end_value':
                         key_text = 'param-val'
                     else:
                         key_text = key

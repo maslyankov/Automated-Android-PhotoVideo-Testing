@@ -9,6 +9,9 @@ import src.constants as constants
 def _convert_dict_to_xml_recurse(parent, dictitem, parent_tag=None):
     elem_tag = None
     assert type(dictitem) is not type([])
+
+    print('dsadsa ', parent.tag, type(dictitem))
+
     if isinstance(dictitem, dict):
         for (tag, child) in dictitem.items():
             tag = str(tag).replace(' ', '')
@@ -41,7 +44,12 @@ def _convert_dict_to_xml_recurse(parent, dictitem, parent_tag=None):
                     elem_tag = tag
                 _convert_dict_to_xml_recurse(elem, child, elem_tag)
     else:
+        print(parent.text, ' getss ', str(dictitem).strip(' '))
         parent.text = str(dictitem).strip(' ')
+
+
+def parses_to_integer(s):
+    return isinstance(s, int) or (isinstance(s, float) and s.is_integer())
 
 
 def convert_dict_to_xml(xmldict, name='root', file_is_new=False):
@@ -151,6 +159,8 @@ def _convert_xml_to_dict_recurse(node, dictclass):
     if len(nodedict) <= 0:
         try:
             text = float(text)
+            if parses_to_integer(text):
+                text = int(text)
         except ValueError:
             pass
         # if we don't have child nodes or attributes, just set the text

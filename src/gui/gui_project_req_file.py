@@ -8,7 +8,6 @@ from src.utils.xml_tools import convert_dict_to_xml, convert_xml_to_dict
 from src.gui.utils_gui import Tree, place, collapse, SYMBOL_DOWN, SYMBOL_UP
 from src.app.Reports import Report
 from src.utils.excel_tools import parse_excel_template
-
 is_excel = False
 
 
@@ -114,9 +113,28 @@ def gui_project_req_file(proj_req=None, return_val=False):
         sg.B('Add LUX', key='add_lux_btn', size=(10, 1)),
     ]]
 
+    list_restrict_max = ['None'] + list(range(1, 100))
+    restrict_left = [
+        [
+            sg.T('Start Val:', size=(7, 1)),
+            sg.Spin(values=list(range(1, 100)), initial_value=1, size=(6, 1), key='restrict_start_val')
+        ],
+        [
+            sg.T('End Val:', size=(7, 1)),
+            sg.Spin(values=list_restrict_max, initial_value=list_restrict_max[0], size=(6, 1), key='restrict_end_val')
+        ]
+    ]
+    restrict_right = [
+        [sg.B('Add\nRestrictors', size=(8, 2), key='add_restrictors_to_param_btn')]
+    ]
+    restrict_layout = [[
+            sg.Column(restrict_left), sg.Column(restrict_right)
+    ]]
+
+    params_restrict_bool = False
     params_section = [
         [
-            sg.I(key='params_search_filter', size=(34, 1), pad=(3, 0), enable_events=True),
+            sg.I(key='params_search_filter', size=(32, 1), pad=(3, 0), enable_events=True),
             sg.Checkbox(text='', default=False, key='params_search_bool', pad=(0, 0), enable_events=True)
         ],
         [
@@ -130,7 +148,12 @@ def gui_project_req_file(proj_req=None, return_val=False):
         ],
         [
             sg.Column(min_max_left), sg.Column(min_max_right),
+        ],
+        [
+            collapse(restrict_layout, '-SUBSEC_RESTRICTS-', visible=params_restrict_bool)
         ]
+
+
     ]
 
     right_col = [
@@ -248,8 +271,10 @@ def gui_project_req_file(proj_req=None, return_val=False):
         if event == '-TREE-':
             # When selecting item check for what test type it is in
             current = tree.where()
+            current_text = tree.get_text(current)
+            curr_parent_val = tree.get_parent_value(current)
             curr_sel_test_type = current
-
+            print('curr val: ', tree.get_value(current))
             while (
                     curr_sel_test_type and tree.get_text(curr_sel_test_type) != '' and
                     str(tree.get_text(curr_sel_test_type)).lower()
@@ -268,6 +293,30 @@ def gui_project_req_file(proj_req=None, return_val=False):
                     if current_test_type == 'root':
                         continue
                     print(f'now at {current_test_type} test type ')
+
+            if current_test_type is not None:
+                print('current text: ', current_text)
+                for paramm, paramm_type in imatest_params[current_test_type].items():
+                    # print(f'"{paramm} ({paramm_type})",  ?= , "{current_text}"')
+
+                    if paramm.lower() == current_text:
+                        print('param found!!!')
+                        print('its type is: ', paramm_type)
+                        window['-SUBSEC_RESTRICTS-'].Update(visible=paramm_type == 'list')
+                        break
+
+        if event == 'add_restrictors_to_param_btn':
+            if curr_parent_val == 'params':
+                if values['restrict_end_val'] != 'None' and values['restrict_start_val'] > values['restrict_end_val']:
+                    sg.popup_ok('Restriction start value cannot be\nbigger than end value!')
+                else:
+                    start_val_node = tree.insert_node(current, 'start_value', 'param-val')
+                    tree.insert_node(start_val_node, values['restrict_start_val'], values['restrict_start_val'])
+                    if values['restrict_end_val'] != 'None':
+                        start_val_node = tree.insert_node(current, 'end_value', 'param-val')
+                        tree.insert_node(start_val_node, values['restrict_end_val'], values['restrict_end_val'])
+            else:
+                sg.popup_ok("You can only add restrictors to the parameter.")
 
         if event == 'params_search_filter' or event == 'params_search_bool' or event == '-TREE-':
             ret_vals = filter_params(
@@ -301,21 +350,18 @@ def gui_project_req_file(proj_req=None, return_val=False):
             tree.insert_node('', f"{values['add_type_value']}", values['add_type_value'])
 
         if event == 'add_param_btn':
-            current = tree.where()
             if tree.get_text(values['-TREE-'][0]) == 'params':
                 tree.insert_node(current, f"{values['params_search_list'][0]}", values['params_search_list'][0])
             else:
                 sg.popup_ok('You can only add params to "params"!')
 
         if event == 'add_light_temp_btn':
-            current = tree.where()
             if tree.get_text(values['-TREE-'][0]) in test_modules_list:
                 tree.insert_node(current, f"{values['add_light_temp_value']}", values['add_light_temp_value'])
             else:
                 sg.popup_ok('You can only add light temps to test type elements!')
 
         if event == 'add_lux_btn':
-            current = tree.where()
             if tree.get_text(values['-TREE-'][0]) in light_types_list:
                 new_elem = tree.insert_node(current, values['add_lux_value'], values['add_lux_value'])
                 tree.insert_node(new_elem, 'params', 'params')
@@ -323,8 +369,6 @@ def gui_project_req_file(proj_req=None, return_val=False):
                 sg.popup_ok('Select temp first')
 
         if event == 'add_min_max_btn':
-            current = tree.where()
-            curr_parent_val = tree.get_parent_value(current)
             if curr_parent_val == 'params':
                 min_node = tree.insert_node(current, 'min', 'param-val')
                 tree.insert_node(min_node, values['param_min_value'], values['param_min_value'])
