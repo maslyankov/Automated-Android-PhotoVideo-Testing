@@ -120,3 +120,27 @@ def analyze_images_test_results(template_data):
                                 print('FAIL!\n')
 
     return template_data
+
+def add_filenames_to_data(template_data, img_dir):
+    file_exts = [
+        'png', 'jpg'
+    ]
+
+    if os.path.isdir(img_dir):
+        img_dir = os.path.normpath(img_dir)
+
+        for test_type in list(template_data.keys()):
+            for light_temp in list(template_data[test_type].keys()):
+                for lux in list(template_data[test_type][light_temp].keys()):
+                    try:
+                        template_data[test_type][light_temp][lux]['filename']
+                    except KeyError:
+                        filepath = None
+                        for ext in file_exts:
+                            filepath = os.path.join(img_dir, test_type, light_temp, f'{test_type}_{light_temp}_{lux}.{ext}')
+                            if os.path.exists(filepath):
+                                break
+                        if filepath is not None:
+                            template_data[test_type][light_temp][lux]['filename'] = filepath
+                        else:
+                            template_data[test_type][light_temp][lux]['filename'] = None

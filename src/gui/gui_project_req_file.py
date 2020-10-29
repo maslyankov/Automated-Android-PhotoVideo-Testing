@@ -409,7 +409,10 @@ def gui_project_req_file(proj_req=None, return_val=False):
 
     window.close()
     if go_templ_btn_clicked:
-        return tree.dump_tree_dict()
+        return {
+            'dict': tree.dump_tree_dict(),
+            'projreq_file': current_file
+        }
     else:
         return None
 

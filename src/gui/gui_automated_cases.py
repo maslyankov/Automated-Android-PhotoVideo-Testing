@@ -83,7 +83,7 @@ def template_tab_logic(window, values, event,
             # If cases are NOT running then button should start them
 
             template_data = gui_project_req_file(
-                values['template_browse_btn'] if values['template_browse_btn'] != '' else None, return_val=True)
+                values['template_browse_btn'] if values['template_browse_btn'] != '' else None, return_val=True)['dict']
             print('template_data: ', template_data)
 
             if template_data is not None:

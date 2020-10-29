@@ -455,6 +455,7 @@ class AutomatedCase(threading.Thread):
                     f'{self.devices_obj[self.attached_devices[0]].friendly_name}_' +  # Device friendly name
                     datetime.now().strftime("%Y%m%d-%H%M%S")
             )
+
             if reports_excel_bool:
                 # Export report to Excel
                 self.current_action = 'Exporting Report to Excel'

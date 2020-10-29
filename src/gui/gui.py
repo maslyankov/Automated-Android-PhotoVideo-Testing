@@ -1,6 +1,4 @@
 import os
-import sys
-import pkgutil
 
 from src.app import AdbClient
 
@@ -16,6 +14,10 @@ from src.gui.gui_setup_device import gui_setup_device
 from src.gui.gui_test_lights import gui_test_lights
 from src.gui.gui_project_req_file import gui_project_req_file
 from src.gui.utils_gui import place, Tabs
+
+from src.app.utils import analyze_images_test_results, add_filenames_to_data
+from src.utils.excel_tools import export_to_excel_file
+from datetime import datetime
 
 import src.constants as constants
 
@@ -116,9 +118,24 @@ def gui():
     ],
     ]
 
+    # Tab 2
+    objective_frame_layout = [
+        [
+            sg.T('Project Requirements: ', size=(18, 1)),
+            sg.Input(key='obj_report_projreq_field', readonly=True, size=(38, 1)),
+            sg.Button(button_text='Open', key='obj_report_projreq_btn', size=(8, 1))
+        ],
+        [
+            sg.T('Images dir:', size=(18, 1)),
+            sg.Input(key='obj_report_output', readonly=True, size=(38, 1)),
+            sg.FolderBrowse(size=(8, 1), target='obj_report_output')
+        ],
+        [sg.Button("Generate", key='obj_report_build_btn', size=(20, 1))]
+    ]
+
+
     # All the stuff inside your window.
     tab_main = [
-        [sg.Image(os.path.join(constants.ROOT_DIR, 'images', 'automated-video-testing-header.png'))],
         [sg.Frame('Devices', devices_frame, font='Any 12')],
         [sg.Frame('Settings', device_settings_frame_layout, font='Any 12')],
         [sg.Frame('Lights', lights_frame_layout, font='Any 12')],
@@ -131,8 +148,8 @@ def gui():
     ]
 
     tab2_layout = [
+        [sg.Frame('Objective Reporting', objective_frame_layout, font='Any 12')],
         [sg.T('Real-Life Reporting')],
-        [sg.T('Objective Reporting')]
     ]
 
     tab3_layout = [
@@ -141,6 +158,7 @@ def gui():
     ]
 
     layout = [
+        [sg.Image(os.path.join(constants.ROOT_DIR, 'images', 'automated-video-testing-header.png'))],
         [
             Tabs([
                 [
@@ -339,6 +357,34 @@ def gui():
 
         if event == 'project_req_tool_btn':
             gui_project_req_file()
+
+        if event == 'obj_report_projreq_btn':
+            ret_data = gui_project_req_file(return_val=True)
+            templ_data = ret_data['dict']
+            window['obj_report_projreq_field'].Update(ret_data['projreq_file'])
+
+        if event == 'obj_report_build_btn':
+            out_dir = os.path.normpath(values['obj_report_output'])
+            add_filenames_to_data(templ_data, out_dir)
+            print('after file data: \n', templ_data)
+
+            # Use images analysis data and insert it into templ_data
+            analyze_images_test_results(templ_data)
+
+            print('With analysis: \n', templ_data)
+
+            report_filename = (
+                    'Report_' +
+                    f"{os.path.basename(values['obj_report_projreq_field']).split('.')[0]}_" +  # Device friendly name
+                    datetime.now().strftime("%Y%m%d-%H%M%S")
+            )
+
+            excel_filename = report_filename + '.xlsx'
+            excel_file_path = os.path.join(out_dir, os.path.pardir, report_filename)
+
+            export_to_excel_file(templ_data, excel_file_path, add_images_bool=False)
+
+            sg.popup_ok("File generated!")
 
     # Before exiting...
 
