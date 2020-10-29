@@ -10,8 +10,6 @@ def _convert_dict_to_xml_recurse(parent, dictitem, parent_tag=None):
     elem_tag = None
     assert type(dictitem) is not type([])
 
-    print('dsadsa ', parent.tag, type(dictitem))
-
     if isinstance(dictitem, dict):
         for (tag, child) in dictitem.items():
             tag = str(tag).replace(' ', '')
@@ -44,7 +42,6 @@ def _convert_dict_to_xml_recurse(parent, dictitem, parent_tag=None):
                     elem_tag = tag
                 _convert_dict_to_xml_recurse(elem, child, elem_tag)
     else:
-        print(parent.text, ' getss ', str(dictitem).strip(' '))
         parent.text = str(dictitem).strip(' ')
 
 
@@ -58,7 +55,6 @@ def convert_dict_to_xml(xmldict, name='root', file_is_new=False):
     Converts a dictionary to an XML ElementTree Element
 
     """
-    print('input dict: \n', xmldict, '\n')
     root = ET.Element(name)
 
     xmldata = {}

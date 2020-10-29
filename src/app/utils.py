@@ -86,10 +86,6 @@ def analyze_images_test_results(template_data):
 
                 img_json_file = os.path.join(img_results_path, img_json_filename[0])
 
-                print('img jsonfile: ', img_json_file)
-
-                print('Now at img: ', img_file_name)
-
                 with open(img_json_file) as json_file:
                     image_analysis_readable = json.load(json_file)
                 image_analysis_readable = image_analysis_readable[list(image_analysis_readable.keys())[0]]
@@ -112,12 +108,12 @@ def analyze_images_test_results(template_data):
                             curr_param_dict = template_data[test_type][light_temp][lux]["params"][param]
 
                             try:
-                                restrict_start = curr_param_dict['start_value']
+                                restrict_start = int(curr_param_dict['start_value']) - 1
                             except KeyError:
                                 restrict_start = None
 
                             try:
-                                restrict_end = curr_param_dict['end_value']
+                                restrict_end = int(curr_param_dict['end_value']) - 1
                             except KeyError:
                                 restrict_end = None
 
