@@ -1,8 +1,7 @@
-from datetime import datetime
+import json
+import os
 
-import xml.etree.ElementTree as ET
 import src.constants as constants
-from src.gui.utils_gui import Tree
 
 
 def kelvin_to_illumenant(kelvins):
@@ -46,171 +45,78 @@ def only_chars(val: str) -> int:
         return ''.join(filter(lambda x: x.isalpha(), val))
 
 
-# XML Utils
-def _convert_dict_to_xml_recurse(parent, dictitem, parent_tag=None):
-    elem_tag = None
-    assert type(dictitem) is not type([])
-    if isinstance(dictitem, dict):
-        for (tag, child) in dictitem.items():
-            tag = str(tag).replace(' ', '')
-            if type(child) is type([]):
-                # iterate through the array and convert
-                for listchild in child:
-                    elem = ET.Element(tag)
-                    parent.append(elem)
-                    _convert_dict_to_xml_recurse(elem, listchild)
-            else:
-                is_light = tag in constants.KELVINS_TABLE.keys() or tag.endswith('K')
-                try:
-                    child['params']
-                except (TypeError, KeyError):
-                    if parent.tag == 'params':
-                        elem = ET.Element('param')
-                        elem.set('name', tag)
-                    else:
-                        elem = ET.Element(tag)
-                        # print('except elem tag: ', tag, ' parent: ', parent.tag, ' child: ', child)
-                else:
-                    elem = ET.Element('light')
-                    elem.set('color', parent_tag)
-                    elem.set('lux', tag)
-                    # print(f'color (parent) {parent.tag}, lux (tag): {tag}')
-                if not is_light:
-                    parent.append(elem)
-                else:
-                    elem = parent
-                    elem_tag = tag
-                _convert_dict_to_xml_recurse(elem, child, elem_tag)
-    else:
-        parent.text = str(dictitem).strip(' ')
+# Other utils
+def get_list_average(list_in: list):
+    if not isinstance(list_in, list):
+        return
+
+    result = 0
+    divider = 0
+
+    for item in list_in:
+        if isinstance(item, float) or isinstance(item, int) or (isinstance(item, str) and item.isdigit()):
+            if isinstance(item, str) and item.isdigit():
+                result += int(item)
+                divider += 1
+                continue
+            result += item
+            divider += 1
+
+    return result/divider
 
 
-def convert_dict_to_xml(xmldict, name='root', file_is_new=False):
-    """
+def analyze_images_test_results(template_data):
+    for test_type in template_data.keys():
+        for light_temp in template_data[test_type].keys():
+            for lux in template_data[test_type][light_temp].keys():
+                img_file_path = template_data[test_type][light_temp][lux]['filename']
+                img_file_name = os.path.basename(img_file_path)
+                img_results_path = os.path.join(os.path.dirname(img_file_path), 'Results')
+                img_json_filename = [f for f in os.listdir(img_results_path) if
+                                     f.startswith(img_file_name.split('.')[0]) and f.endswith('.json')]
 
-    Converts a dictionary to an XML ElementTree Element
+                if len(img_json_filename) < 1:
+                    continue
 
-    """
-    print('input dict: \n', xmldict, '\n')
-    root = ET.Element(name)
+                img_json_file = os.path.join(img_results_path, img_json_filename[0])
 
-    xmldata = {}
+                print('img jsonfile: ', img_json_file)
 
-    if file_is_new:
-        xmldata['time_created'] = str(datetime.now())
-    xmldata['time_updated'] = str(datetime.now())
-    xmldata['proj_req'] = xmldict
+                print('Now at img: ', img_file_name)
 
-    _convert_dict_to_xml_recurse(root, xmldata)
+                with open(img_json_file) as json_file:
+                    image_analysis_readable = json.load(json_file)
+                image_analysis_readable = image_analysis_readable[list(image_analysis_readable.keys())[0]]
 
-    ret = ET.tostring(root)
+                for param in template_data[test_type][light_temp][lux]['params'].keys():
+                    params_depth = param.split('>')
+                    for num, param_piece in enumerate(params_depth):
+                        if num == 0:
+                            # At beginning set equal to parent of param (possibly)
+                            param_val = image_analysis_readable[param_piece]
+                        elif num != len(params_depth) - 1:
+                            # If not at end yet and not at beginning
+                            param_val = param_val[param_piece]
 
-    return ret
+                        if num == len(params_depth) - 1:
+                            # If last one -> return
+                            # Full name of param: param,
+                            # last part of param: param_piece,
+                            # param value: param_val
+                            curr_param_dict = template_data[test_type][light_temp][lux]["params"][param]
+                            param_val_calc = get_list_average(param_val)
+                            curr_param_dict['result'] = param_val
+                            curr_param_dict['result_calculated'] = param_val_calc
 
+                            print(f'param {param} is: ', param_val)
+                            print(f'calculated value is: {param_val_calc}')
+                            print(f'min is: {curr_param_dict["min"]}')
+                            print(f'max is: {curr_param_dict["max"]}')
+                            if curr_param_dict["min"] < param_val_calc < curr_param_dict["max"]:
+                                curr_param_dict['result_pass_bool'] = True
+                                print('PASS!\n')
+                            else:
+                                curr_param_dict['result_pass_bool'] = False
+                                print('FAIL!\n')
 
-def merge_dicts(a, b, path=None):
-    "merges b into a recursively "
-    if path is None: path = []
-    for key in b:
-        if key in a:
-            if isinstance(a[key], dict) and isinstance(b[key], dict):
-                merge_dicts(a[key], b[key], path + [str(key)])
-            elif a[key] == b[key]:
-                pass  # same leaf value
-            else:
-                raise Exception('Conflict at %s' % '.'.join(path + [str(key)]))
-        else:
-            a[key] = b[key]
-    return a
-
-
-def dict_vals_to_int(d, filter=None):
-    d_out = {}
-    for key in d.keys():
-        if key not in filter:
-            try:
-                if d[key].isdigit():
-                    d_out[key] = int(d[key])
-                else:
-                    d_out[key] = d[key]
-            except AttributeError:
-                pass
-    return d_out
-
-
-def _convert_xml_to_dict_recurse(node, dictclass):
-    nodedict = dictclass()
-
-    if node.tag == 'light':
-        par_key = node.attrib['color']
-    elif node.tag == 'param':
-        par_key = node.attrib['name']
-    else:
-        par_key = node.tag
-
-    if len(node.items()) > 0:
-        # if we have attributes, set them
-        nodedict.update(dict_vals_to_int(dict(node.items()), filter=['name','color','lux', 'value']))
-
-    for child in node:
-        current = (None, None)
-        # recursively add the element's children
-        newitem = _convert_xml_to_dict_recurse(child, dictclass)
-        child_key = int(child.tag) if child.tag.isdigit() else child.tag
-
-        if child.tag in nodedict.keys():
-            if child.tag == 'light':
-                try:
-                    nodedict[par_key][child_key] = newitem
-                except KeyError:
-                    pass
-            elif child.tag == 'param':
-                pass
-        else:
-            # only one, directly set the dictionary
-            if child.tag == 'light':
-                temp_key = child.attrib['color']
-                curr_key = int(child.attrib['lux']) if child.attrib['lux'].isdigit() else child.attrib['lux']
-                try:
-                    nodedict[temp_key][curr_key] = newitem
-                except KeyError:
-                    nodedict[temp_key] = {}
-                    nodedict[temp_key][curr_key] = newitem
-            elif child.tag == 'param':
-                param_key = child.attrib['name']
-                try:
-                    nodedict[param_key] = newitem
-                except KeyError:
-                    nodedict = {}
-                    nodedict[param_key] = newitem
-            else:
-                nodedict[child_key] = newitem
-
-
-    if node.text is None:
-        text = ''
-    else:
-        text = node.text.strip()
-
-    if len(nodedict) <= 0:
-        try:
-            text = float(text)
-        except ValueError:
-            pass
-        # if we don't have child nodes or attributes, just set the text
-        nodedict = text
-    return nodedict
-
-
-def convert_xml_to_dict(root, dictclass=dict):
-    """
-    Converts an XML file or ElementTree Element to a dictionary
-
-    """
-    # If a string is passed in, try to open it as a file
-
-    if type(root) == type('') or type(root) == type(u''):
-        root = ET.parse(root).getroot() #ET.fromstring(root)
-    elif not isinstance(root, ET.Element):
-        raise TypeError('Expected ElementTree.Element or file path string')
-    return {root.tag: _convert_xml_to_dict_recurse(root, dictclass)}
+    return template_data

@@ -4,9 +4,10 @@ import os
 import PySimpleGUI as sg
 
 import src.constants as constants
-from src.app.utils import convert_dict_to_xml, convert_xml_to_dict
+from src.utils.xml_tools import convert_dict_to_xml, convert_xml_to_dict
 from src.gui.utils_gui import Tree, place, collapse, SYMBOL_DOWN, SYMBOL_UP
 from src.app.Reports import Report
+from src.utils.excel_tools import parse_excel_template
 
 is_excel = False
 
@@ -442,7 +443,7 @@ def import_templ(templ_in, tree):
         for ext in constants.EXCEL_FILETYPES:
             if templ_in.endswith(ext):
                 print('input file: ', templ_in)
-                template_data = Report.parse_excel_template(templ_in)
+                template_data = parse_excel_template(templ_in)
                 is_excel = True
                 break
         # Check if it is an .proj_req file

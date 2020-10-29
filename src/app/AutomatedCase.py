@@ -10,7 +10,10 @@ from PySimpleGUI import cprint as gui_print
 import src.constants as constants
 from src.app.LightsCtrl import LightsCtrl
 from src.app.Sensor import Sensor
+
 from src.app.Reports import Report
+from src.app.utils import analyze_images_test_results
+from src.utils.excel_tools import export_to_excel_file
 
 
 def dict_len(dictionary):
@@ -131,6 +134,26 @@ class AutomatedCase(threading.Thread):
             }
         )
         gui_print(text, window=self.gui_window, key=self.gui_output, colors=text_color)
+
+    def generate_lights_seqs(self, req_dict=None):
+        if not req_dict:
+            req_dict = self.template_data
+
+        lights_list = []
+
+        for test_type in req_dict.keys():
+            lights_list.append(
+                {
+                    'test_type': test_type,
+                    'lights_seq': {}
+                }
+            )
+            for light_type in req_dict[test_type].keys():
+                lights_list[len(lights_list) - 1]['lights_seq'][light_type] = []
+                for lux in req_dict[test_type][light_type].keys():
+                    lights_list[len(lights_list) - 1]['lights_seq'][light_type].append(lux)
+
+        return lights_list
 
     def pull_new_images(self, folders: list, filename, specific_device=None):
         if self.pull_files_location is None:
@@ -348,7 +371,7 @@ class AutomatedCase(threading.Thread):
         files_destination = os.path.normpath(files_destination)
         files_to_analyze = {}
 
-        lights_seqs = Report.generate_lights_seqs(self.template_data)
+        lights_seqs = self.generate_lights_seqs()
         print("Lights Seq: ", lights_seqs)
 
         # Allocate lists for devices' results data
@@ -405,7 +428,7 @@ class AutomatedCase(threading.Thread):
 
             self.current_action = 'Analyzing Images'
             self.output_gui('Analyzing images...')
-            report = Report()
+            # report = Report()
                                          # files_to_analyze
             # report.analyze_images_parallel(testdict, ini_file, num_processes=4)  # Returns (<class 'str'>)
             # This returns only some of the results, will have to use .json files for each image
@@ -424,7 +447,7 @@ class AutomatedCase(threading.Thread):
             self.output_gui('Generating report...')
 
             # Use images analysis data and insert it into self.template_data dict
-            report.analyze_images_test_results(self.template_data)  # self.template_data
+            analyze_images_test_results(self.template_data)  # self.template_data
             print('returned: ', self.template_data)
 
             report_filename = (
@@ -443,7 +466,7 @@ class AutomatedCase(threading.Thread):
                     excel_filename
                 )
                 # Pass template data with analysis results and requirements
-                report.export_to_excel_file(self.template_data, excel_file_path, add_images_bool = False)  # self.template_data
+                export_to_excel_file(self.template_data, excel_file_path, add_images_bool = False)  # self.template_data
                 self.output_gui(f'Excel file exported!\n{excel_file_path}', 'success')
 
                 if reports_pdf_bool:
