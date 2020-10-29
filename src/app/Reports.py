@@ -8,8 +8,10 @@ from openpyxl import cell as xlcell, worksheet
 from openpyxl.utils import get_column_letter
 from openpyxl.styles import PatternFill, Font, Border, Alignment, Side
 from openpyxl.drawing.image import Image as xls_image
-from openpyxl.utils.units import pixels_to_EMU
 from openpyxl.drawing.xdr import XDRPositiveSize2D as xdr_size
+from openpyxl.drawing.spreadsheet_drawing import AnchorMarker, OneCellAnchor
+from openpyxl.utils.units import pixels_to_EMU, cm_to_EMU
+from PIL import Image as PIL_Image
 import win32com.client as win32
 
 # Imatest
@@ -821,7 +823,4 @@ class Report:
         img.width = 150
         img.height = int(img.width / ratio)
 
-        # size = xdr_size(pixels_to_EMU(img.width), pixels_to_EMU(img.height))
-
-        img.anchor = img_cell.coordinate
-        sheet.add_image(img)
+        sheet.add_image(img, img_cell.coordinate)

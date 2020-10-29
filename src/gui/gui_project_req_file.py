@@ -32,7 +32,7 @@ def gui_project_req_file(proj_req=None, return_val=False):
     imatest_params_file = open(imatest_params_file_location)
     imatest_params = json.load(imatest_params_file)
 
-    params_list = list(imatest_params[test_modules_list[0]].keys())
+    current_test_type = None
 
     left_col = [[tree]]
 
@@ -105,7 +105,8 @@ def gui_project_req_file(proj_req=None, return_val=False):
 
     params_section = [
         [
-            sg.I(key='params_search_filter', size=(34, 1), pad=(3, 0), enable_events=True)
+            sg.I(key='params_search_filter', size=(34, 1), pad=(3, 0), enable_events=True),
+            sg.Checkbox(text='', default=False, key='params_search_bool', pad=(0,0), enable_events=True)
         ],
         [
             sg.Listbox(
@@ -193,7 +194,7 @@ def gui_project_req_file(proj_req=None, return_val=False):
 
         if event.startswith('-OPEN SEC_TT-'):
             opened_tt = not opened_tt
-            opened_impexp, opened_temp, opened_lux, opened_params = False, False, False, False
+            opened_impexp, opened_temp, opened_lux, opened_params = False, False, False, opened_params
 
         if event.startswith('-OPEN SEC_TEMP-'):
             opened_temp = not opened_temp
@@ -205,7 +206,7 @@ def gui_project_req_file(proj_req=None, return_val=False):
 
         if event.startswith('-OPEN SEC_PARAMS-'):
             opened_params = not opened_params
-            opened_impexp, opened_tt, opened_temp, opened_lux = False, False, False, False
+            opened_impexp, opened_tt, opened_temp, opened_lux = False, opened_tt, False, False
 
         # Update UI elements
         window['-OPEN SEC_IMPEXP-'].update(SYMBOL_DOWN if opened_temp else SYMBOL_UP)
@@ -222,8 +223,6 @@ def gui_project_req_file(proj_req=None, return_val=False):
 
         window['-OPEN SEC_PARAMS-'].update(SYMBOL_DOWN if opened_params else SYMBOL_UP)
         window['-SEC_PARAMS-'].update(visible=opened_params)
-
-        current_test_type = None
 
         if event == '-TREE-':
             # When selecting item check for what test type it is in
@@ -246,11 +245,13 @@ def gui_project_req_file(proj_req=None, return_val=False):
                         continue
                     print(f'now at {current_test_type} test type ')
 
-            ret_vals = filter_params(imatest_params, values['params_search_filter'], current_test_type)
+        if event == 'params_search_filter' or event == 'params_search_bool' or event == '-TREE-':
+            ret_vals = filter_params(
+                imatest_params,
+                values['params_search_filter'],
+                current_test_type,
+                values['params_search_bool'])
             window['params_search_list'].Update(values=ret_vals)
-
-        selected = tree.where()
-        selected_text = tree.get_text(selected)
 
         # This does not work - when file is passed, it does not get seen until an event occurs -> current workaround is timeout
         if not done:
@@ -266,10 +267,6 @@ def gui_project_req_file(proj_req=None, return_val=False):
 
         print('vals', values)  # Debugging
         print('event', event)  # Debugging
-
-        if event == 'params_search_filter':
-            ret_vals = filter_params(imatest_params, values['params_search_filter'], current_test_type)
-            window['params_search_list'].Update(values=ret_vals)
 
         if event == 'clear_btn':
             if sg.popup_yes_no('Are you sure you want to remove all entries?') == 'Yes':
@@ -407,15 +404,19 @@ def gui_project_req_file(proj_req=None, return_val=False):
         return None
 
 
-def filter_params(imatest_params, filter, current_test_type=None):
+def filter_params(imatest_params: dict, filter: str, current_test_type: str=None, search_everywhere: bool=True):
     out_list = []
     print(f'filter params got: \n{imatest_params}\n, {filter}\n, {current_test_type}')
     imatest_tests_list = list(imatest_params.keys())
     for key, value in imatest_params.items():
         for param in list(value.keys()):
             if (filter != '' and filter != None):
-                if filter in param.lower():
+                param = param.lower()
+                filter = filter.lower()
+                if search_everywhere or current_test_type == None and filter in param:
                     out_list.append(f'{key} > {param}')
+                elif current_test_type == key and filter in param:
+                    out_list.append(f'{param}')
             elif current_test_type == key:
                 out_list.append(f'{param}')
             elif current_test_type == None:
