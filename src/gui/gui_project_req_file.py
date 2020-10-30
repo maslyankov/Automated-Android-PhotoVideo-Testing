@@ -350,10 +350,15 @@ def gui_project_req_file(proj_req=None, return_val=False):
             tree.insert_node('', f"{values['add_type_value']}", values['add_type_value'])
 
         if event == 'add_param_btn':
-            if tree.get_text(values['-TREE-'][0]) == 'params':
-                tree.insert_node(current, f"{values['params_search_list'][0]}", values['params_search_list'][0])
+            try:
+                selected_val = values['params_search_list'][0]
+            except IndexError:
+                sg.popup_ok('Select parameter first!')
             else:
-                sg.popup_ok('You can only add params to "params"!')
+                if tree.get_text(values['-TREE-'][0]) == 'params':
+                    tree.insert_node(current, f"{selected_val}", selected_val)
+                else:
+                    sg.popup_ok('You can only add params to "params"!')
 
         if event == 'add_light_temp_btn':
             if tree.get_text(values['-TREE-'][0]) in test_modules_list:
