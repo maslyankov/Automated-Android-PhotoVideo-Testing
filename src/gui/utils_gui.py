@@ -266,7 +266,7 @@ class Tree(sg.Tree):
 
         return key
 
-    def load_tree(self, dictionary):
+    def load_tree(self, dictionary, parent_key=None):
         """
         Load dcitionary into self.treedata and update self.tree
         : Parameters
@@ -281,8 +281,12 @@ class Tree(sg.Tree):
             for child in children:
                 node = dictionary[child]
                 table[child] = self._new_key()
+                if parent_key is not None and table[node[0]] == '':
+                    parent = parent_key
+                else:
+                    parent = table[node[0]]
                 self.treedata.Insert(
-                    table[node[0]], table[child], node[2], node[3])
+                    parent, table[child], node[2], node[3])
                 temp += node[1]
             children = temp
         self.tree.update(values=self.treedata)

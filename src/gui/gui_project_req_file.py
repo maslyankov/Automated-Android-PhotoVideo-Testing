@@ -446,16 +446,20 @@ def gui_project_req_file(proj_req=None, return_val=False):
         if event == 'export_btn':
             if values['export_btn'].endswith('.projreq'):
                 current_file = os.path.normpath(values['export_btn'])
+
+            elif values['export_btn'] == '':
+                current_file = None
+            else:
+                current_file = os.path.normpath(values['export_btn']) + '.projreq'
+                #sg.popup_error('Wrong file format!')
+
+            if current_file is not None:
                 dump_dict = tree.dump_tree_dict()
                 # open output file for writing
                 xml = convert_dict_to_xml(dump_dict, 'projreq_file', file_is_new)
                 print("Out XML:\n", xml)
                 with open(current_file, 'wb') as outfile:
                     outfile.write(xml)
-            elif values['export_btn'] == '':
-                pass
-            else:
-                sg.popup_error('Wrong file format!')
 
         if current_file is not None:
             window['current_filename_label'].Update(current_file.split(os.path.sep)[-1])
