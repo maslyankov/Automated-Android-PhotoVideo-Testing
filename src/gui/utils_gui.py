@@ -413,7 +413,7 @@ class Tree(sg.Tree):
         :Parameters
           text - str, name of node.
           next - str, 'New' for new search, 'Previous' for previous node,
-            'Next' for next node.
+            'Next' for next node, 'Current' for currently selected.
         :Return
           key of node, None if not found.
         """
@@ -425,7 +425,10 @@ class Tree(sg.Tree):
         if mode == 'New':
             self.text = text.lower()
             return self._search_next_node(-1)
-        if mode == 'Previous':
+        elif mode == 'Current':
+            self.text = text.lower()
+            return self._search_current_node(index)
+        elif mode == 'Previous':
             return self._search_previous_node(index)
         elif mode == 'Next':
             return self._search_next_node(index)
@@ -599,6 +602,22 @@ class Tree(sg.Tree):
                 index += 1
             else:
                 return self.list[index]
+        return None
+
+    def _search_current_node(self, index):
+        """
+        Search next one node.
+        :Return
+          key of next node, None for not found.
+        """
+        if not self.text:
+            return None
+        # length = len(self.list)
+
+        for key in self.treedata.tree_dict[self.list[index]].children:
+            #key = self.list[i]
+            if self.text in self.treedata.tree_dict[key].text.lower():
+                return key
         return None
 
     def _search_next_node(self, index):
