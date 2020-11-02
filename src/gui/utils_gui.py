@@ -413,7 +413,7 @@ class Tree(sg.Tree):
         :Parameters
           text - str, name of node.
           next - str, 'New' for new search, 'Previous' for previous node,
-            'Next' for next node, 'Current' for currently selected.
+            'Next' for next node, 'Current' for currently selected ('Current' returns first child key).
         :Return
           key of node, None if not found.
         """
@@ -615,9 +615,9 @@ class Tree(sg.Tree):
         # length = len(self.list)
 
         for key in self.treedata.tree_dict[self.list[index]].children:
-            #key = self.list[i]
-            if self.text in self.treedata.tree_dict[key].text.lower():
-                return key
+            #key = self.list[key]
+            if self.text in key.text.lower():
+                return key.children[0].key
         return None
 
     def _search_next_node(self, index):

@@ -311,11 +311,20 @@ def gui_project_req_file(proj_req=None, return_val=False):
                 if values['restrict_end_val'] != 'None' and values['restrict_start_val'] > values['restrict_end_val']:
                     sg.popup_ok('Restriction start value cannot be\nbigger than end value!')
                 else:
-                    start_val_node = tree.insert_node(current, 'start_value', 'param-val')
-                    tree.insert_node(start_val_node, values['restrict_start_val'], values['restrict_start_val'])
+                    has_start_val = tree.search(text='start_value', mode='Current')
+                    if has_start_val is not None:
+                        start_val_node = tree.insert_node(current, 'start_value', 'param-val')
+                        tree.insert_node(start_val_node, values['restrict_start_val'], values['restrict_start_val'])
+                    else:
+                        tree.set_text(has_start_val, values['restrict_start_val'])
+
                     if values['restrict_end_val'] != 'None':
-                        start_val_node = tree.insert_node(current, 'end_value', 'param-val')
-                        tree.insert_node(start_val_node, values['restrict_end_val'], values['restrict_end_val'])
+                        has_end_val = tree.search(text='end_value', mode='Current')
+                        if has_end_val is not None:
+                            start_val_node = tree.insert_node(current, 'end_value', 'param-val')
+                            tree.insert_node(start_val_node, values['restrict_end_val'], values['restrict_end_val'])
+                        else:
+                            tree.set_text(has_end_val, values['restrict_end_val'])
             else:
                 sg.popup_ok("You can only add restrictors to the parameter.")
 
@@ -376,10 +385,19 @@ def gui_project_req_file(proj_req=None, return_val=False):
 
         if event == 'add_min_max_btn':
             if curr_parent_val == 'params':
-                min_node = tree.insert_node(current, 'min', 'param-val')
-                tree.insert_node(min_node, values['param_min_value'], values['param_min_value'])
-                max_node = tree.insert_node(current, 'max', 'param-val')
-                tree.insert_node(max_node, values['param_max_value'], values['param_max_value'])
+                has_min = tree.search(text='min', mode='Current')
+                if has_min is None:
+                    min_node = tree.insert_node(current, 'min', 'param-val')
+                    tree.insert_node(min_node, values['param_min_value'], values['param_min_value'])
+                else:
+                    tree.set_text(has_min, values['param_min_value'])
+
+                has_max = tree.search(text='max', mode='Current')
+                if has_max is None:
+                    max_node = tree.insert_node(current, 'max', 'param-val')
+                    tree.insert_node(max_node, values['param_max_value'], values['param_max_value'])
+                else:
+                    tree.set_text(has_max, values['param_max_value'])
             else:
                 sg.popup_ok("Trying to add min,max to invalid place. \nparent val: ", curr_parent_val)
 
