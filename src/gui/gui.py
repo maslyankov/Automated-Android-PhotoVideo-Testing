@@ -127,10 +127,10 @@ def gui():
         ],
         [
             sg.T('Images dir:', size=(18, 1)),
-            sg.Input(key='obj_report_output', readonly=True, size=(38, 1)),
-            sg.FolderBrowse(size=(8, 1), target='obj_report_output')
+            sg.Input(key='obj_report_output', readonly=True, size=(38, 1), enable_events=True),
+            sg.FolderBrowse(size=(8, 1), key='obj_report_output_browse')
         ],
-        [sg.Button("Generate", key='obj_report_build_btn', size=(20, 1))]
+        [sg.Button("Generate", key='obj_report_build_btn', size=(20, 1), disabled=True)]
     ]
 
 
@@ -359,9 +359,28 @@ def gui():
             gui_project_req_file()
 
         if event == 'obj_report_projreq_btn':
-            ret_data = gui_project_req_file(return_val=True)
-            templ_data = ret_data['dict']
-            window['obj_report_projreq_field'].Update(ret_data['projreq_file'])
+            try:
+                ret_data
+            except NameError:
+                pass_dict = ret_data = None
+            else:
+                try:
+                    pass_dict = ret_data['dict']
+                except KeyError:
+                    pass_dict = None
+
+            ret_data = gui_project_req_file(proj_req=pass_dict, return_val=True)
+            if ret_data is not None:
+                templ_data = ret_data['dict']
+                if ret_data['projreq_file'] is not None:
+                    window['obj_report_projreq_field'].Update(ret_data['projreq_file'])
+                else:
+                    window['obj_report_projreq_field'].Update('New unsaved file')
+
+            window['obj_report_build_btn'].Update(disabled=not (ret_data is not None and values['obj_report_output'] != ''))
+
+        if event == 'obj_report_output':
+            window['obj_report_build_btn'].Update(disabled=not (ret_data is not None and values['obj_report_output'] != ''))
 
         if event == 'obj_report_build_btn':
             out_dir = os.path.normpath(values['obj_report_output'])

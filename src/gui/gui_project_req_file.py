@@ -33,6 +33,7 @@ def gui_project_req_file(proj_req=None, return_val=False):
     imatest_params = json.load(imatest_params_file)
 
     current_test_type = None
+    last_test_type = None
 
     left_col = [[tree]]
 
@@ -200,7 +201,7 @@ def gui_project_req_file(proj_req=None, return_val=False):
         ],
         [sg.HorizontalSeparator()],
         [
-            place(sg.Button('Execute Template!', key='go_templ_btn', visible=False, size=(30, 2)))
+            place(sg.Button('Go!', key='go_templ_btn', visible=False, size=(30, 2)))
         ]
     ]
 
@@ -220,13 +221,32 @@ def gui_project_req_file(proj_req=None, return_val=False):
     current_file = None
 
     while True:
-        event, values = window.read()  # timeout=100)
+        event, values = window.read(timeout=100)
 
         if event == sg.WIN_CLOSED or event == 'Close' or event == 'go_templ_btn':
             # if user closes window or clicks cancel
             if event == 'go_templ_btn':
                 go_templ_btn_clicked = True
             break
+
+        # This does not work - when file is passed,
+        # it does not get seen until an event occurs -> current workaround is timeout
+        if not done:
+            done = True
+            if proj_req is not None:
+                print('Proj Req: ', proj_req)
+                if isinstance(proj_req, dict):
+                    import_templ(proj_req, tree)
+                else:
+                    current_file = import_templ(proj_req, tree)
+                return_val = True
+                if current_file is not None:
+                    file_is_new = False
+            if return_val:
+                window['go_templ_btn'].Update(visible=True)
+
+        # print('vals', values)  # Debugging
+        # print('event', event)  # Debugging
 
         # Sections
         if event.startswith('-OPEN SEC_IMPEXP-'):
@@ -328,29 +348,13 @@ def gui_project_req_file(proj_req=None, return_val=False):
             else:
                 sg.popup_ok("You can only add restrictors to the parameter.")
 
-        if event == 'params_search_filter' or event == 'params_search_bool' or event == '-TREE-':
+        if event == 'params_search_filter' or event == 'params_search_bool' or current_test_type != last_test_type:
             ret_vals = filter_params(
                 imatest_params,
                 values['params_search_filter'],
                 current_test_type,
                 values['params_search_bool'])
             window['params_search_list'].Update(values=ret_vals)
-
-        # This does not work - when file is passed,
-        # it does not get seen until an event occurs -> current workaround is timeout
-        if not done:
-            done = True
-            if proj_req is not None:
-                print('Proj Req: ', proj_req)
-                current_file = import_templ(proj_req, tree)
-                return_val = True
-                if current_file is not None:
-                    file_is_new = False
-            if return_val:
-                window['go_templ_btn'].Update(visible=True)
-
-        print('vals', values)  # Debugging
-        print('event', event)  # Debugging
 
         if event == 'clear_btn':
             if sg.popup_yes_no('Are you sure you want to remove all entries?') == 'Yes':
@@ -488,6 +492,8 @@ def gui_project_req_file(proj_req=None, return_val=False):
         else:
             window['save_btn'].Update(disabled=True)
 
+        last_test_type = current_test_type
+
     window.close()
     if go_templ_btn_clicked:
         return {
@@ -521,36 +527,40 @@ def filter_params(imatest_params: dict, fltr: str, current_test_type: str = None
 
 def import_templ(templ_in, tree):
     global is_excel
-
+    print('proj req got: ', templ_in)
     if templ_in is not None:
-        templ_in = os.path.normpath(templ_in)
-        # Check if it is an Excel file
-        for ext in constants.EXCEL_FILETYPES:
-            if templ_in.endswith(ext):
-                print('input file: ', templ_in)
-                template_data = parse_excel_template(templ_in)
-                is_excel = True
-                break
-        # Check if it is an .proj_req file
-        try:
-            template_data
-        except NameError:
-            if templ_in.endswith('projreq'):
-                file_data = convert_xml_to_dict(templ_in)['projreq_file']
-                print("file data: ", file_data)
-                try:
-                    print(f"created {file_data['time_created']}")
-                except KeyError:
-                    pass
-                try:
-                    print(f" was last modified {file_data['time_updated']} ")
-                except KeyError:
-                    pass
-                print(f"is \n{file_data['proj_req']}")
-                template_data = file_data['proj_req']
-                is_excel = False
-            else:
-                sg.popup_error('Unknown proj_req filetype.')
+        if isinstance(templ_in, str):
+            templ_in = os.path.normpath(templ_in)
+            # Check if it is an Excel file
+            for ext in constants.EXCEL_FILETYPES:
+                if templ_in.endswith(ext):
+                    print('input file: ', templ_in)
+                    template_data = parse_excel_template(templ_in)
+                    is_excel = True
+                    break
+            # Check if it is an .proj_req file
+            try:
+                template_data
+            except NameError:
+                if templ_in.endswith('projreq'):
+                    file_data = convert_xml_to_dict(templ_in)['projreq_file']
+                    print("file data: ", file_data)
+                    try:
+                        print(f"created {file_data['time_created']}")
+                    except KeyError:
+                        pass
+                    try:
+                        print(f" was last modified {file_data['time_updated']} ")
+                    except KeyError:
+                        pass
+                    print(f"is \n{file_data['proj_req']}")
+                    template_data = file_data['proj_req']
+                    is_excel = False
+                else:
+                    sg.popup_error('Unknown proj_req filetype.')
+        elif isinstance(templ_in, dict):
+            print("indict lqlq: ", templ_in)
+            template_data = templ_in
         # Load file to gui tree
         try:
             template_data
