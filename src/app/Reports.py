@@ -123,42 +123,62 @@ class Report:
             yield keys, d
 
     @staticmethod
-    def update_imatest_params():
-        report_obj = Report()
-        images_dict = {'test_serial': []}
-        tests_params = {}
-        curr_progress = 0
-        ini_file = os.path.join(constants.ROOT_DIR, 'images', 'imatest', 'ini_file', 'imatest-v2.ini')
+    def update_imatest_params(json_file=None, test_type=None):
+        params_out_file = os.path.join(constants.DATA_DIR, 'imatest_params.json')
 
-        prog_step = 100 / len(constants.IMATEST_PARALLEL_TEST_TYPES.keys()) / 3
+        if json_file is None:
+            report_obj = Report()
+            images_dict = {'test_serial': []}
+            tests_params = {}
+            curr_progress = 0
+            ini_file = os.path.join(constants.ROOT_DIR, 'images', 'imatest', 'ini_file', 'imatest-v2.ini')
 
-        # Prepare list for passing to image analyzer
-        tests_list = images_dict['test_serial']
-        for test_name in constants.IMATEST_PARALLEL_TEST_TYPES.keys():
-            img_file = os.path.join(constants.ROOT_DIR, 'images', 'imatest', f'{test_name}_example')
-            if os.path.exists(img_file + '.jpg'):
-                img_file += '.jpg'
-            elif os.path.exists(img_file + '.png'):
-                img_file += '.png'
-            else:
-                print('FAILED TO FIND IMAGE FOR', img_file)
-                continue
+            prog_step = 100 / len(constants.IMATEST_PARALLEL_TEST_TYPES.keys()) / 3
 
-            new_dict = {
-                'analysis_type': test_name,
-                'image_files': [img_file]
-            }
+            # Prepare list for passing to image analyzer
+            tests_list = images_dict['test_serial']
+            for test_name in constants.IMATEST_PARALLEL_TEST_TYPES.keys():
+                img_file = os.path.join(constants.ROOT_DIR, 'images', 'imatest', f'{test_name}_example')
+                if os.path.exists(img_file + '.jpg'):
+                    img_file += '.jpg'
+                elif os.path.exists(img_file + '.png'):
+                    img_file += '.png'
+                else:
+                    print('FAILED TO FIND IMAGE FOR', img_file)
+                    continue
 
-            tests_list.append(new_dict)
+                new_dict = {
+                    'analysis_type': test_name,
+                    'image_files': [img_file]
+                }
 
-        print('Created images dict:\n', images_dict)
-        result = report_obj.analyze_images_parallel(images_dict, ini_file)
-        # open output file for writing
-        result_out_file = os.path.join(constants.DATA_DIR, 'imatest_all_tests_results.json')
-        with open(result_out_file, 'w') as outfile:
-            json.dump(result, outfile)
+                tests_list.append(new_dict)
 
-        print('Analysis Result:\n', result)
+            print('Created images dict:\n', images_dict)
+            result = report_obj.analyze_images_parallel(images_dict, ini_file)
+            # open output file for writing
+            result_out_file = os.path.join(constants.DATA_DIR, 'imatest_all_tests_results.json')
+            with open(result_out_file, 'w') as outfile:
+                json.dump(result, outfile)
+
+            print('Analysis Result:\n', result)
+        else:
+            if test_type is None:
+                print('UPD_IMATEST_PARAMS: JSON_FILE not None, but test_type is None.')
+                return
+
+            # Load current params file
+            with open(params_out_file) as params_file_old:
+                last_params_readable = json.load(params_file_old)
+            tests_params = last_params_readable
+
+            print('tests_params: \n', tests_params)
+
+            with open(json_file) as json_file_l:
+                image_analysis_readable = json.load(json_file_l)
+            result = [image_analysis_readable]
+
+            print('result: \n', result)
 
         # Parse received list to params file
         filter_params = [
@@ -171,13 +191,18 @@ class Report:
         # for res_dict in images_analysis_readable:
         for res_dict in result:
             current_type = None
-            for key, value in Report.recurse_dict(res_dict['data']):
+            for key, value in Report.recurse_dict(res_dict[list(res_dict.keys())[0]]):
                 if current_type is None or key[0] == 'title' or key[0] == 'image_file':
                     # First find the title
                     # Turns out dotpattern has neither title, nor image_file keys..
                     # if key[0] == 'title' or key[0] == 'image_file':
                     #     current_type = value.split('_')[0]
-                    if key[0] == 'version':
+                    if test_type is not None:
+                        if key[0] == 'title' or key[0] == 'image_file':
+                            continue
+                        current_type = test_type
+                        del tests_params[current_type]
+                    elif key[0] == 'version':
                         current_type = value.split('  ')[-1].split('_')[0].replace(' ', '').lower()
                     elif key[0] == 'title' or key[0] == 'image_file':
                         last_type_name = None
@@ -205,7 +230,6 @@ class Report:
                         tests_params[current_type][param_name] = val_type
 
         # open output file for writing
-        params_out_file = os.path.join(constants.DATA_DIR, 'imatest_params.json')
         with open(params_out_file, 'w') as outfile:
             json.dump(tests_params, outfile)
 

@@ -6,8 +6,9 @@ import PySimpleGUI as sg
 import src.constants as constants
 from src.utils.xml_tools import convert_dict_to_xml, convert_xml_to_dict
 from src.gui.utils_gui import Tree, place, collapse, SYMBOL_DOWN, SYMBOL_UP
-from src.app.Reports import Report
+from src.gui.gui_imatest_params_upd import gui_imatest_params_upd
 from src.utils.excel_tools import parse_excel_template
+
 is_excel = False
 
 
@@ -403,28 +404,22 @@ def gui_project_req_file(proj_req=None, return_val=False):
             print('expanding nodes')
 
         if event == 'update_params_btn':
-            if sg.popup_yes_no('Are you sure you want to refetch params from Imatest?\n'
-                               'This will do actual tests and parse their results,\n'
-                               'so keep in mind it takes some time.') == 'Yes':
-                sg.popup_auto_close("Loading... Please wait.", non_blocking=True, no_titlebar=True)
+            # Save stuff just in case
+            if current_file is not None:
+                dump_dict = tree.dump_tree_dict()
+                # open output file for writing
+                xml = convert_dict_to_xml(dump_dict, 'projreq_file')
+                print("Out XML:\n", xml)
+                with open(current_file, 'wb') as outfile:
+                    outfile.write(xml)
 
-                # Save stuff just in case
-                if current_file is not None:
-                    dump_dict = tree.dump_tree_dict()
-                    # open output file for writing
-                    xml = convert_dict_to_xml(dump_dict, 'projreq_file')
-                    print("Out XML:\n", xml)
-                    with open(current_file, 'wb') as outfile:
-                        outfile.write(xml)
+            gui_imatest_params_upd()
 
-                # Parse to file (Update file)
-                Report.update_imatest_params()
+            # Reload params from file
+            imatest_params_file = open(imatest_params_file_location)
+            imatest_params = json.load(imatest_params_file)
 
-                # Reload params from file
-                imatest_params_file = open(imatest_params_file_location)
-                imatest_params = json.load(imatest_params_file)
-
-                sg.popup_ok('All Imatest parameters were dumped successfully!')
+            sg.popup_ok('All Imatest parameters were dumped successfully!')
 
         if event == 'import_btn':
             file_is_new = False
