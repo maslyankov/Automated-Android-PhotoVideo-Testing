@@ -2,7 +2,7 @@ import json
 import os
 
 import src.constants as constants
-
+from natsort import natsorted
 
 def kelvin_to_illumenant(kelvins):
     if isinstance(kelvins, str):
@@ -78,7 +78,7 @@ def analyze_images_test_results(template_data):
                 img_file_path = template_data[test_type][light_temp][lux]['filename']
                 img_file_name = os.path.basename(img_file_path)
                 img_results_path = os.path.join(os.path.dirname(img_file_path), 'Results')
-                img_json_filename = [f for f in os.listdir(img_results_path) if
+                img_json_filename = [f for f in natsorted(os.listdir(img_results_path)) if
                                      f.startswith(img_file_name.split('.')[0]) and f.endswith('.json')]
 
                 if len(img_json_filename) < 1:
@@ -96,6 +96,7 @@ def analyze_images_test_results(template_data):
                         if num == 0:
                             # At beginning set equal to parent of param (possibly)
                             param_val = image_analysis_readable[param_piece]
+
                         elif num != len(params_depth) - 1:
                             # If not at end yet and not at beginning
                             param_val = param_val[param_piece]
@@ -105,6 +106,9 @@ def analyze_images_test_results(template_data):
                             # Full name of param: param,
                             # last part of param: param_piece,
                             # param value: param_val
+                            if len(params_depth) > 1:
+                                param_val = param_val[param_piece]
+
                             curr_param_dict = template_data[test_type][light_temp][lux]["params"][param]
 
                             try:
