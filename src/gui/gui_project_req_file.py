@@ -20,7 +20,7 @@ def gui_project_req_file(proj_req=None, return_val=False):
     tree = Tree(
         headings=['LUX No', ],
         num_rows=20,
-        key='-TREE-', )
+        key='-TREE-', column_width=40)
 
     # Lists Data
     test_modules_list = list(constants.IMATEST_PARALLEL_TEST_TYPES.keys())
@@ -136,17 +136,17 @@ def gui_project_req_file(proj_req=None, return_val=False):
     params_restrict_bool = False
     params_section = [
         [
-            sg.I(key='params_search_filter', size=(32, 1), pad=(3, 0), enable_events=True),
+            sg.I(key='params_search_filter', size=(42, 1), pad=(3, 0), enable_events=True),
             sg.Checkbox(text='', default=False, key='params_search_bool', pad=(0, 0), enable_events=True)
         ],
         [
             sg.Listbox(
                 values=filter_params(imatest_params, ''),
                 key='params_search_list',
-                size=(32, 5), pad=(3, 0))
+                size=(42, 5), pad=(3, 0))
         ],
         [
-            sg.B('Add Param', key='add_param_btn', size=(30, 1))
+            sg.B('Add Param', key='add_param_btn', size=(38, 1))
         ],
         [
             sg.Column(min_max_left), sg.Column(min_max_right),
