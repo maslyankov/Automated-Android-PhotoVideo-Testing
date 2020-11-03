@@ -373,7 +373,9 @@ def gui_project_req_file(proj_req=None, return_val=False):
             else:
                 try:
                     if tree.get_text(values['-TREE-'][0]) == 'params':
+                        parent_id = tree.where()
                         tree.insert_node(current, f"{selected_val}", selected_val)
+                        tree.select(parent_id)
                     else:
                         sg.popup_ok('You can only add params to "params"!')
                 except IndexError:
@@ -400,6 +402,7 @@ def gui_project_req_file(proj_req=None, return_val=False):
 
         if event == 'add_min_max_btn':
             if curr_parent_val == 'params':
+                parent_id = tree.where()
                 has_min = tree.search(text='min', mode='Current')
                 if has_min is None:
                     min_node = tree.insert_node(current, 'min', 'param-val')
@@ -413,6 +416,8 @@ def gui_project_req_file(proj_req=None, return_val=False):
                     tree.insert_node(max_node, values['param_max_value'], values['param_max_value'])
                 else:
                     tree.set_text(has_max, values['param_max_value'])
+
+                tree.select(parent_id)
             else:
                 sg.popup_ok("Trying to add min,max to invalid place. \nparent val: ", curr_parent_val)
 
@@ -426,8 +431,12 @@ def gui_project_req_file(proj_req=None, return_val=False):
 
         if event == 'delete_btn' or event == 'Delete:46':
             try:
+                select_next = tree.get_prev_next_of_current()
+
                 print(f"Delete {tree.get_text(values['-TREE-'][0])}")
                 print("Action was successful: ", tree.delete_node(values["-TREE-"][0]))
+
+                tree.select(select_next)
             except IndexError:
                 print('Trying to delete something that is not there.. :(')
 

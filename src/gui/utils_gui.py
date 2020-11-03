@@ -225,6 +225,16 @@ class Tree(sg.Tree):
         """
         return self.get_value(self.treedata.tree_dict[key].parent)
 
+    def get_parent_key(self, key):
+        """
+        Get values[0] of node.
+        : Parameters
+          key - str, key of node
+        : Return
+          str, value of node
+        """
+        return self.treedata.tree_dict[key].parent
+
     def hide_header(self, window):
         """
         Hide header of tree.
@@ -606,7 +616,7 @@ class Tree(sg.Tree):
 
     def _search_current_node(self, index):
         """
-        Search next one node.
+        Search selected node.
         :Return
           key of next node, None for not found.
         """
@@ -647,6 +657,50 @@ class Tree(sg.Tree):
             key = self.list[i]
             if self.text in self.treedata.tree_dict[key].text.lower():
                 return key
+        return None
+
+    def get_prev_next_of_current(self):
+        current = self.where()
+        prev = self._get_prev_node_of_par(current)
+        next = self._get_next_node_of_par(current)
+
+        return prev if prev else next if next else self.get_parent_key(current)
+
+
+    def _get_next_node_of_par(self, key):
+        self._all_nodes('')
+        index = self.list.index(key) + 1
+        while index < len(self.list):
+            parent = []
+            p = self.treedata.tree_dict[self.list[index]].parent
+            while True:
+                parent.append(p)
+                p = self.treedata.tree_dict[p].parent
+                if p == '': break
+            if key in parent:
+                index += 1
+            elif self.treedata.tree_dict[self.list[index]].parent == self.treedata.tree_dict[self.list[self.list.index(key)]].parent:
+                return self.list[index]
+            else:
+                index += 1
+        return None
+
+    def _get_prev_node_of_par(self, key):
+        self._all_nodes('')
+        index = self.list.index(key) - 1
+        while index >= 0:
+            parent = []
+            p = self.treedata.tree_dict[self.list[index]].parent
+            while True:
+                parent.append(p)
+                p = self.treedata.tree_dict[p].parent
+                if p == '': break
+            if key in parent:
+                index -= 1
+            elif self.treedata.tree_dict[self.list[index]].parent == self.treedata.tree_dict[self.list[self.list.index(key)]].parent:
+                return self.list[index]
+            else:
+                index -= 1
         return None
 
     def expand_all(self):
