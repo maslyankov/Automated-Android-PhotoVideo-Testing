@@ -221,6 +221,8 @@ class Report:
                         # Skip string or filtered params
                         print(f'Skipping {key[-1]} because it is a string or in filter!')
                         continue
+                    if val_type == 'list' and len(value) == 1:
+                        val_type = type(value[0]).__name__
                     try:
                         tests_params[current_type]
                     except KeyError:

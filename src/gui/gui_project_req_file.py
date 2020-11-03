@@ -214,14 +214,16 @@ def gui_project_req_file(proj_req=None, return_val=False):
 
     # Create the Window
     window = sg.Window('Project Requirements File Tool', layout,
-                       icon=os.path.join(constants.ROOT_DIR, 'images', 'automated-video-testing-header-icon.ico'))
+                       icon=os.path.join(constants.ROOT_DIR, 'images', 'automated-video-testing-header-icon.ico'),
+                       return_keyboard_events=True, use_default_focus=False)
     tree.set_window(window)
 
     done = False
     current_file = None
+    curr_parent_val = None
 
     while True:
-        event, values = window.read(timeout=100)
+        event, values = window.read() #timeout=100)
 
         if event == sg.WIN_CLOSED or event == 'Close' or event == 'go_templ_btn':
             # if user closes window or clicks cancel
@@ -246,7 +248,7 @@ def gui_project_req_file(proj_req=None, return_val=False):
                 window['go_templ_btn'].Update(visible=True)
 
         # print('vals', values)  # Debugging
-        # print('event', event)  # Debugging
+        # print('event', event, type(event))  # Debugging
 
         # Sections
         if event.startswith('-OPEN SEC_IMPEXP-'):
@@ -369,23 +371,32 @@ def gui_project_req_file(proj_req=None, return_val=False):
             except IndexError:
                 sg.popup_ok('Select parameter first!')
             else:
-                if tree.get_text(values['-TREE-'][0]) == 'params':
-                    tree.insert_node(current, f"{selected_val}", selected_val)
-                else:
-                    sg.popup_ok('You can only add params to "params"!')
+                try:
+                    if tree.get_text(values['-TREE-'][0]) == 'params':
+                        tree.insert_node(current, f"{selected_val}", selected_val)
+                    else:
+                        sg.popup_ok('You can only add params to "params"!')
+                except IndexError:
+                    print('Tree empty.')
 
         if event == 'add_light_temp_btn':
-            if tree.get_text(values['-TREE-'][0]) in test_modules_list:
-                tree.insert_node(current, f"{values['add_light_temp_value']}", values['add_light_temp_value'])
-            else:
-                sg.popup_ok('You can only add light temps to test type elements!')
+            try:
+                if tree.get_text(values['-TREE-'][0]) in test_modules_list:
+                    tree.insert_node(current, f"{values['add_light_temp_value']}", values['add_light_temp_value'])
+                else:
+                    sg.popup_ok('You can only add light temps to test type elements!')
+            except IndexError:
+                print('Tree empty.')
 
         if event == 'add_lux_btn':
-            if tree.get_text(values['-TREE-'][0]) in light_types_list:
-                new_elem = tree.insert_node(current, values['add_lux_value'], values['add_lux_value'])
-                tree.insert_node(new_elem, 'params', 'params')
-            else:
-                sg.popup_ok('Select temp first')
+            try:
+                if tree.get_text(values['-TREE-'][0]) in light_types_list:
+                    new_elem = tree.insert_node(current, values['add_lux_value'], values['add_lux_value'])
+                    tree.insert_node(new_elem, 'params', 'params')
+                else:
+                    sg.popup_ok('Select temp first')
+            except IndexError:
+                print('Tree empty.')
 
         if event == 'add_min_max_btn':
             if curr_parent_val == 'params':
@@ -413,9 +424,12 @@ def gui_project_req_file(proj_req=None, return_val=False):
             print(f'Move down {values["-TREE-"]}')
             tree.move_down()
 
-        if event == 'delete_btn':
-            print(f"Delete {tree.get_text(values['-TREE-'][0])}")
-            print("Action was successful: ", tree.delete_node(values["-TREE-"][0]))
+        if event == 'delete_btn' or event == 'Delete:46':
+            try:
+                print(f"Delete {tree.get_text(values['-TREE-'][0])}")
+                print("Action was successful: ", tree.delete_node(values["-TREE-"][0]))
+            except IndexError:
+                print('Trying to delete something that is not there.. :(')
 
         if event == 'expand_btn':
             tree.expand_all()
