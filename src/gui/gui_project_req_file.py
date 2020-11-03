@@ -534,10 +534,10 @@ def filter_params(imatest_params: dict, fltr: str, current_test_type: str = None
     for key, value in imatest_params.items():
         for param in list(value.keys()):
             if fltr != '' and fltr is not None:
-                param = param.lower()
+                param = param
                 fltr = fltr.lower()
                 if search_everywhere or current_test_type is None:
-                    if fltr in param:
+                    if fltr in param.lower():
                         out_list.append(f'{key} > {param}')
                 elif current_test_type == key and fltr in param:
                     out_list.append(f'{param}')
