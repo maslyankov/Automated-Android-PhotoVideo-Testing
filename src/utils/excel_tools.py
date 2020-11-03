@@ -393,7 +393,7 @@ def xls_draw_results_table(template_data: dict, sheet, start_col: int, start_row
                     # Add param result value
                     try:
                         sheet.cell(current_row, columns['param_calc'][1],
-                                   param_templ_data['result_calculated']).style = cells_style
+                                   format(param_templ_data['result_calculated'], '.3f')).style = cells_style
                         data_len = len(str(param_templ_data['result_calculated']))
                         try:
                             if columns['param_calc'][2] < data_len:
