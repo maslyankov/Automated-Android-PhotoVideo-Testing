@@ -539,7 +539,7 @@ def filter_params(imatest_params: dict, fltr: str, current_test_type: str = None
                 if search_everywhere or current_test_type is None:
                     if fltr in param.lower():
                         out_list.append(f'{key} > {param}')
-                elif current_test_type == key and fltr in param:
+                elif current_test_type == key and fltr in param.lower():
                     out_list.append(f'{param}')
             elif current_test_type == key:
                 out_list.append(f'{param}')
