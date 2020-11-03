@@ -51,6 +51,9 @@ def gui_imatest_params_upd():
             # Parse to file (Update file)
             Report.update_imatest_params()
         elif event == 'update_params_btn' and values['import_json_bool']:
-            Report.update_imatest_params(json_file=values['import_json'], test_type=values['chosen_module'])
+            if values['import_json'] == '' or not values['import_json'].endswith('.json'):
+                sg.popup_ok('You must choose a JSON file!')
+            else:
+                Report.update_imatest_params(json_file=values['import_json'], test_type=values['chosen_module'])
 
     window.close()

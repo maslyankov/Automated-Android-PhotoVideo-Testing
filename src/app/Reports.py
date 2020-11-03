@@ -124,6 +124,12 @@ class Report:
 
     @staticmethod
     def update_imatest_params(json_file=None, test_type=None):
+        if test_type is not None:
+            if json_file is None:
+                return
+            elif not json_file.endswith('.json'):
+                return
+
         params_out_file = os.path.join(constants.DATA_DIR, 'imatest_params.json')
 
         if json_file is None:
