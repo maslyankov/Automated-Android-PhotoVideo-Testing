@@ -334,7 +334,7 @@ def gui_project_req_file(proj_req=None, return_val=False):
                     sg.popup_ok('Restriction start value cannot be\nbigger than end value!')
                 else:
                     has_start_val = tree.search(text='start_value', mode='Current')
-                    if has_start_val is not None:
+                    if has_start_val is None:
                         start_val_node = tree.insert_node(current, 'start_value', 'param-val')
                         tree.insert_node(start_val_node, values['restrict_start_val'], values['restrict_start_val'])
                     else:
@@ -342,7 +342,7 @@ def gui_project_req_file(proj_req=None, return_val=False):
 
                     if values['restrict_end_val'] != 'None':
                         has_end_val = tree.search(text='end_value', mode='Current')
-                        if has_end_val is not None:
+                        if has_end_val is None:
                             start_val_node = tree.insert_node(current, 'end_value', 'param-val')
                             tree.insert_node(start_val_node, values['restrict_end_val'], values['restrict_end_val'])
                         else:
