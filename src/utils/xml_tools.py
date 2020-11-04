@@ -6,6 +6,83 @@ import src.constants as constants
 
 
 # XML Utils
+def generate_sequence(subelem):
+    seq_temp = []
+
+    for action_num, action in enumerate(subelem):
+
+        action_list = []
+        data_list = []
+
+        # self.shoot_photo_seq.append(action.tag)
+        for action_elem_num, action_elem in enumerate(action):
+            # import pdb; pdb.set_trace()
+            print("\naction elem: ", action_elem)
+            print("data_list before", data_list)
+            if action_elem.tag == 'id':
+                action_list.append(action_elem.text)
+                print(action_elem_num, action_elem.text)
+
+            elif action_elem.tag == 'description':
+                print('description be: ', action_elem.text)
+                if action_elem.text is not None:
+                    data_list.append(action_elem.text)
+                else:
+                    data_list.append('')
+
+            elif action_elem.tag == 'coordinates':
+                coords_list = []
+
+                for inner_num, inner in enumerate(action_elem):
+                    # list should be: self.shoot_photo_seq = [
+                    # ['element_id', ['Description', [x, y], 'tap' ] ]
+                    # ]
+                    coords_list.append(inner.text)
+                data_list.append(coords_list)
+
+            elif action_elem.tag == 'value':
+                data_list.append(action_elem.text)
+
+            print("data_list after", data_list)
+        try:
+            data_list.append(action.attrib["type"])  # Set type
+        except KeyError:
+            print("Error! Invalid XML!")
+
+        action_list.append(data_list)
+
+        seq_temp.append(action_list)
+        print('Generated list for action: ', action_list)
+    return seq_temp
+
+
+def xml_from_sequence(obj, prop, xml_obj):
+    for action in getattr(obj, prop):
+        elem = ET.SubElement(xml_obj, "action")
+        elem_id = ET.SubElement(elem, "id")  # set
+        elem_desc = ET.SubElement(elem, "description")  # set
+
+        elem.set('type', action[1][2])
+        if action[1][2] == 'tap':  # If we have coords set, its a tap action
+            elem_coordinates = ET.SubElement(elem, "coordinates")
+
+            x = ET.SubElement(elem_coordinates, "x")  # set
+            y = ET.SubElement(elem_coordinates, "y")  # set
+
+            # list should be: self.shoot_photo_seq = [
+            # ['element_id', ['Description', [x, y] , type] ]
+            # ]
+            elem_id.text = str(action[0])
+            elem_desc.text = str(action[1][0])
+            x.text = str(action[1][1][0])
+            y.text = str(action[1][1][1])
+        else:
+            elem_id.text = str(action[0])
+            elem_desc.text = str(action[1][0])
+            elem_value = ET.SubElement(elem, "value")
+            elem_value.text = str(action[1][1])
+
+
 def _convert_dict_to_xml_recurse(parent, dictitem, parent_tag=None):
     elem_tag = None
     assert type(dictitem) is not type([])

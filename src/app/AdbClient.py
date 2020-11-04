@@ -6,7 +6,7 @@ import time
 
 from ppadb.client import Client as AdbPy
 
-from src.app.Device import Device
+from src.app.ADBDevice import ADBDevice
 import src.constants as constants
 
 
@@ -128,7 +128,7 @@ class AdbClient:
         :param device_obj: Device object
         :return: None
         """
-        self.devices_obj[device_serial] = Device(self, device_serial)  # Assign device to object
+        self.devices_obj[device_serial] = ADBDevice(self, device_serial)  # Assign device to object
         self.attached_devices.append(device_serial)
 
         self.devices_obj[device_serial].set_led_color('0FFF00', 'RGB1', 'global_rgb')  # Poly
