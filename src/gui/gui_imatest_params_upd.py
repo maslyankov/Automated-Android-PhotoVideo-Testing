@@ -55,5 +55,6 @@ def gui_imatest_params_upd():
                 sg.popup_ok('You must choose a JSON file!')
             else:
                 Report.update_imatest_params(json_file=values['import_json'], test_type=values['chosen_module'])
+                sg.popup_auto_close('Done!', no_titlebar=True)
 
     window.close()
