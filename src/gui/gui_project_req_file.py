@@ -12,10 +12,17 @@ from src.utils.excel_tools import parse_excel_template
 is_excel = False
 
 
-def gui_project_req_file(proj_req=None, return_val=False):
+def gui_project_req_file(proj_req=None, proj_req_file=None, return_val=False):
+    print('proj req got file: ', proj_req_file)
+    current_file = None
+
     global is_excel
     go_templ_btn_clicked = False
-    file_is_new = True
+    if proj_req_file is None:
+        file_is_new = True
+    else:
+        file_is_new = False
+        current_file = proj_req_file
 
     tree = Tree(
         headings=['LUX No', ],
@@ -219,7 +226,6 @@ def gui_project_req_file(proj_req=None, return_val=False):
     tree.set_window(window)
 
     done = False
-    current_file = None
     curr_parent_val = None
 
     while True:
@@ -238,9 +244,10 @@ def gui_project_req_file(proj_req=None, return_val=False):
             if proj_req is not None:
                 print('Proj Req: ', proj_req)
                 if isinstance(proj_req, dict):
-                    import_templ(proj_req, tree)
+                    current_file = import_templ(proj_req, tree, templ_in_file=proj_req_file)
                 else:
-                    current_file = import_templ(proj_req, tree)
+                    import_templ(templ_in=proj_req, tree=tree)
+                    current_file = proj_req
                 return_val = True
                 if current_file is not None:
                     file_is_new = False
@@ -547,8 +554,9 @@ def filter_params(imatest_params: dict, fltr: str, current_test_type: str = None
     return out_list
 
 
-def import_templ(templ_in, tree):
+def import_templ(templ_in, tree, templ_in_file=None):
     global is_excel
+    print('proj req got file: ', templ_in_file)
     print('proj req got: ', templ_in)
     if templ_in is not None:
         if isinstance(templ_in, str):
@@ -557,6 +565,7 @@ def import_templ(templ_in, tree):
             for ext in constants.EXCEL_FILETYPES:
                 if templ_in.endswith(ext):
                     print('input file: ', templ_in)
+                    templ_in_file = templ_in
                     template_data = parse_excel_template(templ_in)
                     is_excel = True
                     break
@@ -565,6 +574,7 @@ def import_templ(templ_in, tree):
                 template_data
             except NameError:
                 if templ_in.endswith('projreq'):
+                    templ_in_file = templ_in
                     file_data = convert_xml_to_dict(templ_in)['projreq_file']
                     print("file data: ", file_data)
                     try:
@@ -580,9 +590,10 @@ def import_templ(templ_in, tree):
                     is_excel = False
                 else:
                     sg.popup_error('Unknown proj_req filetype.')
+        # Check if it is a dict
         elif isinstance(templ_in, dict):
-            print("indict lqlq: ", templ_in)
             template_data = templ_in
+
         # Load file to gui tree
         try:
             template_data
@@ -591,7 +602,7 @@ def import_templ(templ_in, tree):
         else:
             tree.load_dict(template_data)
             # tree.expand_all()
-            return templ_in
+            return templ_in_file
     else:
         pass
     return None

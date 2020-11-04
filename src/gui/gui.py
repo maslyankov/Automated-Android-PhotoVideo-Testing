@@ -362,14 +362,15 @@ def gui():
             try:
                 ret_data
             except NameError:
-                pass_dict = ret_data = None
+                pass_file = pass_dict = ret_data = None
             else:
-                try:
+                if isinstance(ret_data, dict):
                     pass_dict = ret_data['dict']
-                except KeyError:
-                    pass_dict = None
+                    pass_file = values['obj_report_projreq_field']
+                else:
+                    pass_file = pass_dict = None
 
-            ret_data = gui_project_req_file(proj_req=pass_dict, return_val=True)
+            ret_data = gui_project_req_file(proj_req=pass_dict, proj_req_file=pass_file, return_val=True)
             if ret_data is not None:
                 templ_data = ret_data['dict']
                 if ret_data['projreq_file'] is not None:
