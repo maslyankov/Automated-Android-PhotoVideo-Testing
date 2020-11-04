@@ -303,7 +303,6 @@ def gui_project_req_file(proj_req=None, return_val=False):
                     str(tree.get_text(curr_sel_test_type)).lower()
                     not in list(constants.IMATEST_PARALLEL_TEST_TYPES.keys())):
                 curr_sel_test_type = tree.treedata.tree_dict[curr_sel_test_type].parent
-                print(tree.get_text(curr_sel_test_type))
 
             if current_test_type is None:
                 current_test_type = str(tree.get_text(curr_sel_test_type)).lower()
@@ -318,11 +317,11 @@ def gui_project_req_file(proj_req=None, return_val=False):
                     print(f'now at {current_test_type} test type ')
 
             if current_test_type is not None:
-                print('current text: ', current_text)
+                print(f'current text: "{current_text}"')
                 for paramm, paramm_type in imatest_params[current_test_type].items():
                     # print(f'"{paramm} ({paramm_type})",  ?= , "{current_text}"')
 
-                    if paramm.lower() == current_text:
+                    if paramm == current_text:
                         print('param found!!!')
                         print('its type is: ', paramm_type)
                         window['-SUBSEC_RESTRICTS-'].Update(visible=paramm_type == 'list')
