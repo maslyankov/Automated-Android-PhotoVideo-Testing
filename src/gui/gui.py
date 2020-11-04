@@ -14,6 +14,7 @@ from src.gui.gui_setup_device import gui_setup_device
 from src.gui.gui_test_lights import gui_test_lights
 from src.gui.gui_project_req_file import gui_project_req_file
 from src.gui.utils_gui import place, Tabs
+from src.gui.gui_cam_tool import gui_cam_tool
 
 from src.app.utils import analyze_images_test_results, add_filenames_to_data
 from src.utils.excel_tools import export_to_excel_file
@@ -139,7 +140,10 @@ def gui():
         [sg.Frame('Devices', devices_frame, font='Any 12')],
         [sg.Frame('Settings', device_settings_frame_layout, font='Any 12')],
         [sg.Frame('Lights', lights_frame_layout, font='Any 12')],
-        [sg.Button('Generate Project Requirements File', size=(30, 2), key='project_req_tool_btn', disabled=False)],
+        [
+            sg.Button('Generate Project Requirements File', size=(30, 2), key='project_req_tool_btn', disabled=False),
+            sg.Button('Test USB Camera', size=(15, 2), key='usb_cam_tool_btn', disabled=False)
+         ],
         [
             sg.Button('Capture Cases (Manual)', size=(25, 2), key='capture_manual_btn', disabled=True),
             sg.Button('Capture Cases (Automated)', size=(31, 2), key='capture_auto_btn', disabled=True),
@@ -358,6 +362,11 @@ def gui():
         if event == 'project_req_tool_btn':
             gui_project_req_file()
 
+        if event == 'usb_cam_tool_btn':
+            gui_cam_tool()
+
+
+        # Reports tab
         if event == 'obj_report_projreq_btn':
             try:
                 ret_data
