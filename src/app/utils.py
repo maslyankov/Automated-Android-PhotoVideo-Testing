@@ -72,19 +72,42 @@ def get_list_average(list_in: list, min_index=None, max_index=None):
 
 
 def analyze_images_test_results(template_data):
+    skipped_cases = []
+
     for test_type in template_data.keys():
         for light_temp in template_data[test_type].keys():
             for lux in template_data[test_type][light_temp].keys():
                 img_file_path = template_data[test_type][light_temp][lux]['filename']
                 img_file_name = os.path.basename(img_file_path)
                 img_results_path = os.path.join(os.path.dirname(img_file_path), 'Results')
+
+                if not os.path.isdir(img_results_path):
+                    skipped_cases.append({
+                        'test_type': test_type,
+                        'light_temp': light_temp,
+                        'lux': lux,
+                        'reason': f'{img_results_path} is not a dir!'
+                    })
+                    print(f'Not found: {img_results_path}\nSkipping!')
+                    continue
+
                 img_json_filename = [f for f in natsorted(os.listdir(img_results_path)) if
                                      f.startswith(img_file_name.split('.')[0]) and f.endswith('.json')]
+
 
                 if len(img_json_filename) < 1:
                     continue
 
                 img_json_file = os.path.join(img_results_path, img_json_filename[0])
+                if not os.path.isfile(img_json_file):
+                    skipped_cases.append({
+                        'test_type': test_type,
+                        'light_temp': light_temp,
+                        'lux': lux,
+                        'reason': f'{img_json_file} is not a file!'
+                    })
+                    print(f'Not found: {img_results_path}\nSkipping!')
+                    continue
 
                 with open(img_json_file) as json_file:
                     image_analysis_readable = json.load(json_file)
@@ -142,7 +165,7 @@ def analyze_images_test_results(template_data):
                                 curr_param_dict['result_pass_bool'] = False
                                 print('FAIL!\n')
 
-    return template_data
+    return template_data, skipped_cases
 
 def add_filenames_to_data(template_data, img_dir):
     file_exts = [

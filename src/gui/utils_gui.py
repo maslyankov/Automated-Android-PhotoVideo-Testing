@@ -762,3 +762,13 @@ class Tabs(sg.TabGroup):
                          theme=theme, key=key, k=k,
                          tooltip=tooltip, visible=visible, metadata=metadata
                          )
+
+
+def skipped_cases_to_str(skipped_cases):
+    output_str = ''
+
+    for case in skipped_cases:
+        output_str += f"Skipped: {case['test_type']}>{case['light_temp']}>{case['lux']}\n"
+        output_str += f"Reason: {case['reason']}\n\n"
+
+    return output_str

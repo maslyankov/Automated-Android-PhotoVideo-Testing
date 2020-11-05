@@ -13,7 +13,7 @@ from src.gui.gui_reboot_device import gui_reboot_device
 from src.gui.gui_setup_device import gui_setup_device
 from src.gui.gui_test_lights import gui_test_lights
 from src.gui.gui_project_req_file import gui_project_req_file
-from src.gui.utils_gui import place, Tabs
+from src.gui.utils_gui import place, Tabs, skipped_cases_to_str
 from src.gui.gui_cam_tool import gui_cam_tool
 
 from src.app.utils import analyze_images_test_results, add_filenames_to_data
@@ -398,7 +398,7 @@ def gui():
             print('after file data: \n', templ_data)
 
             # Use images analysis data and insert it into templ_data
-            analyze_images_test_results(templ_data)
+            skipped_cases = analyze_images_test_results(templ_data)[1]
 
             print('With analysis: \n', templ_data)
 
@@ -414,6 +414,8 @@ def gui():
             export_to_excel_file(templ_data, excel_file_path, add_images_bool=False)
 
             sg.popup_ok("File generated!")
+            if len(skipped_cases) > 0:
+                sg.popup_ok(skipped_cases_to_str(skipped_cases))
 
     # Before exiting...
 
