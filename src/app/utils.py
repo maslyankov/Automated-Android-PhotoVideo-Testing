@@ -4,6 +4,7 @@ import os
 import src.constants as constants
 from natsort import natsorted
 
+
 def kelvin_to_illumenant(kelvins):
     if isinstance(kelvins, str):
         if kelvins == '':
@@ -68,7 +69,7 @@ def get_list_average(list_in: list, min_index=None, max_index=None):
             result += item
             divider += 1
 
-    return result/divider
+    return result / divider
 
 
 def analyze_images_test_results(template_data):
@@ -94,7 +95,6 @@ def analyze_images_test_results(template_data):
                 img_json_filename = [f for f in natsorted(os.listdir(img_results_path)) if
                                      f.startswith(img_file_name.split('.')[0]) and f.endswith('.json')]
 
-
                 if len(img_json_filename) < 1:
                     continue
 
@@ -113,14 +113,18 @@ def analyze_images_test_results(template_data):
                     image_analysis_readable = json.load(json_file)
                 image_analysis_readable = image_analysis_readable[list(image_analysis_readable.keys())[0]]
 
+                keyerr = False
                 for param in template_data[test_type][light_temp][lux]['params'].keys():
                     params_depth = param.split('>')
                     for num, param_piece in enumerate(params_depth):
                         if num == 0:
                             # At beginning set equal to parent of param (possibly)
-                            param_val = image_analysis_readable[param_piece]
+                            try:
+                                param_val = image_analysis_readable[param_piece]
+                            except KeyError:
+                                keyerr = True
 
-                        elif num != len(params_depth) - 1:
+                        elif num != len(params_depth) - 1 and not keyerr:
                             # If not at end yet and not at beginning
                             param_val = param_val[param_piece]
 
@@ -129,6 +133,17 @@ def analyze_images_test_results(template_data):
                             # Full name of param: param,
                             # last part of param: param_piece,
                             # param value: param_val
+                            if keyerr:
+                                skipped_cases.append({
+                                    'test_type': test_type,
+                                    'light_temp': light_temp,
+                                    'lux': lux,
+                                    'param': param,
+                                    'results_file': img_json_file,
+                                    'reason': f'{param} parameter missing in Results file!'
+                                })
+                                continue
+
                             if len(params_depth) > 1:
                                 param_val = param_val[param_piece]
 
@@ -150,7 +165,6 @@ def analyze_images_test_results(template_data):
                                 restrict_end
                             )
 
-
                             curr_param_dict['result'] = param_val
                             curr_param_dict['result_calculated'] = param_val_calc
 
@@ -166,6 +180,7 @@ def analyze_images_test_results(template_data):
                                 print('FAIL!\n')
 
     return template_data, skipped_cases
+
 
 def add_filenames_to_data(template_data, img_dir):
     file_exts = [
@@ -183,7 +198,8 @@ def add_filenames_to_data(template_data, img_dir):
                     except KeyError:
                         filepath = None
                         for ext in file_exts:
-                            filepath = os.path.join(img_dir, test_type, light_temp, f'{test_type}_{light_temp}_{lux}.{ext}')
+                            filepath = os.path.join(img_dir, test_type, light_temp,
+                                                    f'{test_type}_{light_temp}_{lux}.{ext}')
                             if os.path.exists(filepath):
                                 break
                         if filepath is not None:

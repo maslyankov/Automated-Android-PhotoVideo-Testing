@@ -768,7 +768,17 @@ def skipped_cases_to_str(skipped_cases):
     output_str = ''
 
     for case in skipped_cases:
-        output_str += f"Skipped: {case['test_type']}>{case['light_temp']}>{case['lux']}\n"
+        try:
+            parameter = case['param']
+        except KeyError:
+            parameter = ''
+
+        output_str += f"Skipped: {case['test_type']}>{case['light_temp']}>{case['lux']}{parameter}\n"
+        try:
+            output_str += f"Results file: {case['results_file']}"
+        except KeyError:
+            pass
+
         output_str += f"Reason: {case['reason']}\n\n"
 
     return output_str
