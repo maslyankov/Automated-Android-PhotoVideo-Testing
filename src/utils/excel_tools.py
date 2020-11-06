@@ -464,8 +464,12 @@ def xls_draw_results_table(template_data: dict, sheet, start_col: int, start_row
                                   end_column=columns['light_temp'][1], end_row=current_row - 1)
 
         # After each Test Type
-        sheet.merge_cells(start_column=columns['test_type'][1], start_row=type_start_row,
-                          end_column=columns['test_type'][1], end_row=current_row - 1)
+        if type_start_row < current_row - 1 :
+            sheet.merge_cells(start_column=columns['test_type'][1], start_row=type_start_row,
+                              end_column=columns['test_type'][1], end_row=current_row - 1)
+        else:
+            # current_row += 1
+            continue
         if add_border_bool:
             xls_set_border(sheet, start_col, type_start_row, end_col, current_row - 1, 'thick')
 

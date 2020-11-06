@@ -5,28 +5,29 @@ import os
 import sys
 import xml.etree.cElementTree as ET
 from natsort import natsorted
+
+from src.app.Device import Device
 from src.utils.xml_tools import generate_sequence, xml_from_sequence
 
 import src.constants as constants
 
+
 # ---------- CLASS ADBDevice ----------
-class ADBDevice:
+class ADBDevice(Device):
     """
     Class for interacting with devices using adb (ppadb) and AdbClient class
     """
+
     # ----- INITIALIZER -----
     def __init__(self, adb, device_serial):
-        print("Attaching to device...")
+        super().__init__(
+            serial=device_serial,   # Assign device serial as received in arguments
+        )
 
         # Object Parameters #
         self.scrcpy = []
 
-        # Info
-        self.device_serial = device_serial  # Assign device serial as received in arguments
-
         # Settings
-        self.logs_enabled = False
-        self.logs_filter = ''
         self.camera_app = None
 
         # States
@@ -42,8 +43,6 @@ class ADBDevice:
         self.actions_time_gap = 1
 
         # Persistence
-        self.device_xml = os.path.join(constants.DEVICES_SETTINGS_DIR, f'{device_serial}.xml')
-
         self.adb = adb
 
         self.root()  # Make sure we are using root for device
@@ -60,13 +59,15 @@ class ADBDevice:
         print("Device Serial: ", device_serial)  # Debugging
         print(f"Device is {self.get_wakefulness()}")
 
+
+        # TODO: Move to parent class
         self.load_settings_file()
 
         self.print_attributes()
 
         self.setup_device_settings()
         self.turn_on_and_unlock()
-    
+
     # ----- Base methods -----
     def root(self):
         """
@@ -118,10 +119,10 @@ class ADBDevice:
         CREATE_NO_WINDOW = 0x08000000
         self.adb.anticipate_root = True
         disver = subprocess.Popen([constants.ADB, '-s', self.device_serial, 'disable-verity'],
-                                   stdin=subprocess.PIPE,
-                                   stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE,
-                                   creationflags=CREATE_NO_WINDOW)
+                                  stdin=subprocess.PIPE,
+                                  stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE,
+                                  creationflags=CREATE_NO_WINDOW)
         disver.stdin.close()
         stdout, stderr = disver.communicate()
         if stderr:
@@ -164,7 +165,7 @@ class ADBDevice:
         """
         print(f'pulling {src} into {dst}')  # Debugging
         self.d.pull(src, dst)
-    
+
     # ----- Getters/Setters -----
     def set_logs(self, logs_bool, fltr=None):
         if not isinstance(logs_bool, bool):
@@ -187,13 +188,13 @@ class ADBDevice:
 
     def get_start_video_seq(self):
         return self.start_video_seq
-    
+
     def set_stop_video_seq(self, seq):
         self.stop_video_seq = seq
 
     def get_stop_video_seq(self):
         return self.stop_video_seq
-    
+
     def set_camera_app_pkg(self, pkg):
         self.camera_app = pkg
 
@@ -229,7 +230,7 @@ class ADBDevice:
 
     def get_cpu(self):
         return self.exec_shell("getprop ro.product.cpu.abi").strip()
-    
+
     def get_current_app(self):
         """
         Returns currently opened app package and its current activity
@@ -257,7 +258,7 @@ class ADBDevice:
         :return:List of strings, each being an app package on the device
         """
         return sorted(self.exec_shell("pm list packages").replace('package:', '').splitlines())
-    
+
     def get_camera_files_list(self):
         """
         Get a list of files in sdcard/DCIM/Camera on the device
@@ -287,7 +288,7 @@ class ADBDevice:
             res = self.exec_shell('dumpsys window | grep "mUnrestricted"').rstrip().split('][')[1].strip(']').split(',')
 
         return res
-    
+
     def get_wakefulness(self):
         try:
             return self.exec_shell("dumpsys activity | grep -E 'mWakefulness'").split('=')[1]
@@ -301,9 +302,9 @@ class ADBDevice:
         :return:None
         """
         return natsorted(self.exec_shell("ls /sys/class/leds/").strip().replace('\n', '').replace('  ', ' ').split(' '))
-    
+
     # ----- Binary getters -----
-    
+
     def has_screen(self):  # TODO Make this return a valid boolean (now it sometimes works, sometimes doesn't)
         """
         Check if the device has an integrated screen (not working all the time)
@@ -352,7 +353,7 @@ class ADBDevice:
             return self.exec_shell("input touchscreen tap {} {}".format(coords[0][0], coords[0][1]))
         else:
             self.exec_shell("input tap {} {}".format(coords[0][0], coords[0][1]))
-    
+
     def open_app(self, package):
         """
         Open an app package
@@ -435,7 +436,7 @@ class ADBDevice:
                                             stdout=subprocess.PIPE,
                                             stderr=subprocess.PIPE,
                                             creationflags=CREATE_NO_WINDOW))
-        self.scrcpy[len(self.scrcpy)-1].stdin.close()
+        self.scrcpy[len(self.scrcpy) - 1].stdin.close()
 
     def identify(self):
         """
@@ -567,7 +568,7 @@ class ADBDevice:
         tree = ET.ElementTree(root)
         print(f'Writing settings to file {self.device_xml}')
         tree.write(self.device_xml, encoding='UTF8', xml_declaration=True)
-    
+
     # ----- Device UI Parsing -----
     def dump_window_elements(self):
         """
