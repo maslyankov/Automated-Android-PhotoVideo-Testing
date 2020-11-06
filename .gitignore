@@ -148,6 +148,11 @@ tests*/
 
 # Log files
 log*.txt
+
+# Temp Files
 tmp/*
 camxoverridesettings*.txt
 *.xml
+
+# Windows Stuff
+*.lnk
