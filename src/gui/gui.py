@@ -415,7 +415,7 @@ def gui():
 
             sg.popup_ok("File generated!")
             if len(skipped_cases) > 0:
-                sg.popup_ok(skipped_cases_to_str(skipped_cases))
+                sg.popup_scrolled(skipped_cases_to_str(skipped_cases))
 
     # Before exiting...
 
