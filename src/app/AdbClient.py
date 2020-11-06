@@ -7,11 +7,8 @@ import time
 from ppadb.client import Client as AdbPy
 
 from src.app.ADBDevice import ADBDevice
+from src.app.utils import compare_lists
 import src.constants as constants
-
-
-def compare_lists(list1, list2):
-    return [str(s) for s in (set(list1) ^ set(list2))]
 
 
 class AdbClient:
@@ -42,8 +39,9 @@ class AdbClient:
 
         self.client = AdbPy(host="127.0.0.1", port=5037)
 
-        self.connected_devices = []  # to store connected devices
+        self.watchdog_thread = None
 
+        self.connected_devices = []  # to store connected devices
         self.attached_devices = []  # to store attached devices - devices that are connected and we are attached to
         self.devices_obj = {}  # to store attached devices' objects
 
@@ -93,7 +91,9 @@ class AdbClient:
             self.connected_devices = devices_list
 
     def watchdog(self):
-        threading.Thread(target=self._watchdog, args=(), daemon=True).start()
+        self.watchdog_thread = threading.Thread(target=self._watchdog, args=(), daemon=True)
+        self.watchdog_thread.name = 'ADBDevices-Watchdog'
+        self.watchdog_thread.start()
 
     # ----- Getters -----
     def list_devices(self):

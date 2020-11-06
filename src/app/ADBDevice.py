@@ -2,7 +2,6 @@ import subprocess
 import time
 import re
 import os
-import sys
 import xml.etree.cElementTree as ET
 from natsort import natsorted
 
@@ -54,11 +53,6 @@ class ADBDevice(Device):
             self.android_ver = int(self.get_android_version().split('.')[0])
         except RuntimeError:
             print("Device went offline!")
-
-        print("Conn devs: ", adb.attached_devices)  # Debugging
-        print("Device Serial: ", device_serial)  # Debugging
-        print(f"Device is {self.get_wakefulness()}")
-
 
         # TODO: Move to parent class
         self.load_settings_file()
@@ -167,16 +161,6 @@ class ADBDevice(Device):
         self.d.pull(src, dst)
 
     # ----- Getters/Setters -----
-    def set_logs(self, logs_bool, fltr=None):
-        if not isinstance(logs_bool, bool):
-            print('Logs setter got a non bool type... Defaulting to False.')
-            self.logs_enabled = False
-        else:
-            self.logs_enabled = logs_bool
-
-        if fltr is not None:
-            self.logs_filter = fltr
-
     def set_shoot_photo_seq(self, seq):
         self.shoot_photo_seq = seq
 
@@ -405,7 +389,6 @@ class ADBDevice(Device):
         state = self.is_sleeping()
         # print(f"predicate: {state[0] == 'false'}")
         if state[0] == 'true':
-            print('Device should have been already turned on')
             self.exec_shell('input keyevent 26')  # Event Power Button
             self.exec_shell('input keyevent 82')  # Unlock
 
@@ -468,18 +451,8 @@ class ADBDevice(Device):
 
     # ----- Settings Persistence -----
     def load_settings_file(self):
-        print(f'Checking for Device settings file at "{self.device_xml}" and possibly loading it..')
+        root = super().load_settings_file()
 
-        try:
-            tree = ET.parse(self.device_xml)
-        except FileNotFoundError:
-            print("Settings file for device nonexistent! Clean slate... :)")
-            return
-        except ET.ParseError:
-            print("Failed to load Device settings! :( XML Error!")
-            return
-
-        root = tree.getroot()
         # all item attributes
         for elem in root:
             for subelem in elem:

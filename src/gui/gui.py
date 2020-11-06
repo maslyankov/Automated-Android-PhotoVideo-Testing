@@ -191,7 +191,7 @@ def gui():
     adb = AdbClient.AdbClient(gui_window=window, gui_event=devices_watchdog_event)
     adb.watchdog()
 
-    devices = adb.devices_obj  # List to store devices objects
+    adb_devices = adb.devices_obj  # List to store devices objects
 
     # Event Loop to process "events" and get the "values" of the inputs
     while True:
@@ -250,7 +250,7 @@ def gui():
                 try:
                     print('device disconnected, detaching')
                     adb.detach_device(adb_received['serial'])
-                    del devices[adb_received['serial']]
+                    del adb_devices[adb_received['serial']]
                 except KeyError:
                     print("Wasn't attached anyway..")
 
@@ -273,7 +273,7 @@ def gui():
                         window[f'device_attached.{num}'].Update(text_color='white', background_color='green')
                         window[f'device_friendly.{num}'].Update(text_color='white',
                                                                 background_color='green',
-                                                                value=devices[diff_device].friendly_name,
+                                                                value=adb_devices[diff_device].friendly_name,
                                                                 disabled=False)
                         window[f'identify_device_btn.{num}'].Update(disabled=False)
                         window[f'ctrl_device_btn.{num}'].Update(disabled=False)
@@ -281,7 +281,7 @@ def gui():
 
                 print('Added {} to attached devices!'.format(diff_device))
 
-                print('Currently opened app: {}'.format(devices[diff_device].get_current_app()))
+                print('Currently opened app: {}'.format(adb_devices[diff_device].get_current_app()))
             else:  # Detach
                 print('User wanted to detach device...')
                 adb.detach_device(diff_device)
@@ -311,32 +311,32 @@ def gui():
             if event.split('.')[0] == 'identify_device_btn':  # Identify Buttons
                 print('Identifying ' + event.split('.')[1])
                 device000 = values[f"device_serial.{event.split('.')[1]}"]
-                devices[device000].identify()
+                adb_devices[device000].identify()
             if event.split('.')[0] == 'ctrl_device_btn':  # Device Control
                 print('Opening device control for ' + event.split('.')[1])
                 device000 = values[f"device_serial.{event.split('.')[1]}"]
-                devices[device000].open_device_ctrl()
+                adb_devices[device000].open_device_ctrl()
 
             # Buttons callbacks
             if event == "camxoverride_btn":
-                gui_camxoverride(attached_devices_list, devices)
+                gui_camxoverride(attached_devices_list, adb_devices)
 
             if event == "push_file_btn":
-                gui_push_file(attached_devices_list, devices)
+                gui_push_file(attached_devices_list, adb_devices)
 
             if event == "setup_device_btn":
-                gui_setup_device(attached_devices_list, devices)
+                gui_setup_device(attached_devices_list, adb_devices)
 
             if event.split('.')[0] == 'device_friendly':
                 device000 = values[f"device_serial.{event.split('.')[1]}"]
-                devices[device000].friendly_name = values[f"device_friendly.{event.split('.')[1]}"]
-                print(f'for {device000} fr name is {devices[device000].friendly_name}')
+                adb_devices[device000].friendly_name = values[f"device_friendly.{event.split('.')[1]}"]
+                print(f'for {device000} fr name is {adb_devices[device000].friendly_name}')
 
             if event == 'reboot_device_btn':
-                gui_reboot_device(attached_devices_list, devices)
+                gui_reboot_device(attached_devices_list, adb_devices)
 
             if event == 'capture_manual_btn':
-                gui_manual_cases(attached_devices_list, devices)
+                gui_manual_cases(attached_devices_list, adb_devices)
 
             if event == 'capture_auto_btn':
                 print('Launching GUI')

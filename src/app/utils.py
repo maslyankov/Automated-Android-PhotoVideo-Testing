@@ -72,6 +72,11 @@ def get_list_average(list_in: list, min_index=None, max_index=None):
     return result / divider
 
 
+def compare_lists(list1, list2):
+    return [str(s) for s in (set(list1) ^ set(list2))]
+
+# Deeper stuff
+
 def analyze_images_test_results(template_data):
     skipped_cases = []
 
