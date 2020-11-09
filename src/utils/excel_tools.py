@@ -10,7 +10,7 @@ import win32com.client as win32
 
 # Local
 import src.constants as constants
-from src.app.utils import kelvin_to_illumenant, only_digits, only_chars
+from src.app.utils import kelvin_to_illumenant, only_digits, only_chars, extract_video_frame
 
 
 def xls_to_xlsx(xls_file) -> str:
@@ -532,6 +532,11 @@ def xls_set_border(ws, start_col, start_row, end_col, end_row, size='thin', colo
 def xls_import_image(img_file, sheet, img_cell):
     if not os.path.isfile(img_file):
         return
+
+    if os.path.basename(img_file).endswith('mp4'):
+        print('File ', img_file, 'is a video! Extracting frames!')
+        extracted_frames = extract_video_frame(img_file, start_frame=4)
+        img_file = extracted_frames[0]
 
     img = xls_image(img_file)
     ratio = img.width / img.height
