@@ -244,7 +244,7 @@ def xls_draw_results_table(template_data: dict, sheet, start_col: int, start_row
 
     columns = {
         'test_type': ['Test Target'],
-        'image': ['Image', '', 20],
+        'image': ['Image', '', 22],
         'light_temp': ['Light'],
         'lux': ['Lux Level'],
         'param': ['Parameter'],
@@ -432,6 +432,7 @@ def xls_draw_results_table(template_data: dict, sheet, start_col: int, start_row
                 if add_images_bool:
                     # Add image
                     img_cell = sheet.cell(lux_start_row, columns['image'][1])
+                    img_cell.style = cells_style
                     img_file = template_data[test_type][light_color][lux]['filename']
                     print('img: ', img_file)
                     xls_import_image(img_file, sheet, img_cell)
@@ -533,9 +534,10 @@ def xls_import_image(img_file, sheet, img_cell):
     if not os.path.isfile(img_file):
         return
 
-    if os.path.basename(img_file).endswith('mp4'):
+    # If file is a video
+    if img_file.endswith('mp4'):
         print('File ', img_file, 'is a video! Extracting frames!')
-        extracted_frames = extract_video_frame(img_file, start_frame=4)
+        extracted_frames = extract_video_frame(img_file, start_frame=3)
         img_file = extracted_frames[0]
 
     img = xls_image(img_file)
