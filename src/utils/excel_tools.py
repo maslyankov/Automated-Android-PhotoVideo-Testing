@@ -345,9 +345,9 @@ def xls_draw_results_table(template_data: dict, sheet, start_col: int, start_row
                     data_len = len(str(light_color))
                     try:
                         if columns['light_temp'][2] < data_len:
-                            columns['light_temp'][2] = data_len
+                            columns['light_temp'][2] = data_len + 2
                     except IndexError:
-                        columns['light_temp'].append(data_len)
+                        columns['light_temp'].append(data_len + 2)
                     current_col += 1
 
                     # Add lux
@@ -365,9 +365,9 @@ def xls_draw_results_table(template_data: dict, sheet, start_col: int, start_row
                     data_len = len(str(param))
                     try:
                         if columns['param'][2] < data_len:
-                            columns['param'][2] = data_len
+                            columns['param'][2] = data_len + 2
                     except IndexError:
-                        columns['param'].append(data_len)
+                        columns['param'].append(data_len + 2)
                     current_col += 1
 
                     # Add param min
