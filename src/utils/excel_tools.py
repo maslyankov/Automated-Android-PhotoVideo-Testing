@@ -530,6 +530,9 @@ def xls_set_border(ws, start_col, start_row, end_col, end_row, size='thin', colo
 
 
 def xls_import_image(img_file, sheet, img_cell):
+    if not os.path.isfile(img_file):
+        return
+
     img = xls_image(img_file)
     ratio = img.width / img.height
     img.width = 150

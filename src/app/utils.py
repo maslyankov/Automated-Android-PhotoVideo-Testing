@@ -1,5 +1,6 @@
 import json
 import os
+import cv2
 
 import src.constants as constants
 from natsort import natsorted
@@ -189,7 +190,7 @@ def analyze_images_test_results(template_data):
 
 def add_filenames_to_data(template_data, img_dir):
     file_exts = [
-        'png', 'jpg'
+        'png', 'jpg', 'mp4'
     ]
 
     if os.path.isdir(img_dir):
@@ -211,3 +212,26 @@ def add_filenames_to_data(template_data, img_dir):
                             template_data[test_type][light_temp][lux]['filename'] = filepath
                         else:
                             template_data[test_type][light_temp][lux]['filename'] = None
+
+
+def extract_video_frame(videofile, start_frame, end_frame, skip_frames=0):
+    file_name = os.path.basename(videofile)
+    vidcap = cv2.VideoCapture(videofile)
+    success, image = vidcap.read()
+    count = 0
+    skipped_frame = 0
+    while success:
+        if start_frame <= count <= end_frame:
+            if skip_frames:
+                if skipped_frame == 0:
+                    skipped_frame = count + skip_frames
+                if count != skipped_frame:
+                    cv2.imwrite(f"{file_name}_frame%d.jpg" % count, image)  # save frame as JPEG file
+                else:
+                    skipped_frame += skip_frames
+            else:
+                cv2.imwrite(f"{file_name}_frame%d.jpg" % count, image)  # save frame as JPEG file
+
+        success, image = vidcap.read()
+        print('Read a new frame: ', success)
+        count += 1
