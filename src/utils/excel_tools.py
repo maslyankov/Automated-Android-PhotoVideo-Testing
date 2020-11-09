@@ -436,10 +436,26 @@ def xls_draw_results_table(template_data: dict, sheet, start_col: int, start_row
                     img_file = template_data[test_type][light_color][lux]['filename']
                     print('img: ', img_file)
                     xls_import_image(img_file, sheet, img_cell)
+                    set_row_height = 70
                     # Merge image rows
                     if lux_start_row < current_row - 1:
+                        print('lqlqlq: ', lux_start_row, current_row)
+                        merged_row_height = set_row_height / (current_row - lux_start_row)
+                        if merged_row_height < 15:
+                            merged_row_height = 15
+                        for rrow in range(lux_start_row, current_row):
+                            # if sheet.row_dimensions[rrow].height is None:
+                            #     sheet.row_dimensions[rrow].height = merged_row_height
+                            # elif sheet.row_dimensions[rrow].height < merged_row_height:
+                            sheet.row_dimensions[rrow].height = merged_row_height
                         sheet.merge_cells(start_column=columns['image'][1], start_row=lux_start_row,
                                           end_column=columns['image'][1], end_row=current_row - 1)
+                    else:
+                        print('lqlqlq2: ', lux_start_row, current_row)
+                        if sheet.row_dimensions[lux_start_row].height is None:
+                            sheet.row_dimensions[lux_start_row].height = set_row_height
+                        elif sheet.row_dimensions[lux_start_row].height < set_row_height:
+                            sheet.row_dimensions[lux_start_row].height = set_row_height
 
                 print(f"{test_type}>{light_color}>{lux}")
                 print('islast: ', (lux_num == len(luxes) - 1))
