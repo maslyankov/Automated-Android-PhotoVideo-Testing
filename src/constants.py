@@ -194,3 +194,10 @@ GUI_SLIDER_COLOR = PRIMARY_COLOR
 
 GUI_ELEMENT_BG_COLOR = DARK_COLOR
 GUI_ELEMENT_TEXT_COLOR = TEXT_COLOR
+
+# Device Icons
+DEVICE_ICONS = {
+    'android': os.path.join(ROOT_DIR, 'images', 'device-icons', 'android-flat-32.png'),
+    'linux': os.path.join(ROOT_DIR, 'images', 'device-icons', 'linux-32.png'),
+    'usb_cam': os.path.join(ROOT_DIR, 'images', 'device-icons', 'usb-circular-32.png')
+}

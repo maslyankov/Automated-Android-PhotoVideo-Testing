@@ -1,8 +1,15 @@
 import os
-
-from src.app import AdbClient
+from datetime import datetime
 
 import PySimpleGUI as sg
+
+from src.app.AdbClient import AdbClient
+from src.app.USBCamClient import USBCamClient
+
+from src.app.utils import analyze_images_test_results, add_filenames_to_data
+from src.utils.excel_tools import export_to_excel_file
+
+import src.constants as constants
 
 from src.gui.gui_help import gui_help
 from src.gui.gui_camxoverride import gui_camxoverride
@@ -13,35 +20,14 @@ from src.gui.gui_reboot_device import gui_reboot_device
 from src.gui.gui_setup_device import gui_setup_device
 from src.gui.gui_test_lights import gui_test_lights
 from src.gui.gui_project_req_file import gui_project_req_file
-from src.gui.utils_gui import place, Tabs, skipped_cases_to_str
 from src.gui.gui_cam_tool import gui_cam_tool
-
-from src.app.utils import analyze_images_test_results, add_filenames_to_data
-from src.utils.excel_tools import export_to_excel_file
-from datetime import datetime
-
-import src.constants as constants
+from src.gui.utils_gui import place, Tabs, skipped_cases_to_str
 
 
 def gui():
     #sg.theme('DarkBlack')  # Add a touch of color
     # Set GUI theme
-    sg.theme_slider_border_width(0)
-    sg.theme_slider_color(constants.GUI_SLIDER_COLOR)
-    sg.theme_background_color(constants.GUI_BG_COLOR)
-    sg.theme_element_background_color(constants.GUI_ELEMENT_BG_COLOR)
-    sg.theme_element_text_color(constants.GUI_ELEMENT_TEXT_COLOR)
-    sg.theme_text_color(constants.GUI_TEXT_COLOR)
-    sg.theme_text_element_background_color(constants.GUI_BG_COLOR)
-    sg.theme_input_text_color(constants.GUI_INPUT_TEXT_COLOR)
-    sg.theme_input_background_color(constants.GUI_INPUT_BG_COLOR)
-    sg.theme_button_color(
-        (constants.GUI_BUTTON_TEXT_COLOR,
-         constants.GUI_BUTTON_BG_COLOR)
-    )
-    sg.theme_border_width(constants.GUI_BORDER_WIDTH)
-    sg.theme_progress_bar_border_width(constants.GUI_PROGRESS_BAR_BORDER_WIDTH)
-    sg.theme_progress_bar_color(constants.GUI_PROGRESS_BAR_COLOR)
+    set_gui_theme()
 
     devices_frame = []
     for num in range(constants.MAX_DEVICES_AT_ONE_RUN):
@@ -187,11 +173,16 @@ def gui():
         grab_anywhere=True
     )
 
+    # Watchdogs
     devices_watchdog_event = '-DEVICES-WATCHDOG-'
-    adb = AdbClient.AdbClient(gui_window=window, gui_event=devices_watchdog_event)
-    adb.watchdog()
 
+    adb = AdbClient(gui_window=window, gui_event=devices_watchdog_event)
+    adb.watchdog()
     adb_devices = adb.devices_obj  # List to store devices objects
+
+    # usbcam_client = USBCamClient(gui_window=window, gui_event=devices_watchdog_event)
+    # usbcam_client.watchdog()
+    # usbcam_devices = usbcam_client.devices_obj
 
     # Event Loop to process "events" and get the "values" of the inputs
     while True:
@@ -208,38 +199,43 @@ def gui():
 
         # ---- Devices Listing
         if event == devices_watchdog_event:
-            adb_received = values[devices_watchdog_event]
+            watchdog_received = values[devices_watchdog_event]
 
-            if adb_received['action'] == 'connected':
+            if watchdog_received['action'] == 'connected':
                 # Connected
                 for num in range(constants.MAX_DEVICES_AT_ONE_RUN):
                     try:
                         if values[f'device_serial.{num}'] == '' or \
-                                values[f'device_serial.{num}'] == adb_received['serial']:
-                            print("setting {} to row {}".format(adb_received['serial'], num))
+                                values[f'device_serial.{num}'] == watchdog_received['serial']:
+                            device_data = watchdog_received
+                            del device_data['error'], device_data['action']
 
-                            window[f'device_attached.{num}'].Update(text=adb_received['serial'],
+                            print("setting {} to row {}".format(watchdog_received['serial'], num))
+
+                            window[f'device_attached.{num}'].Update(text=watchdog_received['serial'],
                                                                     text_color='black',
                                                                     background_color='yellow',
                                                                     disabled=False,
                                                                     visible=True)
-                            window[f'device_serial.{num}'].Update(adb_received['serial'])
+                            window[f'device_attached.{num}'].metadata = device_data
+                            window[f'device_serial.{num}'].Update(watchdog_received['serial'])  # TODO: Deprecate this
                             window[f'device_icon.{num}'].Update(
-                                filename=os.path.join(constants.ROOT_DIR, 'images', 'device-icons',
-                                                      'android-flat-32.png'),
+                                filename=constants.DEVICE_ICONS[watchdog_received['type']],
                                 visible=True)
 
                             window[f'device_friendly.{num}'].Update(visible=True)
                             window[f'identify_device_btn.{num}'].Update(visible=True)
                             window[f'ctrl_device_btn.{num}'].Update(visible=True)
+
+                            print('metadata: ', window[f'device_attached.{num}'].metadata)
                             break
                     except KeyError:
                         print('Devices limit exceeded!')
                         print(f'num: {num}, max: {constants.MAX_DEVICES_AT_ONE_RUN}')
-            elif adb_received['action'] == 'disconnected':
+            elif watchdog_received['action'] == 'disconnected':
                 # If device is disconnected
                 for num in range(constants.MAX_DEVICES_AT_ONE_RUN):
-                    if values[f'device_serial.{num}'] == adb_received['serial']:
+                    if values[f'device_serial.{num}'] == watchdog_received['serial']:
                         window[f'device_attached.{num}'].Update(value=False, background_color='red', disabled=True,
                                                                 visible=False)
                         window[f'device_friendly.{num}'].Update(disabled=True, visible=False)
@@ -249,8 +245,8 @@ def gui():
                         break
                 try:
                     print('device disconnected, detaching')
-                    adb.detach_device(adb_received['serial'])
-                    del adb_devices[adb_received['serial']]
+                    adb.detach_device(watchdog_received['serial'])
+                    del adb_devices[watchdog_received['serial']]
                 except KeyError:
                     print("Wasn't attached anyway..")
 
@@ -427,3 +423,21 @@ def gui():
         adb.detach_device(dev)
 
     window.close()
+
+def set_gui_theme():
+    sg.theme_slider_border_width(0)
+    sg.theme_slider_color(constants.GUI_SLIDER_COLOR)
+    sg.theme_background_color(constants.GUI_BG_COLOR)
+    sg.theme_element_background_color(constants.GUI_ELEMENT_BG_COLOR)
+    sg.theme_element_text_color(constants.GUI_ELEMENT_TEXT_COLOR)
+    sg.theme_text_color(constants.GUI_TEXT_COLOR)
+    sg.theme_text_element_background_color(constants.GUI_BG_COLOR)
+    sg.theme_input_text_color(constants.GUI_INPUT_TEXT_COLOR)
+    sg.theme_input_background_color(constants.GUI_INPUT_BG_COLOR)
+    sg.theme_button_color(
+        (constants.GUI_BUTTON_TEXT_COLOR,
+         constants.GUI_BUTTON_BG_COLOR)
+    )
+    sg.theme_border_width(constants.GUI_BORDER_WIDTH)
+    sg.theme_progress_bar_border_width(constants.GUI_PROGRESS_BAR_BORDER_WIDTH)
+    sg.theme_progress_bar_color(constants.GUI_PROGRESS_BAR_COLOR)

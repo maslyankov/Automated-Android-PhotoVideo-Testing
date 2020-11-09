@@ -206,12 +206,12 @@ def export_to_excel_file(template_data, dest_file, add_images_bool: bool):
     current_row = xls_draw_results_table(
         template_data,
         sheet,
-        2,
+        1,
         current_row,
-        primary_bg_color=constants.MID_COLOR.strip('#'),
+        primary_bg_color='ddebf7',
         primary_font_color='000000',
-        secondary_bg_color=constants.ALTERNATE_COLOR.strip('#'),
-        secondary_font_color=constants.BUTTON_TEXT_COLOR.strip('#'),
+        secondary_bg_color='729fcf',
+        secondary_font_color='000000',
         add_images_bool=add_images_bool
     )[1][0]
 

@@ -17,3 +17,11 @@ class USBCamDevice(Device):
 
         self.port = port
 
+    def take_photo(self):
+        pass
+
+    def start_video(self):
+        pass
+
+    def stop_video(self):
+        pass

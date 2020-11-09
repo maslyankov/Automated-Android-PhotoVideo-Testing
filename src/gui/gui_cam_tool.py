@@ -27,8 +27,10 @@ def gui_cam_tool():
                        icon=os.path.join(constants.ROOT_DIR, 'images', 'automated-video-testing-header-icon.ico'),
                        grab_anywhere=True)
 
+    print('initiating camera')
     cap = cv2.VideoCapture(preview_cam)
 
+    print('Loading camera')
     while True:
         event, values = window.read(timeout=20)
 

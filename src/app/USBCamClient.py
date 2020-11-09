@@ -23,7 +23,7 @@ def list_ports():
     return out_dict
 
 
-class AdbClient:
+class USBCamClient:
     def __init__(self, gui_window, gui_event):
         self.gui_window = gui_window
         self.gui_event = gui_event

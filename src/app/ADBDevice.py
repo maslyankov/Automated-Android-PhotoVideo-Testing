@@ -31,7 +31,6 @@ class ADBDevice(Device):
 
         # States
         self.current_camera_app_mode = 'photo'
-        self.is_recording_video = False
 
         # Sequences
         self.shoot_photo_seq = []
@@ -452,6 +451,8 @@ class ADBDevice(Device):
     # ----- Settings Persistence -----
     def load_settings_file(self):
         root = super().load_settings_file()
+        if root is None:
+            return
 
         # all item attributes
         for elem in root:
