@@ -3,7 +3,7 @@ from datetime import datetime
 
 # Local
 import src.constants as constants
-
+from src.app.utils import parses_to_integer
 
 # XML Utils
 def generate_sequence(subelem):
@@ -120,10 +120,6 @@ def _convert_dict_to_xml_recurse(parent, dictitem, parent_tag=None):
                 _convert_dict_to_xml_recurse(elem, child, elem_tag)
     else:
         parent.text = str(dictitem).strip(' ')
-
-
-def parses_to_integer(s):
-    return isinstance(s, int) or (isinstance(s, float) and s.is_integer())
 
 
 def convert_dict_to_xml(xmldict, name='root', file_is_new=False):

@@ -76,8 +76,24 @@ def get_list_average(list_in: list, min_index=None, max_index=None):
 def compare_lists(list1, list2):
     return [str(s) for s in (set(list1) ^ set(list2))]
 
-# Deeper stuff
 
+def parses_to_integer(s):
+    return isinstance(s, int) or (isinstance(s, float) and s.is_integer())
+
+
+def convert_to_int_float(s):
+    if isinstance(s, str):
+        if s.isdigit():
+            s = float(s)
+            if parses_to_integer(s):
+                s = int(s)
+    else:
+        if isinstance(s, float) and parses_to_integer(s):
+            s = int(s)
+    return s
+
+
+# Deeper stuff
 def analyze_images_test_results(template_data):
     skipped_cases = []
 
@@ -257,7 +273,6 @@ def extract_video_frame(videofile, start_frame, end_frame=None, skip_frames=0):
         # Save some time..
         if count >= end_frame:
             break
-
 
         success, image = vidcap.read()
         print('Read a new frame: ', success)

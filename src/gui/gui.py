@@ -390,6 +390,7 @@ def gui():
 
         if event == 'obj_report_build_btn':
             out_dir = os.path.normpath(values['obj_report_output'])
+            print('before file data: \n', templ_data)
             add_filenames_to_data(templ_data, out_dir)
             print('after file data: \n', templ_data)
 

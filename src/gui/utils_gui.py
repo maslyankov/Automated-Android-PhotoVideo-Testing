@@ -1,9 +1,4 @@
 """
-Tool for PySimpleGUI
-Author  - Jason Yang
-Date    - 2020/05/12
-Version - 0.0.3
-
 History
 
 - 2020/05/08
@@ -17,8 +12,10 @@ History
   - Revised button_color can be like 'black'.
   - Revised len of button_text to check halfwidth and fullwidth if character.
 """
-import src.constants as constants
 import PySimpleGUI as sg
+
+import src.constants as constants
+from src.app.utils import convert_to_int_float
 
 
 def place(elem):
@@ -176,17 +173,23 @@ class Tree(sg.Tree):
                 curr = ndict[node.text]
 
         if values != 'param-val':
-            for idx, child in enumerate(node.children):
+            if len(node.children[0].children) < 1:
                 try:
-                    curr[child.text]
-                except KeyError:
-                    curr[child.text] = {}
-                except TypeError as e:
-                    print("child.text: ", child.text)
-                    print("Exception: ", e)
-                else:
-                    print('not creating empty dict for ', node.text)
-                self.dfs(child, curr)
+                    ndict[node.text] = convert_to_int_float(node.children[0].text)
+                except IndexError:
+                    ndict[node.text] = ''
+            else:
+                for idx, child in enumerate(node.children):
+                    try:
+                        curr[child.text]
+                    except KeyError:
+                        curr[child.text] = {}
+                    except TypeError as e:
+                        print("child.text: ", child.text)
+                        print("Exception: ", e)
+                    else:
+                        print('not creating empty dict for ', node.text)
+                    self.dfs(child, curr)
         else:
             print('ndict: ', ndict)
             print('key: ', node.text)
