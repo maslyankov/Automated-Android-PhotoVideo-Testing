@@ -1,6 +1,7 @@
 import os
 import time
 import cv2, PySimpleGUI as sg
+import acapture
 
 from src.app.USBCamClient import list_ports
 import src.constants as constants
@@ -9,7 +10,7 @@ import src.constants as constants
 def gui_cam_tool():
     ports_dict = list_ports()
     cameras_list = list(ports_dict.keys())
-    preview_cam = ports_dict[cameras_list[0]]
+    preview_cam = ports_dict[cameras_list[-1]]
 
     print("Ports Dict1:", ports_dict)
 
@@ -28,7 +29,8 @@ def gui_cam_tool():
                        grab_anywhere=True)
 
     print('initiating camera')
-    cap = cv2.VideoCapture(preview_cam)
+    cap = cv2.VideoCapture(preview_cam, cv2.CAP_DSHOW)
+    #cap = acapture.open(preview_cam)
 
     print('Loading camera')
     while True:
@@ -39,8 +41,11 @@ def gui_cam_tool():
 
         if event == 'selected_camera':
             preview_cam = ports_dict[values['selected_camera']]
-            print('Switching preview to camera', )
-            cap = cv2.VideoCapture(preview_cam)
+            print('Switching preview to camera', preview_cam)
+            cap = cv2.VideoCapture(preview_cam, cv2.CAP_DSHOW)
+            #cap = acapture.open(preview_cam)
 
         # Update Preview
-        window['image'](data=cv2.imencode('.png', cap.read()[1])[1].tobytes())
+        is_alive, frame = cap.read()
+        # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        window['image'](data=cv2.imencode('.png', frame)[1].tobytes())
