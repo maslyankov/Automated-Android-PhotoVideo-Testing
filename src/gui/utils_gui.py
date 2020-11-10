@@ -164,6 +164,9 @@ class Tree(sg.Tree):
         except KeyError:
             # If at root
             curr = ndict
+        except TypeError as e:
+            print("node.text: ", node.text)
+            print("Exception: ", e)
         else:
             try:
                 ndict[node.text]
@@ -178,6 +181,9 @@ class Tree(sg.Tree):
                     curr[child.text]
                 except KeyError:
                     curr[child.text] = {}
+                except TypeError as e:
+                    print("child.text: ", child.text)
+                    print("Exception: ", e)
                 else:
                     print('not creating empty dict for ', node.text)
                 self.dfs(child, curr)
@@ -522,7 +528,9 @@ class Tree(sg.Tree):
                     continue
 
                 if parent_name != key:
-                    if key == 'min' or key == 'max' or key == 'start_value' or key == 'end_value':
+                    if key == 'min' or key == 'max' \
+                            or key == 'start_value' or key == 'end_value' \
+                            or key == 'absolute_value_bool':
                         key_text = 'param-val'
                     else:
                         key_text = key

@@ -159,6 +159,11 @@ def gui_project_req_file(proj_req=None, proj_req_file=None, return_val=False):
             sg.Column(min_max_left), sg.Column(min_max_right),
         ],
         [
+            sg.Checkbox(text='Use absolute value',
+                        default=False, key='params_absolute_bool',
+                        enable_events=True, disabled=True)
+        ],
+        [
             collapse(restrict_layout, '-SUBSEC_RESTRICTS-', visible=params_restrict_bool)
         ]
 
@@ -304,7 +309,7 @@ def gui_project_req_file(proj_req=None, proj_req_file=None, return_val=False):
             current_text = tree.get_text(current)
             curr_parent_val = tree.get_parent_value(current)
             curr_sel_test_type = current
-            print('curr val: ', tree.get_value(current))
+            # print('curr val: ', tree.get_value(current))
             while (
                     curr_sel_test_type and tree.get_text(curr_sel_test_type) != '' and
                     str(tree.get_text(curr_sel_test_type)).lower()
@@ -324,7 +329,7 @@ def gui_project_req_file(proj_req=None, proj_req_file=None, return_val=False):
                     print(f'now at {current_test_type} test type ')
 
             if current_test_type is not None:
-                print(f'current text: "{current_text}"')
+                # print(f'current text: "{current_text}"')
                 for paramm, paramm_type in imatest_params[current_test_type].items():
                     # print(f'"{paramm} ({paramm_type})",  ?= , "{current_text}"')
 
@@ -332,7 +337,27 @@ def gui_project_req_file(proj_req=None, proj_req_file=None, return_val=False):
                         print('param found!!!')
                         print('its type is: ', paramm_type)
                         window['-SUBSEC_RESTRICTS-'].Update(visible=paramm_type == 'list')
+
+                        has_abs_val = tree.search(text='absolute_value_bool', mode='Current')
+                        if has_abs_val is not None:
+                            window['params_absolute_bool'].Update(disabled=False, value=tree.get_text(has_abs_val))
+                        else:
+                            window['params_absolute_bool'].Update(disabled=False, value=False)
                         break
+                    else:
+                        window['params_absolute_bool'].Update(disabled=True)
+                        window['-SUBSEC_RESTRICTS-'].Update(visible=False)
+
+        if event == 'params_absolute_bool':
+            if curr_parent_val == 'params':
+                has_abs_val = tree.search(text='absolute_value_bool', mode='Current')
+                if has_abs_val is None:
+                    absolute_node = tree.insert_node(current, 'absolute_value_bool', 'param-val')
+                    tree.insert_node(absolute_node, values['params_absolute_bool'], values['params_absolute_bool'])
+                else:
+                    tree.set_text(has_abs_val, values['params_absolute_bool'])
+            else:
+                sg.popup_ok("You can only add absolute bool to the parameter.")
 
         if event == 'add_restrictors_to_param_btn':
             if curr_parent_val == 'params':

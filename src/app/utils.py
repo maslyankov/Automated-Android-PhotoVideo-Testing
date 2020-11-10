@@ -171,6 +171,12 @@ def analyze_images_test_results(template_data):
                                 restrict_end
                             )
 
+                            try:
+                                if curr_param_dict['absolute_value_bool']:
+                                    param_val_calc = abs(param_val_calc)
+                            except KeyError:
+                                pass
+
                             curr_param_dict['result'] = param_val
                             curr_param_dict['result_calculated'] = param_val_calc
 
