@@ -127,10 +127,6 @@ def gui():
         [sg.Frame('Settings', device_settings_frame_layout, font='Any 12')],
         [sg.Frame('Lights', lights_frame_layout, font='Any 12')],
         [
-            sg.Button('Generate Project Requirements File', size=(30, 2), key='project_req_tool_btn', disabled=False),
-            sg.Button('Test USB Camera', size=(15, 2), key='usb_cam_tool_btn', disabled=False)
-         ],
-        [
             sg.Button('Capture Cases (Manual)', size=(25, 2), key='capture_manual_btn', disabled=True),
             sg.Button('Capture Cases (Automated)', size=(31, 2), key='capture_auto_btn', disabled=True),
             sg.Button('?', size=(4, 2), key='help_btn', disabled=False)
@@ -143,8 +139,18 @@ def gui():
     ]
 
     tab3_layout = [
-        [sg.T('RAW Converter')],
-        [sg.T('ISP Simulator')],
+        [
+            sg.Button('Generate Project Requirements File', size=(30, 2), key='project_req_tool_btn', pad=(15, 15)),
+        ],
+        [
+            sg.Button('Extract Frames From Video', size=(30, 2), key='extract_video_frames_tool_btn', pad=(15, 15))
+        ],
+        [
+            sg.Button('Test USB Camera', size=(30, 2), key='usb_cam_tool_btn', pad=(15, 15))
+        ],
+
+        # [sg.T('RAW Converter')],
+        # [sg.T('ISP Simulator')],
     ]
 
     layout = [
@@ -152,9 +158,9 @@ def gui():
         [
             Tabs([
                 [
-                    sg.Tab('Testing', tab_main),
-                    sg.Tab('Reporting', tab2_layout),
                     sg.Tab('Tools', tab3_layout),
+                    sg.Tab('Reporting', tab2_layout),
+                    sg.Tab('Testing', tab_main),
                 ]],
                 key='main_tabs_group',
         )],

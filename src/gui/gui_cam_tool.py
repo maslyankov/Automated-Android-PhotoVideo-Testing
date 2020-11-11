@@ -31,7 +31,7 @@ def gui_cam_tool():
     print('initiating camera')
     cap = cv2.VideoCapture(preview_cam, cv2.CAP_DSHOW)
     #cap = acapture.open(preview_cam)
-
+    get_max_camera_resolution(cap)
     print('Loading camera')
     while True:
         event, values = window.read(timeout=20)
@@ -44,8 +44,23 @@ def gui_cam_tool():
             print('Switching preview to camera', preview_cam)
             cap = cv2.VideoCapture(preview_cam, cv2.CAP_DSHOW)
             #cap = acapture.open(preview_cam)
+            get_max_camera_resolution(cap)
 
         # Update Preview
         is_alive, frame = cap.read()
         # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         window['image'](data=cv2.imencode('.png', frame)[1].tobytes())
+
+
+def get_camera_resolution(cam):
+    height = cam.get(cv2.CAP_PROP_FRAME_HEIGHT)
+    width = cam.get(cv2.CAP_PROP_FRAME_WIDTH)
+    print(f'Cam res: {width}x{height}')
+
+def get_max_camera_resolution(cam):
+    max = 10000
+
+    height = cam.set(cv2.CAP_PROP_FRAME_HEIGHT, max)
+    width = cam.set(cv2.CAP_PROP_FRAME_WIDTH, max)
+
+    get_camera_resolution(cam)
