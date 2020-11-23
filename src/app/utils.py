@@ -236,16 +236,22 @@ def add_filenames_to_data(template_data, img_dir):
                             template_data[test_type][light_temp][lux]['filename'] = None
 
 
-def extract_video_frame(videofile, start_frame, end_frame=None, skip_frames=0):
+def extract_video_frame(videofile, start_frame, number_of_frames=None, end_frame=None, skip_frames=0, subfolder=False):
     output = []
 
     file_name = os.path.basename(videofile)
     file_path = os.path.dirname(videofile)
 
+    if subfolder:
+        file_path = os.path.join(file_path, subfolder)
+
+
     vidcap = cv2.VideoCapture(videofile)
     success, image = vidcap.read()
+
     count = 0
     skipped_frame = 0
+    img_out = []
 
     if end_frame is None:
         end_frame = start_frame
@@ -271,7 +277,10 @@ def extract_video_frame(videofile, start_frame, end_frame=None, skip_frames=0):
                 cv2.imwrite(img_out, image)  # save frame as JPEG file
 
         # Save some time..
-        if count >= end_frame:
+        if number_of_frames is not None:
+            if len(img_out) == number_of_frames:
+                break
+        elif count >= end_frame:
             break
 
         success, image = vidcap.read()

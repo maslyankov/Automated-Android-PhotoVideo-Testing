@@ -21,6 +21,7 @@ from src.gui.gui_setup_device import gui_setup_device
 from src.gui.gui_test_lights import gui_test_lights
 from src.gui.gui_project_req_file import gui_project_req_file
 from src.gui.gui_cam_tool import gui_cam_tool
+from src.gui.gui_extract_video_frames_tool import gui_extract_video_frames_tool
 from src.gui.utils_gui import place, Tabs, skipped_cases_to_str
 
 
@@ -62,25 +63,34 @@ def gui():
 
     device_settings_frame_layout = [[
         sg.Button('Edit camxoverridesettings',
-                  size=(20, 3),
+                  size=(19, 2),
                   key='camxoverride_btn',
                   disabled=True,
                   tooltip='Edit or view camxoverridesettings of any attached device'),
-        sg.Button('Push file',
-                  size=(12, 3),
-                  key='push_file_btn',
-                  disabled=True),
         sg.Button('Reboot Device',
-                  size=(12, 3),
+                  size=(19, 2),
                   key='reboot_device_btn',
                   disabled=True,
                   tooltip='Reboot devices immediately'),
         sg.Button('Setup',
-                  size=(12, 3),
+                  size=(19, 2),
                   key='setup_device_btn',
                   disabled=True,
                   tooltip='Setup device settings, calibrate touch events etc.'),
     ],
+    ]
+
+    device_tools_layout = [
+        [
+            sg.Button('Push file/s',
+                      size=(12, 3),
+                      key='push_file_btn',
+                      disabled=True),
+            sg.Button('Pull file/s',
+                      size=(12, 3),
+                      key='pull_file_btn',
+                      disabled=True)
+        ]
     ]
 
     lights_frame_layout = [[
@@ -125,6 +135,7 @@ def gui():
     tab_main = [
         [sg.Frame('Devices', devices_frame, font='Any 12')],
         [sg.Frame('Settings', device_settings_frame_layout, font='Any 12')],
+        [sg.Frame('Device Tools', device_tools_layout, font='Any 12')],
         [sg.Frame('Lights', lights_frame_layout, font='Any 12')],
         [
             sg.Button('Capture Cases (Manual)', size=(25, 2), key='capture_manual_btn', disabled=True),
@@ -307,6 +318,7 @@ def gui():
             window['camxoverride_btn'].Update(disabled=False)
             window['reboot_device_btn'].Update(disabled=False)
             window['push_file_btn'].Update(disabled=False)
+            window['pull_file_btn'].Update(disabled=False)
             window['setup_device_btn'].Update(disabled=False)
             window['capture_manual_btn'].Update(disabled=False)
             window['capture_auto_btn'].Update(disabled=False)
@@ -351,6 +363,7 @@ def gui():
             window['camxoverride_btn'].Update(disabled=True)
             window['reboot_device_btn'].Update(disabled=True)
             window['push_file_btn'].Update(disabled=True)
+            window['pull_file_btn'].Update(disabled=True)
             window['setup_device_btn'].Update(disabled=True)
             window['capture_manual_btn'].Update(disabled=True)
             window['capture_auto_btn'].Update(disabled=True)
@@ -363,6 +376,9 @@ def gui():
 
         if event == 'project_req_tool_btn':
             gui_project_req_file()
+
+        if event == 'extract_video_frames_tool_btn':
+            gui_extract_video_frames_tool()
 
         if event == 'usb_cam_tool_btn':
             gui_cam_tool()

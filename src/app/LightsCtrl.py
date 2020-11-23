@@ -21,6 +21,7 @@ class LightsCtrl:
 
         self.available_lights = constants.AVAILABLE_LIGHTS[self.lights_model]
         if self.lights_model == constants.LIGHTS_MODELS['SpectriWave']:
+            print('Initiating SpectriWave lights')
             # Instance API object
             self.api = IQL_Dual_WiFi_Wireless_Lighting_API()
 
