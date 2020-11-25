@@ -119,12 +119,12 @@ def gui():
     objective_frame_layout = [
         [
             sg.T('Project Requirements: ', size=(18, 1)),
-            sg.Input(key='obj_report_projreq_field', readonly=True, size=(38, 1)),
+            sg.Input(key='obj_report_projreq_field', readonly=True, size=(36, 1)),
             sg.Button(button_text='Open', key='obj_report_projreq_btn', size=(8, 1))
         ],
         [
             sg.T('Images dir:', size=(18, 1)),
-            sg.Input(key='obj_report_output', readonly=True, size=(38, 1), enable_events=True),
+            sg.Input(key='obj_report_output', readonly=True, size=(36, 1), enable_events=True),
             sg.FolderBrowse(size=(8, 1), key='obj_report_output_browse')
         ],
         [sg.Button("Generate", key='obj_report_build_btn', size=(20, 1), disabled=True)]
@@ -139,7 +139,7 @@ def gui():
         [sg.Frame('Lights', lights_frame_layout, font='Any 12')],
         [
             sg.Button('Capture Cases (Manual)', size=(25, 2), key='capture_manual_btn', disabled=True),
-            sg.Button('Capture Cases (Automated)', size=(31, 2), key='capture_auto_btn', disabled=True),
+            sg.Button('Capture Cases (Automated)', size=(30, 2), key='capture_auto_btn', disabled=True),
             sg.Button('?', size=(4, 2), key='help_btn', disabled=False)
         ]
     ]
@@ -177,7 +177,7 @@ def gui():
         )],
         [
             sg.Button('Exit', size=(20, 1)),
-            sg.Text('App Version: {}'.format(constants.APP_VERSION), size=(43, 1), justification="right")
+            sg.Text('App Version: {}'.format(constants.APP_VERSION), size=(42, 1), justification="right")
         ]
     ]
 

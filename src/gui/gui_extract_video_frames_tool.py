@@ -1,4 +1,5 @@
 import os
+
 import PySimpleGUI as sg
 
 from src.app.utils import extract_video_frame
@@ -58,10 +59,10 @@ def gui_extract_video_frames_tool():
                 frames_subfolder = False
 
             for video_file in videofiles_list:
-                extract_video_frame(
+                print(extract_video_frame(
                     videofile=video_file,
                     start_frame=values['start_frame'],
                     number_of_frames=values['number_of_frames'],
                     skip_frames=values['skip_frames'],
                     subfolder=frames_subfolder
-                )
+                ))

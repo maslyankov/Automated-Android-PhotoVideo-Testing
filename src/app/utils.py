@@ -1,5 +1,7 @@
 import json
 import os
+from pathlib import Path
+
 import cv2
 
 import src.constants as constants
@@ -244,17 +246,19 @@ def extract_video_frame(videofile, start_frame, number_of_frames=None, end_frame
 
     if subfolder:
         file_path = os.path.join(file_path, subfolder)
+        # Create dirs if not exist
+        Path(file_path).mkdir(parents=True, exist_ok=True)
 
 
     vidcap = cv2.VideoCapture(videofile)
     success, image = vidcap.read()
 
-    count = 0
-    skipped_frame = 0
+    count = 1
+    next_frame = 1
     img_out = []
 
     if end_frame is None:
-        end_frame = start_frame
+        end_frame = start_frame + number_of_frames + (number_of_frames * skip_frames) - 1
     else:
         if start_frame > end_frame:
             print('Start frame must be smaller int than end frame!')
@@ -263,8 +267,8 @@ def extract_video_frame(videofile, start_frame, number_of_frames=None, end_frame
     while success:
         if start_frame <= count <= end_frame:
             if skip_frames:
-                if skipped_frame == 0:
-                    skipped_frame = count + skip_frames
+                if next_frame == 1:
+                    next_frame = count + skip_frames
                 if count != skipped_frame:
                     img_out = os.path.join(file_path, f"{file_name}_frame{count}.jpg")
                     output.append(img_out)

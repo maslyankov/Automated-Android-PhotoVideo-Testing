@@ -221,6 +221,7 @@ class ADBDevice(Device):
         """
         # dumpsys window windows | grep -E 'mFocusedApp' <- had issues with this one, sometimes returns null
         # Alternative -> dumpsys activity | grep top-activity
+        # First try
         try:  # This works on older Android versions
             current = self.exec_shell("dumpsys activity | grep -E 'mFocusedActivity'").strip().split(' ')[3].split('/')
             if current is None:
@@ -230,8 +231,33 @@ class ADBDevice(Device):
                 temp.append(current[0])  # -> [pkg, activity_id, pid]
                 return temp
         except IndexError:
+            pass
+        else:
+            return current
+
+        # Second try
+        try:
             current = self.exec_shell("dumpsys window windows | grep -E 'mFocusedApp'").split(' ')[6].split('/')
-        return current
+        except IndexError:
+            pass
+        else:
+            return current
+
+        # Third try
+        try:
+            current = self.exec_shell("dumpsys window windows | grep -E 'ActivityRecord'").split(' ')[13].split('/')
+        except IndexError:
+            pass
+        else:
+            print("Curr app: ", current)
+            return current
+        # else
+        print("Can't fetch currently opened app! \nOutput of dumpsys: ")
+
+        print("==============================")
+        print(self.exec_shell("dumpsys window windows"))
+        print("==============================")
+        return None
 
     def get_installed_packages(self):
         """
