@@ -8,7 +8,9 @@ def gui_push_file(attached_devices, device_obj):
     file_destinations = [
         'sdcard/DCIM/',
         'vendor/lib/',
-        'vendor/lib/camera/'
+        'vendor/lib/camera/',
+        'vendor/lib64/',
+        'vendor/lib64/camera/'
     ]
 
     layout = [
