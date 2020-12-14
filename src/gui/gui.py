@@ -16,6 +16,7 @@ from src.gui.gui_camxoverride import gui_camxoverride
 from src.gui.gui_manual_cases import gui_manual_cases
 from src.gui.gui_automated_cases import gui_automated_cases
 from src.gui.gui_push_file import gui_push_file
+from src.gui.gui_pull_file import gui_pull_file
 from src.gui.gui_reboot_device import gui_reboot_device
 from src.gui.gui_setup_device import gui_setup_device
 from src.gui.gui_test_lights import gui_test_lights
@@ -338,6 +339,9 @@ def gui():
             if event == "push_file_btn":
                 gui_push_file(attached_devices_list, adb_devices)
 
+            if event == "pull_file_btn":
+                gui_pull_file(attached_devices_list, adb_devices)
+
             if event == "setup_device_btn":
                 gui_setup_device(attached_devices_list, adb_devices)
 
@@ -363,7 +367,10 @@ def gui():
             window['camxoverride_btn'].Update(disabled=True)
             window['reboot_device_btn'].Update(disabled=True)
             window['push_file_btn'].Update(disabled=True)
-            window['pull_file_btn'].Update(disabled=True)
+            window['pull_file_btn'].Update(disabled=False)
+            if event == "pull_file_btn":
+                gui_pull_file(attached_devices_list, adb_devices)
+
             window['setup_device_btn'].Update(disabled=True)
             window['capture_manual_btn'].Update(disabled=True)
             window['capture_auto_btn'].Update(disabled=True)

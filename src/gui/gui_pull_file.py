@@ -4,41 +4,32 @@ import PySimpleGUI as sg
 import src.constants as constants
 
 
-def gui_push_file(attached_devices, device_obj):
-    file_destinations = [
-        'sdcard/DCIM/',
-        'vendor/lib/',
-        'vendor/lib/camera/',
-        'vendor/lib64/',
-        'vendor/lib64/camera/'
-    ]
+def gui_pull_file(attached_devices, device_obj):
+    STARTING_PATH = sg.PopupGetFolder('Folder to display')
 
-    layout = [
-        [
-            sg.Text('Device: ', size=(9, 1)),
-            sg.Combo(attached_devices, size=(20, 20),
-                     enable_events=True, key='selected_device',
-                     default_value=attached_devices[0]),
-            sg.Text(text=device_obj[attached_devices[0]].friendly_name,
-                    key='device-friendly',
-                    size=(13, 1),
-                    font="Any 18")
-        ],
-        [
-            sg.Text('Destination: ', size=(9, 1)),
-            sg.Combo(file_destinations, size=(20, 20), key='dest_folder', default_value=file_destinations[0])
-        ],
-        [
-            sg.Text('File:', size=(9, 1)),
-            sg.InputText(size=(35, 1), key='source_file', enable_events=True),
-            sg.FilesBrowse()
-        ],
-        [
-            sg.Button('Disable Verity', key='disable_verity_btn', size=(10, 2)),
-            sg.Button('Push File', size=(10, 2),
-                   key='push_file_btn', disabled=True)]
-    ]
+    folder_icon = constants.FOLDER_ICON
+    file_icon = constants.FILE_ICON
 
+    treedata = sg.TreeData()
+
+    def add_files_in_folder(parent, dirname):
+        files = os.listdir(dirname)
+        for f in files:
+            fullname = os.path.join(dirname, f)
+            if os.path.isdir(fullname):  # if it's a folder, add folder and recurse
+                treedata.Insert(parent, fullname, f, values=[],
+                                icon=folder_icon)
+                add_files_in_folder(fullname, fullname)
+            else:
+                treedata.Insert(parent, fullname, f, values=["14/12/2020 01:22", "22.5 MB"],
+                                icon=file_icon)
+
+    add_files_in_folder('', STARTING_PATH)
+
+    layout = [[sg.Text('File and folder browser Test')],
+              [sg.Tree(data=treedata, headings=['date', 'size'], auto_size_columns=True, num_rows=20,
+                       col0_width=30, key='_TREE_', show_expanded=False, enable_events=True, ),],
+              [sg.Button('Ok'), sg.Button('Cancel')]]
     # Create the Window
     window = sg.Window('Pull file/s', layout,
                        icon=os.path.join(constants.ROOT_DIR, 'images', 'automated-video-testing-header-icon.ico'))
@@ -51,32 +42,5 @@ def gui_push_file(attached_devices, device_obj):
 
         print('vals', values)  # Debugging
         print('event', event)  # Debugging
-
-        if event == 'selected_device':
-            window['device-friendly'].Update(device_obj[values['selected_device']].friendly_name)
-
-        if event == 'source_file':
-            window['push_file_btn'].Update(disabled=False)
-
-        if event == 'disable_verity_btn':
-            curr_device = device_obj[values['selected_device']]
-
-            curr_device.disable_verity()
-
-            sg.popup_ok('Verity Disabled!\nYou might need to reattach to device.')
-
-        if event == 'push_file_btn':
-            curr_device = device_obj[values['selected_device']]
-            files_dest = values['dest_folder']
-
-            print(values['source_file'].split(';'))
-
-            print("Remounting Device...")
-            curr_device.remount()
-            print("Pushing new file to device...")
-
-            curr_device.push_files(values['source_file'], files_dest)
-
-            sg.popup_ok('Files pushed!')
 
     window.close()

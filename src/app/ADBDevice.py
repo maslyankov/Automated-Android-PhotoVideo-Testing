@@ -268,13 +268,13 @@ class ADBDevice(Device):
         """
         return sorted(self.exec_shell("pm list packages").replace('package:', '').splitlines())
 
-    def get_camera_files_list(self):
+    def get_files_list(self, target_dir):
         """
         Get a list of files in sdcard/DCIM/Camera on the device
         :return: List of strings, each being a file located in sdcard/DCIM/Camera
         """
 
-        files_list = self.exec_shell("ls -d sdcard/DCIM/Camera/*").splitlines()
+        files_list = self.exec_shell(f"ls -d {target_dir.rstrip('/')}/*").splitlines()
 
         try:
             check_for_missing_dir = files_list[0]
@@ -285,6 +285,10 @@ class ADBDevice(Device):
                 return None
             else:
                 return files_list
+
+    def get_camera_files_list(self):
+        self.get_files_list("sdcard/DCIM/Camera")
+
 
     def get_screen_resolution(self):
         """
