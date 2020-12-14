@@ -253,42 +253,47 @@ def extract_video_frame(videofile, start_frame, number_of_frames=None, end_frame
     vidcap = cv2.VideoCapture(videofile)
     success, image = vidcap.read()
 
-    count = 1
-    next_frame = 1
+    current_frame = 1
+
+    next_frame = start_frame
+
     img_out = []
 
     if end_frame is None:
-        end_frame = start_frame + number_of_frames + (number_of_frames * skip_frames) - 1
+        end_frame = start_frame + (number_of_frames * skip_frames) - 1
     else:
+        print("end frame is: ", end_frame)
         if start_frame > end_frame:
             print('Start frame must be smaller int than end frame!')
             return
-
+    print()
     while success:
-        if start_frame <= count <= end_frame:
+        if start_frame <= current_frame <= end_frame:
             if skip_frames:
                 if next_frame == 1:
-                    next_frame = count + skip_frames
-                if count != skipped_frame:
-                    img_out = os.path.join(file_path, f"{file_name}_frame{count}.jpg")
+                    next_frame = current_frame + skip_frames
+                if current_frame == next_frame:
+                    img_out = os.path.join(file_path, f"{file_name}_frame{current_frame}.jpg")
                     output.append(img_out)
                     cv2.imwrite(img_out, image)  # save frame as JPEG file
-                else:
-                    skipped_frame += skip_frames
+
+                    next_frame += skip_frames
             else:
-                img_out = os.path.join(file_path, f"{file_name}_frame{count}.jpg")
+                img_out = os.path.join(file_path, f"{file_name}_frame{current_frame}.jpg")
                 output.append(img_out)
                 cv2.imwrite(img_out, image)  # save frame as JPEG file
+        elif start_frame <= current_frame:
+            break
 
         # Save some time..
         if number_of_frames is not None:
             if len(img_out) == number_of_frames:
                 break
-        elif count >= end_frame:
+        elif current_frame >= end_frame:
             break
 
         success, image = vidcap.read()
         print('Read a new frame: ', success)
-        count += 1
+        current_frame += 1
 
     return output
