@@ -40,7 +40,7 @@ def gui_push_file(attached_devices, device_obj):
     ]
 
     # Create the Window
-    window = sg.Window('Push file/s', layout,
+    window = sg.Window('Pull file/s', layout,
                        icon=os.path.join(constants.ROOT_DIR, 'images', 'automated-video-testing-header-icon.ico'))
 
     while True:
