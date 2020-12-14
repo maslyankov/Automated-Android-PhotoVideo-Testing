@@ -20,21 +20,19 @@ def gui_extract_video_frames_tool():
                 ),
                 size=(10, 1)
             )
-        ],
-        [
+        ],[
             sg.Text("Start frame: "),
-            sg.Spin([i for i in range(1, 30)], initial_value=1, key='start_frame')
-        ],
-        [
+            sg.Spin([i for i in range(1, 30)], initial_value=1, key='start_frame', size=(3, 1), pad=((0, 40), 0))
+        ,
             sg.Text("Number of frames: "),
-            sg.Spin([i for i in range(1, 30)], initial_value=1, key='number_of_frames')
-        ],
-        [
+            sg.Spin([i for i in range(1, 30)], initial_value=1, key='number_of_frames', size=(3, 1), pad=((0, 40), 0))
+        ,
             sg.Text("Skipped frames: "),
-            sg.Spin([i for i in range(0, 30)], initial_value=0, key='skip_frames')
-        ],
+            sg.Spin([i for i in range(0, 30)], initial_value=0, key='skip_frames', size=(3, 1), pad=((0, 0), 0))]
+        ,
         [
-            sg.Checkbox(text='Save frames to subfolder', default=False, key='frames_subfolder_bool')
+            sg.Checkbox(text='Save frames to subfolder', default=False, key='frames_subfolder_bool', pad=((0, 40), 0)),
+            sg.Radio('JPEG', "FORMAT_OUT", default=True, key="jpeg_bool"), sg.Radio('PNG', "FORMAT_OUT", key="png_bool")
         ],
         [
             sg.Button('Extract frames', key='extract_frames_button')
@@ -58,11 +56,21 @@ def gui_extract_video_frames_tool():
             else:
                 frames_subfolder = False
 
+            if values['jpeg_bool']:
+                format_out = "JPEG"
+            elif values['png_bool']:
+                format_out = "PNG"
+            else:
+                format_out = None
+
+
+            # print(values)
             for video_file in videofiles_list:
                 print(extract_video_frame(
                     videofile=video_file,
                     start_frame=values['start_frame'],
                     number_of_frames=values['number_of_frames'],
                     skip_frames=values['skip_frames'],
-                    subfolder=frames_subfolder
+                    subfolder=frames_subfolder,
+                    out_format=format_out
                 ))

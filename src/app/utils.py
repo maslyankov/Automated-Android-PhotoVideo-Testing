@@ -238,8 +238,14 @@ def add_filenames_to_data(template_data, img_dir):
                             template_data[test_type][light_temp][lux]['filename'] = None
 
 
-def extract_video_frame(videofile, start_frame, number_of_frames=None, end_frame=None, skip_frames=0, subfolder=False):
+def extract_video_frame(videofile, start_frame, number_of_frames=None, end_frame=None, skip_frames=0,
+                        subfolder=False, out_format="JPEG"):
     output = []
+
+    formats = {
+        "JPEG": "jpg",
+        "PNG": "png"
+    }
 
     file_name = os.path.basename(videofile)
     file_path = os.path.dirname(videofile)
@@ -259,8 +265,8 @@ def extract_video_frame(videofile, start_frame, number_of_frames=None, end_frame
 
     img_out = []
 
-    if end_frame is None:
-        end_frame = start_frame + (number_of_frames * skip_frames) - 1
+    if end_frame is None or end_frame == 0:
+        end_frame = start_frame + ((number_of_frames * skip_frames) if skip_frames else number_of_frames) - 1
     else:
         print("end frame is: ", end_frame)
         if start_frame > end_frame:
@@ -270,16 +276,14 @@ def extract_video_frame(videofile, start_frame, number_of_frames=None, end_frame
     while success:
         if start_frame <= current_frame <= end_frame:
             if skip_frames:
-                if next_frame == 1:
-                    next_frame = current_frame + skip_frames
                 if current_frame == next_frame:
-                    img_out = os.path.join(file_path, f"{file_name}_frame{current_frame}.jpg")
+                    img_out = os.path.join(file_path, f"{file_name}_frame{current_frame}.{formats[out_format]}")
                     output.append(img_out)
                     cv2.imwrite(img_out, image)  # save frame as JPEG file
 
                     next_frame += skip_frames
             else:
-                img_out = os.path.join(file_path, f"{file_name}_frame{current_frame}.jpg")
+                img_out = os.path.join(file_path, f"{file_name}_frame{current_frame}.{formats[out_format]}")
                 output.append(img_out)
                 cv2.imwrite(img_out, image)  # save frame as JPEG file
         elif start_frame <= current_frame:
