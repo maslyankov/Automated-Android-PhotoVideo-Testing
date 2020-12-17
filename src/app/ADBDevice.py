@@ -134,6 +134,7 @@ class ADBDevice(Device):
         :return:None
         """
         try:
+            print('executing', cmd)
             return self.d.shell(cmd)
         except AttributeError:
             raise ValueError('You tried to reach a device that is already disconnected!')
@@ -268,26 +269,32 @@ class ADBDevice(Device):
         """
         return sorted(self.exec_shell("pm list packages").replace('package:', '').splitlines())
 
-    def get_files_list(self, target_dir):
+    def get_recursive_files_list(self, target_dir):
+        files_list = self.exec_shell(f"du -a {target_dir}").splitlines()
+        for num, f in enumerate(files_list):
+            files_list[num] = f.split()
+
+    def get_files_list(self, target_dir, get_full_path=False):
         """
         Get a list of files in sdcard/DCIM/Camera on the device
         :return: List of strings, each being a file located in sdcard/DCIM/Camera
         """
 
-        files_list = self.exec_shell(f"ls -d {target_dir.rstrip('/')}/*").splitlines()
-
+        files_list = self.exec_shell(f"ls {'-d' if get_full_path else ''} {target_dir.rstrip('/')}/*").splitlines()
+        print("Files List: ", files_list)
         try:
             check_for_missing_dir = files_list[0]
         except IndexError:
             return []
         else:
-            if check_for_missing_dir.endswith('No such file or directory'):
+            if 'No such file or directory' in check_for_missing_dir \
+            or "Not a directory" in check_for_missing_dir:
                 return None
             else:
                 return files_list
 
     def get_camera_files_list(self):
-        self.get_files_list("sdcard/DCIM/Camera")
+        self.get_files_list("sdcard/DCIM/Camera", get_full_path=True)
 
 
     def get_screen_resolution(self):

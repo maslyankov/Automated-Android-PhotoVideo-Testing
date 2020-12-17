@@ -319,7 +319,7 @@ def gui():
             window['camxoverride_btn'].Update(disabled=False)
             window['reboot_device_btn'].Update(disabled=False)
             window['push_file_btn'].Update(disabled=False)
-            window['pull_file_btn'].Update(disabled=False)
+            # window['pull_file_btn'].Update(disabled=False)
             window['setup_device_btn'].Update(disabled=False)
             window['capture_manual_btn'].Update(disabled=False)
             window['capture_auto_btn'].Update(disabled=False)
@@ -367,10 +367,7 @@ def gui():
             window['camxoverride_btn'].Update(disabled=True)
             window['reboot_device_btn'].Update(disabled=True)
             window['push_file_btn'].Update(disabled=True)
-            window['pull_file_btn'].Update(disabled=False)
-            if event == "pull_file_btn":
-                gui_pull_file(attached_devices_list, adb_devices)
-
+            window['pull_file_btn'].Update(disabled=True)
             window['setup_device_btn'].Update(disabled=True)
             window['capture_manual_btn'].Update(disabled=True)
             window['capture_auto_btn'].Update(disabled=True)
