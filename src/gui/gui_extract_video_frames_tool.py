@@ -66,11 +66,20 @@ def gui_extract_video_frames_tool():
 
             # print(values)
             for video_file in videofiles_list:
-                print(extract_video_frame(
+                print(
+                    "videofile=",video_file,
+                    "start_frame=",values['start_frame'],
+                    "number_of_frames=",values['number_of_frames'],
+                    "skip_frames=",values['skip_frames'],
+                    "subfolder=",frames_subfolder,
+                    "out_format=", format_out
+                )
+                extract_video_frame(
                     videofile=video_file,
-                    start_frame=values['start_frame'],
-                    number_of_frames=values['number_of_frames'],
-                    skip_frames=values['skip_frames'],
+                    start_frame=int(values['start_frame']) if values['start_frame'] else values['start_frame'],
+                    number_of_frames=int(values['number_of_frames']) if values['number_of_frames'] else values['number_of_frames'],
+                    skip_frames=int(values['skip_frames']) if values['skip_frames'] else values['skip_frames'],
                     subfolder=frames_subfolder,
                     out_format=format_out
-                ))
+                )
+            sg.popup_ok("Done")
