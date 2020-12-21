@@ -79,7 +79,7 @@ Most code is written OS-independent, but more work is needed for proper support 
 
 ## Setup project
 
-To clone the project, follow these steps:
+To setup the project, follow these steps:
 
 1. Clone the project:
     ```
