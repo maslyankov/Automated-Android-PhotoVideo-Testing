@@ -78,7 +78,10 @@ class ADBDevice(Device):
         root.stdin.close()
         stdout, stderr = root.communicate()
         if stderr:
-            raise ValueError(f'Rooting Errors: {stderr.decode()}')
+            if b"unauthorized" in stderr:
+                raise ValueError(f'Device not rooted (probably).\nRooting Errors: {stderr.decode()}')
+            else:
+                raise ValueError(f'Rooting Errors: {stderr.decode()}')
         if stdout:
             print("Rooting Output: {}".format(stdout.decode()))
         root.terminate()

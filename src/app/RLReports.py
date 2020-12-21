@@ -25,7 +25,7 @@ np.warnings.filterwarnings('ignore')
 
 # RLTReport Class
 class RLReports:
-    # Class initialization
+    # Class inietialization
     def __init__(self, config_dict):
         self.config = config_dict['config']
         self.summary_params = config_dict['summary_params']
