@@ -88,10 +88,14 @@ def generate_rlt_report(report_config: dict):
 class RLReports:
     # Class inietialization
     def __init__(self, config_dict):
-        self.config = config_dict['config']
-        self.summary_params = config_dict['summary_params']
-        self.summary_items = config_dict['summary_items']
-        self.attribute = config_dict['attribute']
+        try:
+            self.config = config_dict['config']
+            self.summary_params = config_dict['summary_params']
+            self.summary_items = config_dict['summary_items']
+            self.attribute = config_dict['attribute']
+        except KeyError:
+            print("RLReports class got wrong data!")
+            raise ValueError()
 
     # Create presentation
     def create_presentation(self):
@@ -99,7 +103,11 @@ class RLReports:
         image_path = self.config['image_path']
         image_outpath = self.config['thumbnail_path']
         presentation_name = self.config['presentation_name']
-        output_file = os.path.join(self.config['image_path'], os.path.pardir, f"{presentation_name}.pptm")
+        if presentation_name == "":
+            presentation_name = "RealLife Report"
+
+        date_str = datetime.now().strftime("%Y%m%d-%H%M%S")
+        output_file = os.path.join(self.config['image_path'], os.path.pardir, f"{presentation_name}_{date_str}.pptm")
 
         prs = pptx.Presentation(os.path.join(constants.VENDOR_DIR, 'rltreport', 'RLTv1.pptm'))
 
