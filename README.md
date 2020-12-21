@@ -88,7 +88,7 @@ To clone the project, follow these steps:
 
 2. Open the cloned project folder in cmd
 
-3: Download and install requirements:
+3. Download and install requirements:
     ```
     pip install -r requirements.txt
     ```
