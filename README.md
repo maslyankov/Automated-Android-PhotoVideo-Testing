@@ -65,9 +65,9 @@ for automated/semi-automated testing:
 
 Before you begin, ensure you have met the following requirements:
 <!--- These are just example requirements. Add, duplicate or remove as required --->
-* You have installed the `Python 3.6`
 * You have a `Windows` machine. 
 Most code is written OS-independent, but more work is needed for proper support of `Linux` and `Mac`
+* You have installed the `Python 3.6`
 * You have a working `pip` (Python Package Manager).
 
 ## Setup project
