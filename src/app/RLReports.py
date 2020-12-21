@@ -17,10 +17,71 @@ import re
 from scipy.signal import find_peaks
 import shutil
 import substring
+from typing import Dict
 
 import src.constants as constants
 
 np.warnings.filterwarnings('ignore')
+
+
+###############################################################################
+###############################################################################
+# Example data:
+# report_config = {
+#     "config": {
+#         "image_path": r"C:\Users\mms00519\Downloads\Indoor_cases",
+#         "thumbnail_path": r"C:\Users\mms00519\Downloads\Indoor_cases\Thumbnail",
+#         "presentation_name": "RLT_presentation",
+#         "attribute_on": 1,
+#         "avg_luma": True,
+#         "contrast": True,
+#         "black_level": True,
+#         "white_level": True,
+#         "over_exposed": True,
+#         "under_exposed": True,
+#         "dynamic_range": False,
+#         "peak_saturation1": False,
+#         "peak_hue1": False,
+#         "peak_saturation2": False,
+#         "peak_hue2": False,
+#         "sharpness": True,
+#         "ISO": True,
+#         "ET": True
+#     },
+#     "summary_params": {
+#         "af": True,
+#         "ae": True,
+#         "awb": True,
+#         "colors": True,
+#         "noise": True,
+#         "details": True,
+#         "artifacts": True,
+#         "torch": True,
+#         "flash": True
+#     },
+#     "summary_items": {
+#         "attribute": True,
+#         "level": True,
+#         "issues": True,
+#         "suggestions": True
+#     },
+#     "attribute": {
+#         "exposure": True,
+#         "colors": True,
+#         "noise": True,
+#         "details": True,
+#         "artifacts": True
+#     }
+# }
+#
+def generate_rlt_report(report_config: dict):
+    print("Creating object... ")
+    new_report = RLReports(report_config)
+
+    print("Creating Presentation... ")
+    new_report.create_presentation()
+
+    del(new_report)
 
 
 # RLTReport Class
@@ -38,9 +99,9 @@ class RLReports:
         image_path = self.config['image_path']
         image_outpath = self.config['thumbnail_path']
         presentation_name = self.config['presentation_name']
-        output_file = os.path.join(self.condig['image_path'], os.path.pardir, f"{ presentation_name }.pptm")
+        output_file = os.path.join(self.config['image_path'], os.path.pardir, f"{presentation_name}.pptm")
 
-        prs = pptx.Presentation(os.path.join(constants.VENDOR_DIR, 'rltreport','RLTv1.pptm'))
+        prs = pptx.Presentation(os.path.join(constants.VENDOR_DIR, 'rltreport', 'RLTv1.pptm'))
 
         prs.slide_height = Inches(7.5)
         prs.slide_width = Inches(13.33070866)
@@ -80,7 +141,6 @@ class RLReports:
             # print (item)
             if value:
                 item_list.extend([str(key)])
-
 
         #### ET ISO ###########
         if self.config['ET'] or self.config['ISO']:
@@ -137,7 +197,7 @@ class RLReports:
         #### saturattion ######
         if self.config['peak_saturation1'] \
                 or self.config['peak_saturation2'] \
-                or self.config['peak_hue1']\
+                or self.config['peak_hue1'] \
                 or self.config['peak_hue2']:
             img_peak_sat = np.asarray(img)
             peak_sat = peak_saturation(img_peak_sat)
@@ -189,7 +249,7 @@ class RLReports:
 
     # Create slides with summary
     def set_summary_to_slide(self, prs):
-                # print (len(value_dict[1]))
+        # print (len(value_dict[1]))
         table_default = []
         summary_list = []
         for item in self.summary_params.keys():
@@ -210,7 +270,8 @@ class RLReports:
         table_top = int(prs.slide_height * 0.2)
         table_width = int(prs.slide_width / 1.02)
         table_height = int(prs.slide_height / 8)
-        shape = slide.shapes.add_table((len(self.summary_params.keys()) + 1), (len(self.summary_items.keys())), table_left, table_top,
+        shape = slide.shapes.add_table((len(self.summary_params.keys()) + 1), (len(self.summary_items.keys())),
+                                       table_left, table_top,
                                        table_width, table_height)
         table = shape.table
         for row in range(0, (bb + 1)):
@@ -382,6 +443,7 @@ def create_thumbnail(prs, slide, files, path, outpath):
             if pic_left > (prs.slide_width - pic_width):
                 pic_top = int(pic_top + pic_height + pic_separator)
                 pic_left = int(prs.slide_width * 0.01)
+
 
 # Create slides with images
 def set_images_to_slide(prs, files, obj):
@@ -840,60 +902,3 @@ def set_image_stats(image_name, obj):
     rgb_copy = rgb_array.copy()
     stats_list = obj.show_req(rgb_copy, image_name)
     return stats_list
-
-
-###############################################################################
-###############################################################################
-    # Example data:
-    # report_config = {
-    #     "config": {
-    #         "image_path": r"C:\Users\mms00519\Downloads\Indoor_cases",
-    #         "thumbnail_path": r"C:\Users\mms00519\Downloads\Indoor_cases\Thumbnail",
-    #         "presentation_name": "RLT_presentation",
-    #         "attribute_on": 1,
-    #         "avg_luma": True,
-    #         "contrast": True,
-    #         "black_level": True,
-    #         "white_level": True,
-    #         "over_exposed": True,
-    #         "under_exposed": True,
-    #         "dynamic_range": False,
-    #         "peak_saturation1": False,
-    #         "peak_hue1": False,
-    #         "peak_saturation2": False,
-    #         "peak_hue2": False,
-    #         "sharpness": True,
-    #         "ISO": True,
-    #         "ET": True
-    #     },
-    #     "summary_params": {
-    #         "af": True,
-    #         "ae": True,
-    #         "awb": True,
-    #         "colors": True,
-    #         "noise": True,
-    #         "details": True,
-    #         "artifacts": True,
-    #         "torch": True,
-    #         "flash": True
-    #     },
-    #     "summary_items": {
-    #         "attribute": True,
-    #         "level": True,
-    #         "issues": True,
-    #         "suggestions": True
-    #     },
-    #     "attribute": {
-    #         "exposure": True,
-    #         "colors": True,
-    #         "noise": True,
-    #         "details": True,
-    #         "artifacts": True
-    #     }
-    # }
-    #
-    # print("Creating object... ")
-    # new_report = RLTReport(report_config)
-    # print("Creating Presentation... ")
-    # new_report.create_presentation()
-

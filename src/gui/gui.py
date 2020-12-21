@@ -8,6 +8,7 @@ from src.app.USBCamClient import USBCamClient
 
 from src.app.utils import analyze_images_test_results, add_filenames_to_data
 from src.utils.excel_tools import export_to_excel_file
+from src.app.RLReports import generate_rlt_report
 
 import src.constants as constants
 
@@ -23,7 +24,7 @@ from src.gui.gui_test_lights import gui_test_lights
 from src.gui.gui_project_req_file import gui_project_req_file
 from src.gui.gui_cam_tool import gui_cam_tool
 from src.gui.gui_extract_video_frames_tool import gui_extract_video_frames_tool
-from src.gui.utils_gui import place, Tabs, skipped_cases_to_str
+from src.gui.utils_gui import place, Tabs, skipped_cases_to_str, collapse
 
 
 def gui():
@@ -131,6 +132,184 @@ def gui():
         [sg.Button("Generate", key='obj_report_build_btn', size=(20, 1), disabled=True)]
     ]
 
+    ### Real Life Reports
+
+    #         "image_path": r"C:\Users\mms00519\Downloads\Indoor_cases",
+    #         "thumbnail_path": r"C:\Users\mms00519\Downloads\Indoor_cases\Thumbnail",
+    #         "presentation_name": "RLT_presentation",
+    #         "attribute_on": 1,
+
+    # Collapsables
+    global opened_conf_main, opened_conf_summ_params, opened_conf_summ_items, opened_conf_attribute
+    opened_conf_main, opened_conf_summ_params, opened_conf_summ_items, opened_conf_attribute = False, False, False, False
+
+    #         "avg_luma": True,
+    #         "contrast": True,
+    #         "black_level": True,
+    #         "white_level": True,
+    #         "over_exposed": True,
+    #         "under_exposed": True,
+    #         "dynamic_range": False,
+    #         "peak_saturation1": False,
+    #         "peak_hue1": False,
+    #         "peak_saturation2": False,
+    #         "peak_hue2": False,
+    #         "sharpness": True,
+    #         "ISO": True,
+    #         "ET": True
+    conf_main_layout = [
+        [
+            sg.Checkbox(text='Avg Luma', default=True, key='conf_main_avg_luma_bool', pad=((0, 20), 0)),
+            sg.Checkbox(text='Contrast', default=True, key='conf_main_contrast_bool', pad=((0, 20), 0)),
+            sg.Checkbox(text='Black level', default=True, key='conf_main_black_level_bool', pad=((0, 20), 0)),
+            sg.Checkbox(text='White level', default=True, key='conf_main_white_level_bool', pad=((0, 20), 0)),
+            sg.Checkbox(text='Over Exposed', default=True, key='conf_main_over_exposed_bool', pad=((0, 20), 0)),
+        ],
+        [
+            sg.Checkbox(text='Under Exposed', default=True, key='conf_main_under_exposed_bool', pad=((0, 20), 0)),
+            sg.Checkbox(text='Dynamic Range', default=False, key='conf_main_dynamic_range_bool', pad=((0, 20), 0)),
+            sg.Checkbox(text='Peak Saturation1', default=False, key='conf_main_peak_saturation1_bool', pad=((0, 20), 0)),
+            sg.Checkbox(text='Peak Hue1', default=False, key='conf_main_peak_hue1_bool', pad=((0, 20), 0)),
+        ],
+        [
+            sg.Checkbox(text='Peak Saturation2', default=False, key='conf_main_peak_saturation2_bool', pad=((0, 20), 0)),
+            sg.Checkbox(text='Peak Hue2', default=False, key='conf_main_peak_hue2_bool', pad=((0, 20), 0)),
+            sg.Checkbox(text='Sharpness', default=True, key='conf_main_sharpness_bool', pad=((0, 20), 0)),
+            sg.Checkbox(text='ISO', default=True, key='conf_main_iso_bool', pad=((0, 20), 0)),
+            sg.Checkbox(text='ET', default=True, key='conf_main_et_bool', pad=((0, 20), 0)),
+        ]
+    ]
+    #     "summary_params": {
+    #         "af": True,
+    #         "ae": True,
+    #         "awb": True,
+    #         "colors": True,
+    #         "noise": True,
+    #         "details": True,
+    #         "artifacts": True,
+    #         "torch": True,
+    #         "flash": True
+    #     },
+    conf_summ_params_layout = [
+        [
+            sg.Checkbox(text='AF', default=True, key='conf_summ_params_af_bool', pad=((0, 20), 0)),
+            sg.Checkbox(text='AE', default=True, key='conf_summ_params_ae_bool', pad=((0, 20), 0)),
+            sg.Checkbox(text='AWB', default=True, key='conf_summ_params_awb_bool', pad=((0, 20), 0)),
+            sg.Checkbox(text='Colors', default=True, key='conf_summ_params_colors_bool', pad=((0, 20), 0)),
+            sg.Checkbox(text='Noise', default=True, key='conf_summ_params_noise_bool', pad=((0, 20), 0)),
+            sg.Checkbox(text='Details', default=True, key='conf_summ_params_details_bool', pad=((0, 20), 0)),
+        ],
+        [
+            sg.Checkbox(text='Artifacts', default=True, key='conf_summ_params_artifacts_bool', pad=((0, 20), 0)),
+            sg.Checkbox(text='Torch', default=True, key='conf_summ_params_torch_bool', pad=((0, 20), 0)),
+            sg.Checkbox(text='Flash', default=True, key='conf_summ_params_flash_bool', pad=((0, 20), 0)),
+        ],
+    ]
+
+    #     "summary_items": {
+    #         "attribute": True,
+    #         "level": True,
+    #         "issues": True,
+    #         "suggestions": True
+    #     },
+    conf_summ_items_layout = [
+        [
+            sg.Checkbox(text='Attribute', default=True, key='conf_summ_items_attribute_bool', pad=((0, 20), 0)),
+            sg.Checkbox(text='Level', default=True, key='conf_summ_items_level_bool', pad=((0, 20), 0)),
+            sg.Checkbox(text='Issues', default=True, key='conf_summ_items_issues_bool', pad=((0, 20), 0)),
+            sg.Checkbox(text='Suggestions', default=True, key='conf_summ_items_suggestions_bool', pad=((0, 20), 0)),
+        ],
+    ]
+
+    #     "attribute": {
+    #         "exposure": True,
+    #         "colors": True,
+    #         "noise": True,
+    #         "details": True,
+    #         "artifacts": True
+    #     }
+    conf_attribute_layout = [[
+            sg.Checkbox(text='Exposure', default=True, key='conf_attribute_exposure_bool', pad=((0, 20), 0)),
+            sg.Checkbox(text='Colors', default=True, key='conf_attribute_colors_bool', pad=((0, 20), 0)),
+            sg.Checkbox(text='Noise', default=True, key='conf_attribute_noise_bool', pad=((0, 20), 0)),
+            sg.Checkbox(text='Details', default=True, key='conf_attribute_details_bool', pad=((0, 20), 0)),
+            sg.Checkbox(text='Artifacts', default=True, key='conf_attribute_artifacts_bool', pad=((0, 20), 0)),
+        ],]
+
+    reallife_frame_layout = [
+        [
+            sg.T('Images dir:', size=(18, 1)),
+            sg.Input(key='rlt_report_input_files', readonly=True, size=(36, 1), enable_events=True),
+            sg.FolderBrowse(size=(8, 1), key='obj_report_output_browse', target='rlt_report_input_files')
+        ],[
+            sg.T('Presentation Name:', size=(18, 1)),
+            sg.Input(key='rlt_report_name', size=(36, 1)),
+        ],
+        # First Collapsable
+        [
+            sg.T(constants.SYMBOL_DOWN if opened_conf_main else constants.SYMBOL_UP,
+                 enable_events=True, k='-OPEN SEC_CONF_MAIN-',
+                 text_color=constants.PRIMARY_COLOR),
+            sg.T('Main',
+                 enable_events=True,
+                 text_color=constants.PRIMARY_COLOR,
+                 k='-OPEN SEC_CONF_MAIN-TEXT-',
+                 pad=((0, 20), 0)),
+
+            sg.T(constants.SYMBOL_DOWN if opened_conf_summ_params else constants.SYMBOL_UP,
+                 enable_events=True, k='-OPEN SEC_CONF_SUMM_PARAMS-',
+                 text_color=constants.PRIMARY_COLOR),
+            sg.T('Summary Params',
+                 enable_events=True,
+                 text_color=constants.PRIMARY_COLOR,
+                 k='-OPEN SEC_CONF_SUMM_PARAMS-TEXT-',
+                 pad=((0, 20), 0)),
+
+
+            sg.T(constants.SYMBOL_DOWN if opened_conf_summ_items else constants.SYMBOL_UP,
+                 enable_events=True, k='-OPEN SEC_CONF_SUMM_ITEMS-',
+                 text_color=constants.PRIMARY_COLOR),
+            sg.T('Summary Items',
+                 enable_events=True,
+                 text_color=constants.PRIMARY_COLOR,
+                 k='-OPEN SEC_CONF_SUMM_ITEMS-TEXT-',
+                 pad=((0, 20), 0)),
+
+            sg.T(constants.SYMBOL_DOWN if opened_conf_attribute else constants.SYMBOL_UP,
+                 enable_events=True, k='-OPEN SEC_CONF_ATTRIBUTE-',
+                 text_color=constants.PRIMARY_COLOR),
+            sg.T('Attributes',
+                 enable_events=True,
+                 text_color=constants.PRIMARY_COLOR,
+                 k='-OPEN SEC_CONF_ATTRIBUTE-TEXT-',
+                 pad=((0, 20), 0))
+
+        ],
+        # First Collapsable
+        [collapse(conf_main_layout,
+                  '-SEC_CONF_MAIN-',
+                  visible=opened_conf_main)],
+
+        # Second Collapsable
+        [collapse(conf_summ_params_layout,
+                  '-SEC_CONF_SUMM_PARAMS-',
+                  visible=opened_conf_summ_params)],
+
+        # Third Collapsable
+        [collapse(conf_summ_items_layout,
+                  '-SEC_CONF_SUMM_ITEMS-',
+                  visible=opened_conf_summ_params)],
+
+        # Fourth Collapsable
+        [collapse(conf_attribute_layout,
+                  '-SEC_CONF_ATTRIBUTE-',
+                  visible=opened_conf_attribute)],
+
+        [sg.Button("Generate",
+                   key='rlt_report_build_btn',
+                   size=(20, 1),
+                   disabled=True)]
+    ]
 
     # All the stuff inside your window.
     tab_main = [
@@ -146,8 +325,8 @@ def gui():
     ]
 
     tab2_layout = [
-        [sg.Frame('Objective Reporting', objective_frame_layout, font='Any 12')],
-        [sg.T('Real-Life Reporting')],
+        [sg.Frame('Objective Tests Reporting', objective_frame_layout, font='Any 12')],
+        [sg.Frame('Real-Life Tests Reporting', reallife_frame_layout, font='Any 12')],
     ]
 
     tab3_layout = [
@@ -409,8 +588,6 @@ def gui():
                 else:
                     window['obj_report_projreq_field'].Update('New unsaved file')
 
-            window['obj_report_build_btn'].Update(disabled=not (ret_data is not None and values['obj_report_output'] != ''))
-
         if event == 'obj_report_output':
             window['obj_report_build_btn'].Update(disabled=not (ret_data is not None and values['obj_report_output'] != ''))
 
@@ -439,6 +616,82 @@ def gui():
             sg.popup_ok("File generated!")
             if len(skipped_cases) > 0:
                 sg.popup_scrolled(skipped_cases_to_str(skipped_cases))
+
+        window['rlt_report_build_btn'].Update(disabled=not (values['rlt_report_input_files'] != ''))
+
+        if event.startswith('-OPEN SEC_CONF_MAIN'):
+            opened_conf_main, opened_conf_summ_params, opened_conf_summ_items, opened_conf_attribute = not opened_conf_main, False, False, False
+        elif event.startswith('-OPEN SEC_CONF_SUMM_PARAMS'):
+            opened_conf_main, opened_conf_summ_params, opened_conf_summ_items, opened_conf_attribute = False, not opened_conf_summ_params, False, False
+        elif event.startswith('-OPEN SEC_CONF_SUMM_ITEMS'):
+            opened_conf_main, opened_conf_summ_params, opened_conf_summ_items, opened_conf_attribute = False, False, not opened_conf_summ_items, False
+        elif event.startswith('-OPEN SEC_CONF_ATTRIBUTE'):
+            opened_conf_main, opened_conf_summ_params, opened_conf_summ_items, opened_conf_attribute = False, False, False, not opened_conf_attribute
+
+        window['-OPEN SEC_CONF_MAIN-'].update(constants.SYMBOL_DOWN if opened_conf_main else constants.SYMBOL_UP)
+        window['-SEC_CONF_MAIN-'].update(visible=opened_conf_main)
+
+        window['-OPEN SEC_CONF_SUMM_PARAMS-'].update(constants.SYMBOL_DOWN if opened_conf_summ_params else constants.SYMBOL_UP)
+        window['-SEC_CONF_SUMM_PARAMS-'].update(visible=opened_conf_summ_params)
+
+        window['-OPEN SEC_CONF_SUMM_ITEMS-'].update(constants.SYMBOL_DOWN if opened_conf_summ_items else constants.SYMBOL_UP)
+        window['-SEC_CONF_SUMM_ITEMS-'].update(visible=opened_conf_summ_items)
+
+        window['-OPEN SEC_CONF_ATTRIBUTE-'].update(constants.SYMBOL_DOWN if opened_conf_attribute else constants.SYMBOL_UP)
+        window['-SEC_CONF_ATTRIBUTE-'].update(visible=opened_conf_attribute)
+
+        if event == 'rlt_report_build_btn':
+            report_config = {
+                "config": {
+                    "image_path": values['rlt_report_input_files'],
+                    "thumbnail_path": os.path.join(values['rlt_report_input_files'], "Thumbnail"),
+                    "presentation_name": values['rlt_report_name'],
+                    "attribute_on": 1,
+                    "avg_luma": values['conf_main_avg_luma_bool'],
+                    "contrast": values['conf_main_contrast_bool'],
+                    "black_level": values['conf_main_black_level_bool'],
+                    "white_level": values['conf_main_white_level_bool'],
+                    "over_exposed": values['conf_main_over_exposed_bool'],
+                    "under_exposed": values['conf_main_under_exposed_bool'],
+                    "dynamic_range": values['conf_main_dynamic_range_bool'],
+                    "peak_saturation1": values['conf_main_peak_saturation1_bool'],
+                    "peak_hue1": values['conf_main_peak_hue1_bool'],
+                    "peak_saturation2": values['conf_main_peak_saturation2_bool'],
+                    "peak_hue2": values['conf_main_peak_hue2_bool'],
+                    "sharpness": values['conf_main_sharpness_bool'],
+                    "ISO": values['conf_main_iso_bool'],
+                    "ET": values['conf_main_et_bool']
+                },
+                "summary_params": {
+                    "af": values['conf_summ_params_af_bool'],
+                    "ae": values['conf_summ_params_ae_bool'],
+                    "awb": values['conf_summ_params_awb_bool'],
+                    "colors": values['conf_summ_params_colors_bool'],
+                    "noise": values['conf_summ_params_noise_bool'],
+                    "details": values['conf_summ_params_details_bool'],
+                    "artifacts": values['conf_summ_params_artifacts_bool'],
+                    "torch": values['conf_summ_params_torch_bool'],
+                    "flash": values['conf_summ_params_flash_bool']
+                },
+                "summary_items": {
+                    "attribute": values['conf_summ_items_attribute_bool'],
+                    "level": values['conf_summ_items_level_bool'],
+                    "issues": values['conf_summ_items_issues_bool'],
+                    "suggestions": values['conf_summ_items_suggestions_bool']
+                },
+                "attribute": {
+                    "exposure": values['conf_attribute_exposure_bool'],
+                    "colors": values['conf_attribute_colors_bool'],
+                    "noise": values['conf_attribute_noise_bool'],
+                    "details": values['conf_attribute_details_bool'],
+                    "artifacts": values['conf_attribute_artifacts_bool']
+                }
+            }
+            print(report_config)
+
+            generate_rlt_report(report_config)
+            sg.popup_auto_close("Report Generated!")
+
 
     # Before exiting...
 
