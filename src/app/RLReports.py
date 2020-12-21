@@ -137,7 +137,9 @@ class RLReports:
 
         img = Image.open(img_iso)
 
-        for key, value in self.config.items():
+        print("dict: ", str(self.config.items()))
+
+        for key, value in list(self.config.items())[4:]:
             # print (item)
             if value:
                 item_list.extend([str(key)])
