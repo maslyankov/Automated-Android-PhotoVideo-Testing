@@ -102,6 +102,9 @@ build_exe.bat
 ```
 This should build files and save them to /dist
 
+## TODO:
+
+
 ## Contact
 
 If you want to contact me you can reach me at mmaslyankov@mm-sol.com
