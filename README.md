@@ -82,13 +82,16 @@ Most code is written OS-independent, but more work is needed for proper support 
 To clone the project, follow these steps:
 
 1. Clone the project:
-```
-git clone https://github.com/ttodorov9/acapture.git
-```
-2: Download and install requirements:
-```
-pip install -r requirements.txt
-```
+    ```
+    git clone https://github.com/ttodorov9/acapture.git
+    ```
+
+2. Open the cloned project folder in cmd
+
+3: Download and install requirements:
+    ```
+    pip install -r requirements.txt
+    ```
 
 ## Building
 
