@@ -4,6 +4,13 @@
 
 This project automates the process of testing photo/video capture (Android / USB webcam) devices, generation of reports and more. 
 
+  * [Features](#features)
+  * [Prerequisites](#prerequisites)
+  * [Setup project](#setup-project)
+  * [Building](#building)
+  * [Contact](#contact)
+  * [License](#license)
+
 ## Features:
 - Persistence of devices settings
 - Lights control of SpectriWave (easy to add support for more) with GUI and programmatically
