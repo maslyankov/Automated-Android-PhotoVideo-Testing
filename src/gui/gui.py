@@ -326,7 +326,7 @@ def gui():
 
     tab2_layout = [
         [sg.Frame('Objective Tests Reporting', objective_frame_layout, font='Any 12')],
-        [sg.Frame('Real-Life Tests Reporting', reallife_frame_layout, font='Any 12')],
+        [sg.Frame('Real-Life Tests Reporting', reallife_frame_layout, font='Any 12')]
     ]
 
     tab3_layout = [
@@ -357,7 +357,11 @@ def gui():
         )],
         [
             sg.Button('Exit', size=(20, 1)),
-            sg.Text('App Version: {}'.format(constants.APP_VERSION), size=(42, 1), justification="right")
+            sg.Text('App Version: {}'.format(constants.APP_VERSION), size=(40, 1), justification="right")
+        ],
+        [
+            sg.ProgressBar(max_value=100, orientation='h', size=(35, 10), visible=True, key='progressbar'),
+            sg.T("0", justification='right', size=(3, 1), pad=(0, 0), key='progressbar_percent'), sg.T("%"), sg.T("Loading", size=(8, 1), key='progressbar_status')
         ]
     ]
 
@@ -381,12 +385,25 @@ def gui():
     # usbcam_client.watchdog()
     # usbcam_devices = usbcam_client.devices_obj
 
+    progress_bar = window['progressbar']
+    progress_bar_percent = window['progressbar_percent']
+    progress_bar_status = window['progressbar_status']
+
+    ilqlq = 1
+
     # Event Loop to process "events" and get the "values" of the inputs
     while True:
         event, values = window.read()
 
         if event == sg.WIN_CLOSED or event == 'Exit':  # if user closes window or clicks cancel
             break
+
+        print("updating to ", ilqlq)
+        progress_bar.Update(current_count=ilqlq + 1)
+        progress_bar_percent.Update(ilqlq + 1)
+        progress_bar_status.Update('Loading')
+        if ilqlq < 100:
+            ilqlq += 10
 
         # print('Data: ', values)  # Debugging
         print('Event: ', event)  # Debugging
@@ -720,4 +737,4 @@ def set_gui_theme():
     )
     sg.theme_border_width(constants.GUI_BORDER_WIDTH)
     sg.theme_progress_bar_border_width(constants.GUI_PROGRESS_BAR_BORDER_WIDTH)
-    sg.theme_progress_bar_color(constants.GUI_PROGRESS_BAR_COLOR)
+    sg.theme_progress_bar_color((constants.GUI_PROGRESS_BAR_COLOR, '#D0D0D0'))
