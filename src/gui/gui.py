@@ -713,6 +713,7 @@ def gui():
             rlt_received = values[rlt_reports_event]
             print('rlt gui received: ', rlt_received)
 
+            # TODO: Make object send errors
             try:
                 rlt_received['error']
             except KeyError:
