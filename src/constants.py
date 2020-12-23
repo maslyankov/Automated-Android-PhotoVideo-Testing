@@ -35,7 +35,7 @@ SCRCPY = os.path.join(VENDOR_DIR, 'scrcpy-win64-v1.16', 'scrcpy.exe')
 MAX_DEVICES_AT_ONE_RUN = 6
 MAX_ACTIONS_DISPLAY = 5
 
-APP_VERSION = '0.07 Beta'
+APP_VERSION = '0.08 Beta'
 
 # - Actions - #
 
