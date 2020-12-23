@@ -324,6 +324,14 @@ def gui():
         ]
     ]
 
+    loading_status_bar_layout = [
+        [
+            sg.ProgressBar(max_value=100, orientation='h', size=(35, 10), visible=True, key='progressbar'),
+            sg.T("0", justification='right', size=(3, 1), pad=(0, 0), key='progressbar_percent'), sg.T("%"),
+            sg.T("Loading", size=(8, 1), key='progressbar_status')
+        ]
+    ]
+
     tab2_layout = [
         [sg.Frame('Objective Tests Reporting', objective_frame_layout, font='Any 12')],
         [sg.Frame('Real-Life Tests Reporting', reallife_frame_layout, font='Any 12')]
@@ -360,8 +368,7 @@ def gui():
             sg.Text('App Version: {}'.format(constants.APP_VERSION), size=(40, 1), justification="right")
         ],
         [
-            sg.ProgressBar(max_value=100, orientation='h', size=(35, 10), visible=True, key='progressbar'),
-            sg.T("0", justification='right', size=(3, 1), pad=(0, 0), key='progressbar_percent'), sg.T("%"), sg.T("Loading", size=(8, 1), key='progressbar_status')
+            collapse(loading_status_bar_layout, 'loading_status_bar')
         ]
     ]
 

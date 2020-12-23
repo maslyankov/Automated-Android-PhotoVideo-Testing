@@ -4,6 +4,7 @@ TODO Tasks
 
 ### Todo
 
+- [ ] Add swipe actions for android
 - [ ] Make lights test GUI multithreaded
 - [ ] Fix SpecrtiWave control
 - [ ] Finish integration of usb webcam

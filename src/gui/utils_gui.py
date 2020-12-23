@@ -1,17 +1,3 @@
-"""
-History
-
-- 2020/05/08
-  - New Tree class for more methods and functions, but with only name and
-    one text value for each node.
-- 2020/05/10
-  - New Button class for stadium shape background
-- 2020/05/11
-  - Revised for auto_size_button in class Button.
-- 2020/05/12
-  - Revised button_color can be like 'black'.
-  - Revised len of button_text to check halfwidth and fullwidth if character.
-"""
 import PySimpleGUI as sg
 
 import src.constants as constants
@@ -26,9 +12,6 @@ def place(elem):
     """
     return sg.Column([[elem]], pad=(0, 0))
 
-SYMBOL_UP =    '▲'
-SYMBOL_DOWN =  '▼'
-
 
 def collapse(layout, key, visible=False):
     """
@@ -40,6 +23,25 @@ def collapse(layout, key, visible=False):
     """
     return sg.pin(sg.Column(layout, key=key, visible=visible))
 
+
+def send_progress_to_gui(gui_window, gui_event, progress, info):
+    gui_window.write_event_value(
+        gui_event,
+        {
+            'progress': progress,
+            'info': info
+        }
+    )
+
+def send_error_to_gui(gui_window, gui_event, from_where=None, info=None):
+    gui_window.write_event_value(
+        gui_event,
+        {
+            'error': True,
+            'from_where': from_where,
+            'info': info
+        }
+    )
 
 class Tree(sg.Tree):
     """

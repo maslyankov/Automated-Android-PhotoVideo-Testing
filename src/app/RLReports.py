@@ -74,9 +74,11 @@ np.warnings.filterwarnings('ignore')
 #     }
 # }
 #
-def generate_rlt_report(report_config: dict):
+def generate_rlt_report(report_config: dict, gui_window=None, gui_event=None):
     print("Creating object... ")
-    new_report = RLReports(report_config)
+
+
+    new_report = RLReports(report_config, gui_window, gui_event)
 
     print("Creating Presentation... ")
     new_report.create_presentation()
@@ -87,7 +89,9 @@ def generate_rlt_report(report_config: dict):
 # RLTReport Class
 class RLReports:
     # Class inietialization
-    def __init__(self, config_dict):
+    def __init__(self, config_dict, gui_window=None, gui_event=None):
+        self.gui_window = gui_window
+        self.gui_event = gui_event
         try:
             self.config = config_dict['config']
             self.summary_params = config_dict['summary_params']
@@ -95,7 +99,7 @@ class RLReports:
             self.attribute = config_dict['attribute']
         except KeyError:
             print("RLReports class got wrong data!")
-            raise ValueError()
+            raise ValueError("RLReports class got wrong data in dict!")
 
     # Create presentation
     def create_presentation(self):
