@@ -5,7 +5,7 @@ import PySimpleGUI as sg
 
 import src.constants as constants
 from src.utils.xml_tools import convert_dict_to_xml, convert_xml_to_dict
-from src.gui.utils_gui import Tree, place, collapse, SYMBOL_DOWN, SYMBOL_UP
+from src.gui.utils_gui import Tree, place, collapse
 from src.gui.gui_imatest_params_upd import gui_imatest_params_upd
 from src.utils.excel_tools import parse_excel_template
 
@@ -175,29 +175,29 @@ def gui_project_req_file(proj_req=None, proj_req_file=None, return_val=False):
         [sg.T('New requirements file', key='current_filename_label', size=(30, 1))],
         [sg.HorizontalSeparator()],
 
-        [sg.T(SYMBOL_DOWN if opened_impexp else SYMBOL_UP, enable_events=True, k='-OPEN SEC_IMPEXP-',
+        [sg.T(constants.SYMBOL_DOWN if opened_impexp else constants.SYMBOL_UP, enable_events=True, k='-OPEN SEC_IMPEXP-',
               text_color=constants.PRIMARY_COLOR),
          sg.T('Import / Export', enable_events=True, text_color=constants.PRIMARY_COLOR, k='-OPEN SEC_IMPEXP-TEXT')],
         [collapse(expimp_section, '-SEC_IMPEXP-', visible=opened_temp)],
 
         [sg.HorizontalSeparator()],
 
-        [sg.T(SYMBOL_DOWN if opened_tt else SYMBOL_UP, enable_events=True, k='-OPEN SEC_TT-',
+        [sg.T(constants.SYMBOL_DOWN if opened_tt else constants.SYMBOL_UP, enable_events=True, k='-OPEN SEC_TT-',
               text_color=constants.PRIMARY_COLOR),
          sg.T('Test Type', enable_events=True, text_color=constants.PRIMARY_COLOR, k='-OPEN SEC_TT-TEXT')],
         [collapse(tt_section, '-SEC_TT-', visible=opened_tt)],
 
-        [sg.T(SYMBOL_DOWN if opened_temp else SYMBOL_UP, enable_events=True, k='-OPEN SEC_TEMP-',
+        [sg.T(constants.SYMBOL_DOWN if opened_temp else constants.SYMBOL_UP, enable_events=True, k='-OPEN SEC_TEMP-',
               text_color=constants.PRIMARY_COLOR),
          sg.T('Color Temp', enable_events=True, text_color=constants.PRIMARY_COLOR, k='-OPEN SEC_TEMP-TEXT')],
         [collapse(temp_section, '-SEC_TEMP-', visible=opened_temp)],
 
-        [sg.T(SYMBOL_DOWN if opened_lux else SYMBOL_UP, enable_events=True, k='-OPEN SEC_LUX-',
+        [sg.T(constants.SYMBOL_DOWN if opened_lux else constants.SYMBOL_UP, enable_events=True, k='-OPEN SEC_LUX-',
               text_color=constants.PRIMARY_COLOR),
          sg.T('Lux', enable_events=True, text_color=constants.PRIMARY_COLOR, k='-OPEN SEC_LUX-TEXT')],
         [collapse(lux_section, '-SEC_LUX-', visible=opened_lux)],
 
-        [sg.T(SYMBOL_DOWN if opened_params else SYMBOL_UP, enable_events=True, k='-OPEN SEC_PARAMS-',
+        [sg.T(constants.SYMBOL_DOWN if opened_params else constants.SYMBOL_UP, enable_events=True, k='-OPEN SEC_PARAMS-',
               text_color=constants.PRIMARY_COLOR),
          sg.T('Parameters', enable_events=True, text_color=constants.PRIMARY_COLOR, k='-OPEN SEC_PARAMS-TEXT')],
         [collapse(params_section, '-SEC_PARAMS-', visible=opened_params)],
@@ -284,19 +284,19 @@ def gui_project_req_file(proj_req=None, proj_req_file=None, return_val=False):
             opened_impexp, opened_tt, opened_temp, opened_lux = False, opened_tt, False, False
 
         # Update UI elements
-        window['-OPEN SEC_IMPEXP-'].update(SYMBOL_DOWN if opened_temp else SYMBOL_UP)
+        window['-OPEN SEC_IMPEXP-'].update(constants.SYMBOL_DOWN if opened_temp else constants.SYMBOL_UP)
         window['-SEC_IMPEXP-'].update(visible=opened_impexp)
 
-        window['-OPEN SEC_TT-'].update(SYMBOL_DOWN if opened_tt else SYMBOL_UP)
+        window['-OPEN SEC_TT-'].update(constants.SYMBOL_DOWN if opened_tt else constants.SYMBOL_UP)
         window['-SEC_TT-'].update(visible=opened_tt)
 
-        window['-OPEN SEC_TEMP-'].update(SYMBOL_DOWN if opened_temp else SYMBOL_UP)
+        window['-OPEN SEC_TEMP-'].update(constants.SYMBOL_DOWN if opened_temp else constants.SYMBOL_UP)
         window['-SEC_TEMP-'].update(visible=opened_temp)
 
-        window['-OPEN SEC_LUX-'].update(SYMBOL_DOWN if opened_lux else SYMBOL_UP)
+        window['-OPEN SEC_LUX-'].update(constants.SYMBOL_DOWN if opened_lux else constants.SYMBOL_UP)
         window['-SEC_LUX-'].update(visible=opened_lux)
 
-        window['-OPEN SEC_PARAMS-'].update(SYMBOL_DOWN if opened_params else SYMBOL_UP)
+        window['-OPEN SEC_PARAMS-'].update(constants.SYMBOL_DOWN if opened_params else constants.SYMBOL_UP)
         window['-SEC_PARAMS-'].update(visible=opened_params)
 
         if event == 'add_light_temp_value':

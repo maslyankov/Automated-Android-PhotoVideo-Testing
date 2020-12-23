@@ -18,8 +18,10 @@ from scipy.signal import find_peaks
 import shutil
 import substring
 from typing import Dict
+from datetime import datetime
 
 import src.constants as constants
+from src.gui.utils_gui import send_progress_to_gui, send_error_to_gui
 
 np.warnings.filterwarnings('ignore')
 
@@ -74,24 +76,30 @@ np.warnings.filterwarnings('ignore')
 #     }
 # }
 #
-def generate_rlt_report(report_config: dict, gui_window=None, gui_event=None):
+def _generate_rlt_report(report_config: dict, gui_window=None, gui_event=None):
     print("Creating object... ")
-
 
     new_report = RLReports(report_config, gui_window, gui_event)
 
     print("Creating Presentation... ")
     new_report.create_presentation()
 
-    del(new_report)
+    del (new_report)
+
+
+def generate_rlt_report(report_config: dict, gui_window=None, gui_event=None):
+    rlt_thread = threading.Thread(target=_generate_rlt_report, args=(report_config, gui_window, gui_event), daemon=True)
+    rlt_thread.name = 'RLTReportsGeneration'
+    rlt_thread.start()
 
 
 # RLTReport Class
 class RLReports:
-    # Class inietialization
+    # Class initialization
     def __init__(self, config_dict, gui_window=None, gui_event=None):
         self.gui_window = gui_window
         self.gui_event = gui_event
+
         try:
             self.config = config_dict['config']
             self.summary_params = config_dict['summary_params']
@@ -103,6 +111,7 @@ class RLReports:
 
     # Create presentation
     def create_presentation(self):
+        send_progress_to_gui(self.gui_window, self.gui_event, 0, 'Starting')
 
         image_path = self.config['image_path']
         image_outpath = self.config['thumbnail_path']
@@ -126,6 +135,8 @@ class RLReports:
         def natural_keys(input):
             return [atoi(c) for c in re.split('(\d+)', input)]
 
+        send_progress_to_gui(self.gui_window, self.gui_event, 3, 'Initializing')
+
         images.sort(key=natural_keys)
 
         slide = prs.slides.add_slide(prs.slide_layouts[7])
@@ -133,13 +144,18 @@ class RLReports:
         title.text = "Images - Executed test cases"
         title.text_frame.paragraphs[0].font.size = Pt(26)
         title.text_frame.paragraphs[0].alignment = PP_ALIGN.RIGHT
+
+        send_progress_to_gui(self.gui_window, self.gui_event, 30, 'Generating Thumbnails')
         create_thumbnail(prs, slide, images, image_path, image_outpath)
 
         shutil.rmtree(image_outpath)
+        send_progress_to_gui(self.gui_window, self.gui_event, 60, 'Generating Report')
         set_images_to_slide(prs, images, self)
 
+        send_progress_to_gui(self.gui_window, self.gui_event, 95, 'Saving')
         prs.save(output_file)
 
+        send_progress_to_gui(self.gui_window, self.gui_event, 100, 'Done!', 'new_file', output_file)
         print(f"RLReport {presentation_name} Done\nSaved to: {output_file}")
 
     # Get image stats
@@ -148,8 +164,6 @@ class RLReports:
         item_list = ["Item"]
 
         img = Image.open(img_iso)
-
-        print("dict: ", str(self.config.items()))
 
         for key, value in list(self.config.items())[4:]:
             # print (item)
@@ -164,25 +178,25 @@ class RLReports:
                 et = tags.get('EXIF ExposureTime')
 
         #### sharpness ########
-        if self.config['sharpness']:
+        if self.config['Sharpness']:
             img_sharp = cv2.imread(img_iso, 0)
             sharpness = sharpness_image(img_sharp)
 
         #### dyn range ########
-        if self.config['dynamic_range']:
+        if self.config['Dynamic Range']:
             img_dyn_range = cv2.imread(img_iso, 1)
             dyn_range = dynamic_range(img_dyn_range)
         #### over exp ########
-        if self.config['over_exposed']:
+        if self.config['Over Exposed']:
             img_dyn_range = cv2.imread(img_iso, 1)
             dyn_range = dynamic_range(img_dyn_range)
         #### under exp ########
-        if self.config['under_exposed']:
+        if self.config['Under Exposed']:
             img_dyn_range = cv2.imread(img_iso, 1)
             dyn_range = dynamic_range(img_dyn_range)
 
         #### BL WL contrast ###
-        if self.config['contrast'] or self.config['white_level'] or self.config['black_level']:
+        if self.config['Contrast'] or self.config['White Level'] or self.config['Black Level']:
             img_grey = img.convert('L')
             f1 = figure(1)
             f1.suptitle("Input Image")
@@ -201,7 +215,7 @@ class RLReports:
             contrast = int(((white_level - black_level) / 255) * 100)
 
         #### AVR Luma #########
-        if self.config['avg_luma']:
+        if self.config['Avg Luma']:
             im = Image.fromarray(rgb_copy.astype('uint8'))
             yuv = asarray(im.convert('L'))
             h, s, v = colorsys.rgb_to_hsv(np.mean(rgb_copy[:, :, 0]), np.mean(rgb_copy[:, :, 1]),
@@ -209,47 +223,47 @@ class RLReports:
             avr_y = int(np.mean(yuv))
 
         #### saturattion ######
-        if self.config['peak_saturation1'] \
-                or self.config['peak_saturation2'] \
-                or self.config['peak_hue1'] \
-                or self.config['peak_hue2']:
+        if self.config['Peak Saturation 1'] \
+                or self.config['Peak Saturation 2']\
+                or self.config['Peak Hue 1']\
+                or self.config['Peak Hue 2']:
             img_peak_sat = np.asarray(img)
             peak_sat = peak_saturation(img_peak_sat)
 
-        if self.config['avg_luma']:
+        if self.config['Avg Luma']:
             stats_list.extend([str(avr_y)])
 
-        if self.config['contrast']:
+        if self.config['Contrast']:
             stats_list.extend([str(contrast) + "%"])
 
-        if self.config['black_level']:
+        if self.config['Black Level']:
             stats_list.extend([str(black_level)])
 
-        if self.config['white_level']:
+        if self.config['White Level']:
             stats_list.extend([str(white_level)])
 
-        if self.config['dynamic_range']:
+        if self.config['Dynamic Range']:
             stats_list.extend([str(dyn_range[2]) + "%"])
 
-        if self.config['over_exposed']:
+        if self.config['Over Exposed']:
             stats_list.extend([str(dyn_range[0]) + "%"])
 
-        if self.config['over_exposed']:
+        if self.config['Under Exposed']:
             stats_list.extend([str(dyn_range[1]) + "%"])
 
-        if self.config['peak_saturation1']:
+        if self.config['Peak Saturation 1']:
             stats_list.extend([str(peak_sat[0]) + "%"])
 
-        if self.config['peak_hue1']:
+        if self.config['Peak Hue 1']:
             stats_list.extend([str(peak_sat[1]) + "°"])
 
-        if self.config['peak_saturation2']:
+        if self.config['Peak Saturation 2']:
             stats_list.extend([str(peak_sat[2]) + "%"])
 
-        if self.config['peak_hue2']:
+        if self.config['Peak Hue 2']:
             stats_list.extend([str(peak_sat[3]) + "°"])
 
-        if self.config['sharpness']:
+        if self.config['Sharpness']:
             stats_list.extend([str(sharpness)])
 
         if self.config['ISO']:

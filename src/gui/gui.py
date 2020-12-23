@@ -240,7 +240,7 @@ def gui():
         [
             sg.T('Images dir:', size=(18, 1)),
             sg.Input(key='rlt_report_input_files', readonly=True, size=(36, 1), enable_events=True),
-            sg.FolderBrowse(size=(8, 1), key='obj_report_output_browse', target='rlt_report_input_files')
+            sg.FolderBrowse(size=(8, 1), key='rlt_report_output_browse', target='rlt_report_input_files')
         ],[
             sg.T('Presentation Name:', size=(18, 1)),
             sg.Input(key='rlt_report_name', size=(36, 1)),
@@ -326,9 +326,9 @@ def gui():
 
     loading_status_bar_layout = [
         [
-            sg.ProgressBar(max_value=100, orientation='h', size=(35, 10), visible=True, key='progressbar'),
+            sg.ProgressBar(max_value=100, orientation='h', size=(30, 10), visible=True, key='progressbar'),
             sg.T("0", justification='right', size=(3, 1), pad=(0, 0), key='progressbar_percent'), sg.T("%"),
-            sg.T("Loading", size=(8, 1), key='progressbar_status')
+            sg.T("Loading", size=(14, 1), key='progressbar_status')
         ]
     ]
 
@@ -392,11 +392,11 @@ def gui():
     # usbcam_client.watchdog()
     # usbcam_devices = usbcam_client.devices_obj
 
+    rlt_reports_event = "RLTReport_Thread"
+
     progress_bar = window['progressbar']
     progress_bar_percent = window['progressbar_percent']
     progress_bar_status = window['progressbar_status']
-
-    ilqlq = 1
 
     # Event Loop to process "events" and get the "values" of the inputs
     while True:
@@ -404,13 +404,6 @@ def gui():
 
         if event == sg.WIN_CLOSED or event == 'Exit':  # if user closes window or clicks cancel
             break
-
-        print("updating to ", ilqlq)
-        progress_bar.Update(current_count=ilqlq + 1)
-        progress_bar_percent.Update(ilqlq + 1)
-        progress_bar_status.Update('Loading')
-        if ilqlq < 100:
-            ilqlq += 10
 
         # print('Data: ', values)  # Debugging
         print('Event: ', event)  # Debugging
@@ -641,7 +634,8 @@ def gui():
             if len(skipped_cases) > 0:
                 sg.popup_scrolled(skipped_cases_to_str(skipped_cases))
 
-        window['rlt_report_build_btn'].Update(disabled=not (values['rlt_report_input_files'] != ''))
+        if event == 'rlt_report_input_files':
+            window['rlt_report_build_btn'].Update(disabled=not (values['rlt_report_input_files'] != ''))
 
         if event.startswith('-OPEN SEC_CONF_MAIN'):
             opened_conf_main, opened_conf_summ_params, opened_conf_summ_items, opened_conf_attribute = not opened_conf_main, False, False, False
@@ -671,52 +665,101 @@ def gui():
                     "thumbnail_path": os.path.join(values['rlt_report_input_files'], "Thumbnail"),
                     "presentation_name": values['rlt_report_name'],
                     "attribute_on": 1,
-                    "avg_luma": values['conf_main_avg_luma_bool'],
-                    "contrast": values['conf_main_contrast_bool'],
-                    "black_level": values['conf_main_black_level_bool'],
-                    "white_level": values['conf_main_white_level_bool'],
-                    "over_exposed": values['conf_main_over_exposed_bool'],
-                    "under_exposed": values['conf_main_under_exposed_bool'],
-                    "dynamic_range": values['conf_main_dynamic_range_bool'],
-                    "peak_saturation1": values['conf_main_peak_saturation1_bool'],
-                    "peak_hue1": values['conf_main_peak_hue1_bool'],
-                    "peak_saturation2": values['conf_main_peak_saturation2_bool'],
-                    "peak_hue2": values['conf_main_peak_hue2_bool'],
-                    "sharpness": values['conf_main_sharpness_bool'],
+                    "Avg Luma": values['conf_main_avg_luma_bool'],
+                    "Contrast": values['conf_main_contrast_bool'],
+                    "Black Level": values['conf_main_black_level_bool'],
+                    "White Level": values['conf_main_white_level_bool'],
+                    "Over Exposed": values['conf_main_over_exposed_bool'],
+                    "Under Exposed": values['conf_main_under_exposed_bool'],
+                    "Dynamic Range": values['conf_main_dynamic_range_bool'],
+                    "Peak Saturation 1": values['conf_main_peak_saturation1_bool'],
+                    "Peak Hue 1": values['conf_main_peak_hue1_bool'],
+                    "Peak Saturation 2": values['conf_main_peak_saturation2_bool'],
+                    "Peak Hue 2": values['conf_main_peak_hue2_bool'],
+                    "Sharpness": values['conf_main_sharpness_bool'],
                     "ISO": values['conf_main_iso_bool'],
                     "ET": values['conf_main_et_bool']
                 },
                 "summary_params": {
-                    "af": values['conf_summ_params_af_bool'],
-                    "ae": values['conf_summ_params_ae_bool'],
-                    "awb": values['conf_summ_params_awb_bool'],
-                    "colors": values['conf_summ_params_colors_bool'],
-                    "noise": values['conf_summ_params_noise_bool'],
-                    "details": values['conf_summ_params_details_bool'],
-                    "artifacts": values['conf_summ_params_artifacts_bool'],
-                    "torch": values['conf_summ_params_torch_bool'],
-                    "flash": values['conf_summ_params_flash_bool']
+                    "AF": values['conf_summ_params_af_bool'],
+                    "AE": values['conf_summ_params_ae_bool'],
+                    "AWB": values['conf_summ_params_awb_bool'],
+                    "Colors": values['conf_summ_params_colors_bool'],
+                    "Noise": values['conf_summ_params_noise_bool'],
+                    "Details": values['conf_summ_params_details_bool'],
+                    "Artifacts": values['conf_summ_params_artifacts_bool'],
+                    "Torch": values['conf_summ_params_torch_bool'],
+                    "Flash": values['conf_summ_params_flash_bool']
                 },
                 "summary_items": {
-                    "attribute": values['conf_summ_items_attribute_bool'],
-                    "level": values['conf_summ_items_level_bool'],
-                    "issues": values['conf_summ_items_issues_bool'],
-                    "suggestions": values['conf_summ_items_suggestions_bool']
+                    "Attribute": values['conf_summ_items_attribute_bool'],
+                    "Level": values['conf_summ_items_level_bool'],
+                    "Issues": values['conf_summ_items_issues_bool'],
+                    "Suggestions": values['conf_summ_items_suggestions_bool']
                 },
                 "attribute": {
-                    "exposure": values['conf_attribute_exposure_bool'],
-                    "colors": values['conf_attribute_colors_bool'],
-                    "noise": values['conf_attribute_noise_bool'],
-                    "details": values['conf_attribute_details_bool'],
-                    "artifacts": values['conf_attribute_artifacts_bool']
+                    "Exposure": values['conf_attribute_exposure_bool'],
+                    "Colors": values['conf_attribute_colors_bool'],
+                    "Noise": values['conf_attribute_noise_bool'],
+                    "Details": values['conf_attribute_details_bool'],
+                    "Artifacts": values['conf_attribute_artifacts_bool']
                 }
             }
             print(report_config)
 
-            generate_rlt_report(report_config)
-            sg.popup_auto_close("Report Generated!")
+            generate_rlt_report(report_config, window, rlt_reports_event)
 
+        if event == rlt_reports_event:
+            rlt_received = values[rlt_reports_event]
+            print('rlt gui received: ', rlt_received)
 
+            try:
+                rlt_received['error']
+            except KeyError:
+                pass
+            else:
+                if rlt_received['error']:
+                    sg.popup_error(f"{rlt_received['from_where']}: {rlt_received['info']}")
+
+            try:
+                rlt_received['info']
+            except KeyError:
+                pass
+            else:
+                progress_bar_status.Update(rlt_received['info'])
+
+            try:
+                rlt_received['progress']
+            except KeyError:
+                pass
+            else:
+                if rlt_received['progress'] == 0:
+                    # make visible
+                    window['loading_status_bar'].Update(visible=True)
+
+                    window['rlt_report_build_btn'].Update(disabled=True)
+                    window['rlt_report_output_browse'].Update(disabled=True)
+
+                progress_bar.Update(current_count=rlt_received['progress'])
+                progress_bar_percent.Update(rlt_received['progress'])
+
+                if rlt_received['progress'] == 100:
+                    done_msg = rlt_received['info']
+
+                    try:
+                        rlt_received['new_file']
+                    except KeyError:
+                        pass
+                    else:
+                        if rlt_received['new_file']:
+                            done_msg = f"{done_msg}\nNew report:\n{rlt_received['new_file']}"
+
+                    sg.popup_ok(done_msg)
+
+                    window['loading_status_bar'].Update(visible=False)
+
+                    window['rlt_report_build_btn'].Update(disabled=False)
+                    window['rlt_report_output_browse'].Update(disabled=False)
     # Before exiting...
 
     # Detach attached devices

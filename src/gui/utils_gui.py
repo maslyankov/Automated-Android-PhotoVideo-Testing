@@ -24,24 +24,27 @@ def collapse(layout, key, visible=False):
     return sg.pin(sg.Column(layout, key=key, visible=visible))
 
 
-def send_progress_to_gui(gui_window, gui_event, progress, info):
-    gui_window.write_event_value(
-        gui_event,
-        {
-            'progress': progress,
-            'info': info
-        }
-    )
+def send_progress_to_gui(gui_window: sg.Window, gui_event, progress, info, misc_key: str = None, misc_value=None):
+    out_dict = {
+        'progress': progress,
+        'info': info
+    }
 
-def send_error_to_gui(gui_window, gui_event, from_where=None, info=None):
-    gui_window.write_event_value(
-        gui_event,
-        {
-            'error': True,
-            'from_where': from_where,
-            'info': info
-        }
-    )
+    if misc_key:
+        out_dict[misc_key] = misc_value
+
+    gui_window.write_event_value(gui_event, out_dict)
+
+
+def send_error_to_gui(gui_window: sg.Window, gui_event, from_where=None, info=None):
+    out_dict = {
+        'error': True,
+        'from_where': from_where,
+        'info': info
+    }
+
+    gui_window.write_event_value(gui_event, out_dict)
+
 
 class Tree(sg.Tree):
     """
@@ -638,7 +641,7 @@ class Tree(sg.Tree):
         # length = len(self.list)
 
         for key in self.treedata.tree_dict[self.list[index]].children:
-            #key = self.list[key]
+            # key = self.list[key]
             if self.text in key.text.lower():
                 return key.children[0].key
         return None
@@ -679,7 +682,6 @@ class Tree(sg.Tree):
 
         return prev if prev else next if next else self.get_parent_key(current)
 
-
     def _get_next_node_of_par(self, key):
         self._all_nodes('')
         index = self.list.index(key) + 1
@@ -692,7 +694,8 @@ class Tree(sg.Tree):
                 if p == '': break
             if key in parent:
                 index += 1
-            elif self.treedata.tree_dict[self.list[index]].parent == self.treedata.tree_dict[self.list[self.list.index(key)]].parent:
+            elif self.treedata.tree_dict[self.list[index]].parent == self.treedata.tree_dict[
+                self.list[self.list.index(key)]].parent:
                 return self.list[index]
             else:
                 index += 1
@@ -710,7 +713,8 @@ class Tree(sg.Tree):
                 if p == '': break
             if key in parent:
                 index -= 1
-            elif self.treedata.tree_dict[self.list[index]].parent == self.treedata.tree_dict[self.list[self.list.index(key)]].parent:
+            elif self.treedata.tree_dict[self.list[index]].parent == self.treedata.tree_dict[
+                self.list[self.list.index(key)]].parent:
                 return self.list[index]
             else:
                 index -= 1
