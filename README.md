@@ -1,6 +1,6 @@
 # A(utomated)Capture
 
-![Logo](https://github.com/maslyankov/Automated-Android-PhotoVideo-Testing/blob/master/images/automated-video-testing-header.png?raw=true "Logo Header")
+![Logo](https://github.com/ttodorov9/acapture/blob/master/images/automated-video-testing-header.png?raw=true "Logo Header")
 
 This project automates the process of testing photo/video capture (Android / USB webcam) devices, generation of reports and more. 
 
