@@ -90,6 +90,8 @@ def generate_rlt_report(report_config: dict, gui_window=None, gui_event=None):
     rlt_thread.name = 'RLTReportsGeneration'
     rlt_thread.start()
 
+    # TODO: Kill thread after it is finished
+
 
 # RLTReport Class
 class RLReports:
