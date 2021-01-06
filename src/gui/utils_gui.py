@@ -25,6 +25,9 @@ def collapse(layout, key, visible=False):
 
 
 def send_progress_to_gui(gui_window: sg.Window, gui_event, progress, info, misc_key: str = None, misc_value=None):
+    # progress = round(progress, 2)
+    progress = int(progress)
+
     out_dict = {
         'progress': progress,
         'info': info
