@@ -2,7 +2,7 @@ import os
 import PySimpleGUI as sg
 
 import src.constants as constants
-from src.app.Reports import Report
+from src.app.ImatestReports import ImatestReports
 
 def gui_imatest_params_upd():
     test_modules_list = list(constants.IMATEST_PARALLEL_TEST_TYPES.keys())
@@ -49,12 +49,12 @@ def gui_imatest_params_upd():
                            'so keep in mind it takes some time.') == 'Yes':
             sg.popup_auto_close("Loading... Please wait.", non_blocking=True, no_titlebar=True)
             # Parse to file (Update file)
-            Report.update_imatest_params()
+            ImatestReports.update_imatest_params()
         elif event == 'update_params_btn' and values['import_json_bool']:
             if values['import_json'] == '' or not values['import_json'].endswith('.json'):
                 sg.popup_ok('You must choose a JSON file!')
             else:
-                Report.update_imatest_params(json_file=values['import_json'], test_type=values['chosen_module'])
+                ImatestReports.update_imatest_params(json_file=values['import_json'], test_type=values['chosen_module'])
                 sg.popup_auto_close('Done!', no_titlebar=True)
 
     window.close()

@@ -3,7 +3,7 @@ import os
 import threading
 import time
 
-from pygrabber.dshow_graph import FilterGraph
+# from pygrabber.dshow_graph import FilterGraph
 
 from src.app.utils import compare_lists
 from src.app.USBCamDevice import USBCamDevice
@@ -11,14 +11,14 @@ import src.constants as constants
 
 
 def list_ports():
-    graph = FilterGraph()
-    cams_enumerated = enumerate(graph.get_input_devices())
+    # graph = FilterGraph()
+    # cams_enumerated = enumerate(graph.get_input_devices())
     out_dict = {}
 
-    print('Names list: ', cams_enumerated)
-    for cam_id, cam_name in cams_enumerated:
-        print(f"Camera {cam_id}: {cam_name}")
-        out_dict[cam_name] = cam_id
+    # print('Names list: ', cams_enumerated)
+    # for cam_id, cam_name in cams_enumerated:
+    #     print(f"Camera {cam_id}: {cam_name}")
+    #     out_dict[cam_name] = cam_id
 
     return out_dict
 

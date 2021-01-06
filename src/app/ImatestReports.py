@@ -10,13 +10,19 @@ try:
     from imatest.it import ImatestLibrary, ImatestException
 except RuntimeError:
     print('Imatest Import error (Check MathLAB path)!')
+except ModuleNotFoundError:
+    print('Imatest IT Python Library not found!')
+    SKIP_IMATEST_IT = True
 
 # Local
 import src.constants as constants
 
 
-class Report:
+class ImatestReports:
     def __init__(self):
+        if SKIP_IMATEST_IT:
+            return
+
         try:
             self.imatest = ImatestLibrary()
         except ImatestException.MatlabException as e:
@@ -117,7 +123,7 @@ class Report:
     def recurse_dict(d, keys=()):
         if type(d) == dict:
             for k in d:
-                for rv in Report.recurse_dict(d[k], keys + (k,)):
+                for rv in ImatestReports.recurse_dict(d[k], keys + (k,)):
                     yield rv
         else:
             yield keys, d
@@ -133,7 +139,7 @@ class Report:
         params_out_file = os.path.join(constants.DATA_DIR, 'imatest_params.json')
 
         if json_file is None:
-            report_obj = Report()
+            report_obj = ImatestReports()
             images_dict = {'test_serial': []}
             tests_params = {}
             curr_progress = 0
@@ -197,7 +203,7 @@ class Report:
         # for res_dict in images_analysis_readable:
         for res_dict in result:
             current_type = None
-            for key, value in Report.recurse_dict(res_dict[list(res_dict.keys())[0]]):
+            for key, value in ImatestReports.recurse_dict(res_dict[list(res_dict.keys())[0]]):
                 if current_type is None or key[0] == 'title' or key[0] == 'image_file':
                     # First find the title
                     # Turns out dotpattern has neither title, nor image_file keys..
@@ -243,6 +249,6 @@ class Report:
 
     @staticmethod
     def update_imatest_params_threaded():
-        threading.Thread(target=Report.update_imatest_params,
+        threading.Thread(target=ImatestReports.update_imatest_params,
                          args=(),
                          daemon=True).start()

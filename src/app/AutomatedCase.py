@@ -11,7 +11,7 @@ import src.constants as constants
 from src.app.LightsCtrl import LightsCtrl
 from src.app.Sensor import Sensor
 
-from src.app.Reports import Report
+from src.app.ImatestReports import ImatestReports
 from src.app.utils import analyze_images_test_results
 from src.utils.excel_tools import export_to_excel_file
 

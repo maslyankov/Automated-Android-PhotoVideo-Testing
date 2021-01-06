@@ -4,7 +4,7 @@ import PySimpleGUI as sg
 
 import src.constants as constants
 from src.app.AutomatedCase import AutomatedCase
-from src.app.Reports import Report
+from src.app.ImatestReports import ImatestReports
 
 from src.gui.gui_automated_cases_lights_xml_gui import lights_xml_gui
 from src.gui.utils_gui import place, Tabs
