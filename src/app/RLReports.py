@@ -16,8 +16,6 @@ from pylab import *
 import re
 from scipy.signal import find_peaks
 import shutil
-import substring
-from typing import Dict
 from datetime import datetime
 
 import src.constants as constants
@@ -805,8 +803,7 @@ def hist_image(prs, slide, width, height, image_hist, image_on_slide):
 
 # Get device name
 def get_device_name(image_name):
-    devices = substring.substringByChar(image_name,
-                                        startChar="_", endChar=".")
+    devices = image_name.split("_")[-1].split(".")[0]
     devices = devices[1:-1]
     return devices
 
@@ -851,7 +848,7 @@ def set_device_name(prs, image_name, slide, image_on_slide, width, height):
 # Set title to a slide
 def set_title_to_slide(image_name, title, g, prs):
     slide_title = os.path.basename(os.path.dirname(g))
-    case_num = substring.substringByChar(image_name, endChar="_")
+    case_num = image_name.split("_")[0]
     case_num = case_num[0:-1]
 
     title.text = case_num + " : " + slide_title
