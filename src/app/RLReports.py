@@ -109,7 +109,9 @@ class RLReports:
 
     # Create presentation
     def create_presentation(self):
-        send_progress_to_gui(self.gui_window, self.gui_event, 0, 'Starting')
+
+        if self.gui_window is not None and self.gui_event is not None:
+            send_progress_to_gui(self.gui_window, self.gui_event, 0, 'Starting')
 
         image_path = self.config['image_path']
         image_outpath = self.config['thumbnail_path']
@@ -133,7 +135,8 @@ class RLReports:
         def natural_keys(input):
             return [atoi(c) for c in re.split('(\d+)', input)]
 
-        send_progress_to_gui(self.gui_window, self.gui_event, 3, 'Initializing')
+        if self.gui_window is not None and self.gui_event is not None:
+            send_progress_to_gui(self.gui_window, self.gui_event, 3, 'Initializing')
 
         images.sort(key=natural_keys)
 
@@ -143,17 +146,21 @@ class RLReports:
         title.text_frame.paragraphs[0].font.size = Pt(26)
         title.text_frame.paragraphs[0].alignment = PP_ALIGN.RIGHT
 
-        send_progress_to_gui(self.gui_window, self.gui_event, 30, 'Generating Thumbnails')
+        if self.gui_window is not None and self.gui_event is not None:
+            send_progress_to_gui(self.gui_window, self.gui_event, 30, 'Generating Thumbnails')
         create_thumbnail(prs, slide, images, image_path, image_outpath)
 
         shutil.rmtree(image_outpath)
-        send_progress_to_gui(self.gui_window, self.gui_event, 60, 'Generating Report')
+        if self.gui_window is not None and self.gui_event is not None:
+            send_progress_to_gui(self.gui_window, self.gui_event, 38, 'Generating Report')
         set_images_to_slide(prs, images, self)
 
-        send_progress_to_gui(self.gui_window, self.gui_event, 95, 'Saving')
+        if self.gui_window is not None and self.gui_event is not None:
+            send_progress_to_gui(self.gui_window, self.gui_event, 95, 'Saving')
         prs.save(output_file)
 
-        send_progress_to_gui(self.gui_window, self.gui_event, 100, 'Done!', 'new_file', output_file)
+        if self.gui_window is not None and self.gui_event is not None:
+            send_progress_to_gui(self.gui_window, self.gui_event, 100, 'Done!', 'new_file', output_file)
         print(f"RLReport {presentation_name} Done\nSaved to: {output_file}")
 
     # Get image stats
@@ -482,6 +489,8 @@ def set_images_to_slide(prs, files, obj):
     device1_name = ""
     device2_name = ""
 
+    progress = 40
+
     # get_item()
     first_stats_list = []
     second_stats_list = []
@@ -524,6 +533,8 @@ def set_images_to_slide(prs, files, obj):
         tf.paragraphs[0].font.size = Pt(16)
         tf.paragraphs[0].alignment = PP_ALIGN.RIGHT
 
+        progress_step = 50/len(files)
+
         for g in files:
             img = Image.open(g)
             head, tail = os.path.split(g)
@@ -560,13 +571,13 @@ def set_images_to_slide(prs, files, obj):
                             pic_left += int(prs.slide_width * 0.37)  # 16:9
                         second_stats_list = set_image_stats(g, obj)
                         # xlsx_data(second_stats_list, tail, image_on_slide, slide_counter)
-                        print("image :", tail)
+                        print("image:", tail)
                         device2_name = get_device_name(tail)
                     else:
                         pic_left = int(prs.slide_width * 0.01)
                         first_stats_list = set_image_stats(g, obj)
                         # xlsx_data(first_stats_list, tail, image_on_slide, slide_counter)
-                        print("image :", tail)
+                        print("image:", tail)
                         device1_name = get_device_name(tail)
                 else:
                     pic_width = int(prs.slide_width / 5.3)
@@ -575,14 +586,19 @@ def set_images_to_slide(prs, files, obj):
                         pic_left += int(prs.slide_width * 0.195)
                         second_stats_list = set_image_stats(g, obj)
                         # xlsx_data(second_stats_list, tail, image_on_slide, slide_counter)
-                        print("image :", tail)
+                        print("image:", tail)
                         device2_name = get_device_name(tail)
                     else:
                         pic_left = int(prs.slide_width * 0.01)
                         first_stats_list = set_image_stats(g, obj)
                         # xlsx_data(first_stats_list, tail, image_on_slide, slide_counter)
-                        print("image :", tail)
+                        print("image:", tail)
                         device1_name = get_device_name(tail)
+
+                progress += progress_step
+                if obj.gui_window is not None and obj.gui_event is not None:
+                    send_progress_to_gui(obj.gui_window, obj.gui_event, progress, f"img: {tail}")
+
                 pic = slide.shapes.add_picture(g, pic_left, pic_top,
                                                pic_width, pic_height)
                 hist_image(prs, slide, width, height, g, image_on_slide)
