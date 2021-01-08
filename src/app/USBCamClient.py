@@ -7,7 +7,7 @@ import time
 
 from src.app.utils import compare_lists
 from src.app.USBCamDevice import USBCamDevice
-import src.constants as constants
+from src import constants
 
 
 def list_ports():

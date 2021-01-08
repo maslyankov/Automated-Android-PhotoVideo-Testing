@@ -15,7 +15,7 @@ except ModuleNotFoundError:
     SKIP_IMATEST_IT = True
 
 # Local
-import src.constants as constants
+from src import constants
 
 
 class ImatestReports:

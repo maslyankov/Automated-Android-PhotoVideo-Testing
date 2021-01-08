@@ -9,7 +9,7 @@ from openpyxl.drawing.image import Image as xls_image
 import win32com.client as win32
 
 # Local
-import src.constants as constants
+from src import constants
 from src.app.utils import kelvin_to_illumenant, only_digits, only_chars, extract_video_frame
 
 

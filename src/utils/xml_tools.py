@@ -2,7 +2,7 @@ import xml.etree.ElementTree as ET
 from datetime import datetime
 
 # Local
-import src.constants as constants
+from src import constants
 from src.app.utils import parses_to_integer
 
 # XML Utils

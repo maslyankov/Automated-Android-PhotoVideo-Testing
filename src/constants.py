@@ -12,7 +12,6 @@ if getattr(sys, 'frozen', False):
 
     ROOT_DIR = sys._MEIPASS
 else:
-    print('App not build to an exe. Setting DEBUG_MODE on')
     DEBUG_MODE = True
 
     ROOT_DIR = os.path.abspath(os.curdir + "/../")  # This is Project Root
@@ -30,6 +29,11 @@ Path(XML_DIR).mkdir(parents=True, exist_ok=True)
 
 ADB = os.path.join(VENDOR_DIR, 'scrcpy-win64-v1.16', 'adb.exe')
 SCRCPY = os.path.join(VENDOR_DIR, 'scrcpy-win64-v1.16', 'scrcpy.exe')
+
+LOG_FILE = 'logfile.log'
+LOG_LEVEL = 'INFO'
+LOG_LEVEL_FILE = 'DEBUG'
+
 
 # Settings
 MAX_DEVICES_AT_ONE_RUN = 6

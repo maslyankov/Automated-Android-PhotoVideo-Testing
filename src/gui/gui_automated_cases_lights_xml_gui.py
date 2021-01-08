@@ -2,7 +2,7 @@ import os
 import PySimpleGUI as sg
 from pathlib import Path
 
-import src.constants as constants
+from src import constants
 from src.app.AutomatedCase import parse_lights_xml_seq
 from src.gui.utils_gui import Tree
 

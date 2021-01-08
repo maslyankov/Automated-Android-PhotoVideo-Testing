@@ -3,7 +3,7 @@ import os
 import PySimpleGUI as sg
 
 from src.app.utils import extract_video_frame
-import src.constants as constants
+from src import constants
 
 
 def gui_extract_video_frames_tool():

@@ -7,7 +7,7 @@ from pathlib import Path
 
 from PySimpleGUI import cprint as gui_print
 
-import src.constants as constants
+from src import constants
 from src.app.LightsCtrl import LightsCtrl
 from src.app.Sensor import Sensor
 

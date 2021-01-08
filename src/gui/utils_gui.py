@@ -1,6 +1,6 @@
 import PySimpleGUI as sg
 
-import src.constants as constants
+from src import constants
 from src.app.utils import convert_to_int_float
 
 

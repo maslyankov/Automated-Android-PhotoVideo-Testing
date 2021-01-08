@@ -1,7 +1,7 @@
 import time
 
 from src.konica.ChromaMeterKonica import ChromaMeterKonica
-import src.constants as constants
+from src import constants
 
 
 class Sensor:

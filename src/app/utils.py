@@ -3,9 +3,9 @@ import os
 from pathlib import Path
 
 import cv2
-
-import src.constants as constants
 from natsort import natsorted
+
+from src import constants
 
 
 def kelvin_to_illumenant(kelvins):

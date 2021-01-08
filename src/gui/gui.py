@@ -3,14 +3,15 @@ from datetime import datetime
 
 import PySimpleGUI as sg
 
+from src import constants
+from src import logs
+
 from src.app.AdbClient import AdbClient
 from src.app.USBCamClient import USBCamClient
 
 from src.app.utils import analyze_images_test_results, add_filenames_to_data
 from src.utils.excel_tools import export_to_excel_file
 from src.app.RLReports import generate_rlt_report
-
-import src.constants as constants
 
 from src.gui.gui_help import gui_help
 from src.gui.gui_camxoverride import gui_camxoverride
@@ -28,7 +29,7 @@ from src.gui.utils_gui import place, Tabs, skipped_cases_to_str, collapse
 
 
 def gui():
-    #sg.theme('DarkBlack')  # Add a touch of color
+    # sg.theme('DarkBlack')  # Add a touch of color
     # Set GUI theme
     set_gui_theme()
 
@@ -63,6 +64,7 @@ def gui():
                                              ))
                          ],
 
+    # noinspection PyTypeChecker
     device_settings_frame_layout = [[
         sg.Button('Edit camxoverridesettings',
                   size=(19, 2),
@@ -168,11 +170,13 @@ def gui():
         [
             sg.Checkbox(text='Under Exposed', default=True, key='conf_main_under_exposed_bool', pad=((0, 20), 0)),
             sg.Checkbox(text='Dynamic Range', default=False, key='conf_main_dynamic_range_bool', pad=((0, 20), 0)),
-            sg.Checkbox(text='Peak Saturation1', default=False, key='conf_main_peak_saturation1_bool', pad=((0, 20), 0)),
+            sg.Checkbox(text='Peak Saturation1', default=False, key='conf_main_peak_saturation1_bool',
+                        pad=((0, 20), 0)),
             sg.Checkbox(text='Peak Hue1', default=False, key='conf_main_peak_hue1_bool', pad=((0, 20), 0)),
         ],
         [
-            sg.Checkbox(text='Peak Saturation2', default=False, key='conf_main_peak_saturation2_bool', pad=((0, 20), 0)),
+            sg.Checkbox(text='Peak Saturation2', default=False, key='conf_main_peak_saturation2_bool',
+                        pad=((0, 20), 0)),
             sg.Checkbox(text='Peak Hue2', default=False, key='conf_main_peak_hue2_bool', pad=((0, 20), 0)),
             sg.Checkbox(text='Sharpness', default=True, key='conf_main_sharpness_bool', pad=((0, 20), 0)),
             sg.Checkbox(text='ISO', default=True, key='conf_main_iso_bool', pad=((0, 20), 0)),
@@ -229,19 +233,19 @@ def gui():
     #         "artifacts": True
     #     }
     conf_attribute_layout = [[
-            sg.Checkbox(text='Exposure', default=True, key='conf_attribute_exposure_bool', pad=((0, 20), 0)),
-            sg.Checkbox(text='Colors', default=True, key='conf_attribute_colors_bool', pad=((0, 20), 0)),
-            sg.Checkbox(text='Noise', default=True, key='conf_attribute_noise_bool', pad=((0, 20), 0)),
-            sg.Checkbox(text='Details', default=True, key='conf_attribute_details_bool', pad=((0, 20), 0)),
-            sg.Checkbox(text='Artifacts', default=True, key='conf_attribute_artifacts_bool', pad=((0, 20), 0)),
-        ],]
+        sg.Checkbox(text='Exposure', default=True, key='conf_attribute_exposure_bool', pad=((0, 20), 0)),
+        sg.Checkbox(text='Colors', default=True, key='conf_attribute_colors_bool', pad=((0, 20), 0)),
+        sg.Checkbox(text='Noise', default=True, key='conf_attribute_noise_bool', pad=((0, 20), 0)),
+        sg.Checkbox(text='Details', default=True, key='conf_attribute_details_bool', pad=((0, 20), 0)),
+        sg.Checkbox(text='Artifacts', default=True, key='conf_attribute_artifacts_bool', pad=((0, 20), 0)),
+    ], ]
 
     reallife_frame_layout = [
         [
             sg.T('Images dir:', size=(18, 1)),
             sg.Input(key='rlt_report_input_files', readonly=True, size=(36, 1), enable_events=True),
             sg.FolderBrowse(size=(8, 1), key='rlt_report_output_browse', target='rlt_report_input_files')
-        ],[
+        ], [
             sg.T('Presentation Name:', size=(18, 1)),
             sg.Input(key='rlt_report_name', size=(36, 1)),
         ],
@@ -264,7 +268,6 @@ def gui():
                  text_color=constants.PRIMARY_COLOR,
                  k='-OPEN SEC_CONF_SUMM_PARAMS-TEXT-',
                  pad=((0, 20), 0)),
-
 
             sg.T(constants.SYMBOL_DOWN if opened_conf_summ_items else constants.SYMBOL_UP,
                  enable_events=True, k='-OPEN SEC_CONF_SUMM_ITEMS-',
@@ -362,7 +365,7 @@ def gui():
                     sg.Tab('Testing', tab_main),
                 ]],
                 key='main_tabs_group',
-        )],
+            )],
         [
             sg.Button('Exit', size=(20, 1)),
             sg.Text('App Version: {}'.format(constants.APP_VERSION), size=(40, 1), justification="right")
@@ -557,7 +560,6 @@ def gui():
                 gui_automated_cases(adb, values['selected_lights_model'],
                                     values['selected_luxmeter_model'])
 
-
         else:
             # print('No attached devices!')
             window['camxoverride_btn'].Update(disabled=True)
@@ -583,7 +585,6 @@ def gui():
         if event == 'usb_cam_tool_btn':
             gui_cam_tool()
 
-
         # Reports tab
         if event == 'obj_report_projreq_btn':
             try:
@@ -606,7 +607,8 @@ def gui():
                     window['obj_report_projreq_field'].Update('New unsaved file')
 
         if event == 'obj_report_output':
-            window['obj_report_build_btn'].Update(disabled=not (ret_data is not None and values['obj_report_output'] != ''))
+            window['obj_report_build_btn'].Update(
+                disabled=not (ret_data is not None and values['obj_report_output'] != ''))
 
         if event == 'obj_report_build_btn':
             out_dir = os.path.normpath(values['obj_report_output'])
@@ -649,20 +651,23 @@ def gui():
         window['-OPEN SEC_CONF_MAIN-'].update(constants.SYMBOL_DOWN if opened_conf_main else constants.SYMBOL_UP)
         window['-SEC_CONF_MAIN-'].update(visible=opened_conf_main)
 
-        window['-OPEN SEC_CONF_SUMM_PARAMS-'].update(constants.SYMBOL_DOWN if opened_conf_summ_params else constants.SYMBOL_UP)
+        window['-OPEN SEC_CONF_SUMM_PARAMS-'].update(
+            constants.SYMBOL_DOWN if opened_conf_summ_params else constants.SYMBOL_UP)
         window['-SEC_CONF_SUMM_PARAMS-'].update(visible=opened_conf_summ_params)
 
-        window['-OPEN SEC_CONF_SUMM_ITEMS-'].update(constants.SYMBOL_DOWN if opened_conf_summ_items else constants.SYMBOL_UP)
+        window['-OPEN SEC_CONF_SUMM_ITEMS-'].update(
+            constants.SYMBOL_DOWN if opened_conf_summ_items else constants.SYMBOL_UP)
         window['-SEC_CONF_SUMM_ITEMS-'].update(visible=opened_conf_summ_items)
 
-        window['-OPEN SEC_CONF_ATTRIBUTE-'].update(constants.SYMBOL_DOWN if opened_conf_attribute else constants.SYMBOL_UP)
+        window['-OPEN SEC_CONF_ATTRIBUTE-'].update(
+            constants.SYMBOL_DOWN if opened_conf_attribute else constants.SYMBOL_UP)
         window['-SEC_CONF_ATTRIBUTE-'].update(visible=opened_conf_attribute)
 
         if event == 'rlt_report_build_btn':
             report_config = {
                 "config": {
                     "image_path": values['rlt_report_input_files'],
-                    "thumbnail_path": os.path.join(values['rlt_report_input_files'], "Thumbnail"),
+                    "thumbnail_path": os.path.join(values['rlt_report_input_files'], "Thumbnails"),
                     "presentation_name": values['rlt_report_name'],
                     "attribute_on": 1,
                     "Avg Luma": values['conf_main_avg_luma_bool'],
@@ -771,6 +776,7 @@ def gui():
         adb.detach_device(dev)
 
     window.close()
+
 
 def set_gui_theme():
     sg.theme_slider_border_width(0)

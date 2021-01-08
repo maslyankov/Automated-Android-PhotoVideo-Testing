@@ -1,7 +1,7 @@
 import os
 import PySimpleGUI as sg
 
-import src.constants as constants
+from src import constants
 
 
 def gui_camxoverride(attached_devices, device_obj):

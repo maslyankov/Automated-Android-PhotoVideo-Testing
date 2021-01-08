@@ -6,9 +6,9 @@ import time
 
 from ppadb.client import Client as AdbPy
 
+from src import constants
 from src.app.ADBDevice import ADBDevice
 from src.app.utils import compare_lists
-import src.constants as constants
 
 
 class AdbClient:

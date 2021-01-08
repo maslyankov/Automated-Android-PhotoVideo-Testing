@@ -1,7 +1,7 @@
 import os
 import xml.etree.cElementTree as ET
 
-import src.constants as constants
+from src import constants
 
 
 class Device():

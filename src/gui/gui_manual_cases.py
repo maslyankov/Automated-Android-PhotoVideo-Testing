@@ -3,7 +3,7 @@ import time
 
 import PySimpleGUI as sg
 
-import src.constants as constants
+from src import constants
 
 
 def gui_manual_cases(attached_devices, device_obj):  # TODO

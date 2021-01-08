@@ -1,7 +1,7 @@
 import os
 import PySimpleGUI as sg
 
-import src.constants as constants
+from src import constants
 from src.app.ImatestReports import ImatestReports
 
 def gui_imatest_params_upd():

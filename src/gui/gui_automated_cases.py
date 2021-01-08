@@ -2,7 +2,7 @@ import os
 
 import PySimpleGUI as sg
 
-import src.constants as constants
+from src import constants
 from src.app.AutomatedCase import AutomatedCase
 from src.app.ImatestReports import ImatestReports
 

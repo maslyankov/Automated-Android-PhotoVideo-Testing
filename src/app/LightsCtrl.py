@@ -6,7 +6,7 @@ from contextlib import redirect_stdout, contextmanager, redirect_stderr
 from os import devnull
 from vendor.wireless_lighting.wireless_lighting_api import IQL_Dual_WiFi_Wireless_Lighting_API
 
-import src.constants as constants
+from src import constants
 
 
 class LightsCtrl:

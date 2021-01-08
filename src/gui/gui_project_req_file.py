@@ -3,7 +3,7 @@ import os
 
 import PySimpleGUI as sg
 
-import src.constants as constants
+from src import constants
 from src.utils.xml_tools import convert_dict_to_xml, convert_xml_to_dict
 from src.gui.utils_gui import Tree, place, collapse
 from src.gui.gui_imatest_params_upd import gui_imatest_params_upd

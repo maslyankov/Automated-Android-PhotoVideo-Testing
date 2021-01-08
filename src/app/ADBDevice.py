@@ -8,7 +8,7 @@ from natsort import natsorted
 from src.app.Device import Device
 from src.utils.xml_tools import generate_sequence, xml_from_sequence
 
-import src.constants as constants
+from src import constants
 
 
 # ---------- CLASS ADBDevice ----------

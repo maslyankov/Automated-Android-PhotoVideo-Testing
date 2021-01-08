@@ -18,7 +18,7 @@ from scipy.signal import find_peaks
 import shutil
 from datetime import datetime
 
-import src.constants as constants
+from src import constants
 from src.gui.utils_gui import send_progress_to_gui, send_error_to_gui
 
 np.warnings.filterwarnings('ignore')

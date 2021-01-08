@@ -4,7 +4,7 @@ import cv2, PySimpleGUI as sg
 import acapture
 
 from src.app.USBCamClient import list_ports
-import src.constants as constants
+from src import constants
 
 
 def gui_cam_tool():

@@ -1,10 +1,10 @@
 import os
 import time
 import PySimpleGUI as sg
+
 from src.app.LightsCtrl import LightsCtrl
 from src.app.Sensor import Sensor
-
-import src.constants as constants
+from src import constants
 
 
 def gui_test_lights(selected_lights_model, selected_luxmeter_model):
