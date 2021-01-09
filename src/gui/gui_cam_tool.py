@@ -36,13 +36,13 @@ def gui_cam_tool():
     ]
 
     window = sg.Window('Camera Tool', layout,
-                       #location=(0, 0),
+                       # location=(0, 0),
                        icon=os.path.join(constants.ROOT_DIR, 'images', 'automated-video-testing-header-icon.ico'),
                        grab_anywhere=True)
 
     logger.info('initiating camera')
     cap = cv2.VideoCapture(preview_cam, cv2.CAP_DSHOW)
-    #cap = acapture.open(preview_cam)
+    # cap = acapture.open(preview_cam)
     get_camera_resolution(cap)
     logger.info('Loading camera')
     while True:
@@ -55,7 +55,7 @@ def gui_cam_tool():
             preview_cam = ports_dict[values['selected_camera']]
             logger.info(f'Switching preview to camera {preview_cam}')
             cap = cv2.VideoCapture(preview_cam, cv2.CAP_DSHOW)
-            #cap = acapture.open(preview_cam)
+            # cap = acapture.open(preview_cam)
             get_camera_resolution(cap)
             # get_max_camera_resolution(cap)
 
@@ -80,6 +80,7 @@ def get_camera_resolution(cam):
     width = cam.get(cv2.CAP_PROP_FRAME_WIDTH)
     logger.info(f'Cam res: {width}x{height}')
 
+
 def get_max_camera_resolution(cam):
     max = 10000
 
@@ -88,9 +89,11 @@ def get_max_camera_resolution(cam):
 
     get_camera_resolution(cam)
 
+
 def set_camera_resolution(cam, width, height):
     cam.set(cv2.CAP_PROP_FRAME_HEIGHT, int(height))
     cam.set(cv2.CAP_PROP_FRAME_WIDTH, int(width))
+
 
 def cam_take_photo(frame, dest):
     cv2.imwrite(dest, frame)  # save frame as JPEG file
