@@ -17,6 +17,7 @@ This project automates the process of testing photo/video capture (Android / USB
 - Light Intensity Sensors (Luxmeters) support (Currently supported - Konita Minolta CL-200A)
 - Automated capturing of test cases - video/photo based on template build in GUI with different light temperatures and intensities.
 - Integration with Imatest IT for automated images analysis
+- Advanced app logging
 
 Tools:
 - Generating of Objective Testing Reports based on requirements templates build in GUI and using imported files or automatically captured ones. 
