@@ -329,9 +329,9 @@ def gui():
 
     loading_status_bar_layout = [
         [
-            sg.ProgressBar(max_value=100, orientation='h', size=(30, 10), visible=True, key='progressbar'),
+            sg.ProgressBar(max_value=100, orientation='h', size=(22, 10), visible=True, key='progressbar'),
             sg.T("0", justification='right', size=(3, 1), pad=(0, 0), key='progressbar_percent'), sg.T("%"),
-            sg.T("Loading", size=(14, 1), key='progressbar_status')
+            sg.T("Loading", size=(17, 1), key='progressbar_status')
         ]
     ]
 
