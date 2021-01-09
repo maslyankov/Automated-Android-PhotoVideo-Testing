@@ -4,7 +4,7 @@ from datetime import datetime
 import PySimpleGUI as sg
 
 from src import constants
-from src import logs
+from src.logs import logger
 
 from src.app.AdbClient import AdbClient
 from src.app.USBCamClient import USBCamClient
@@ -35,7 +35,7 @@ def gui():
 
     devices_frame = []
     for num in range(constants.MAX_DEVICES_AT_ONE_RUN):
-        print(f"Building row {num}")  # Debugging
+        logger.debug(f"Building row {num}")  # Debugging
         devices_frame += [
                              place(sg.Image(filename='', key=f'device_icon.{num}', visible=False)),
                              place(sg.Checkbox('', key=f'device_attached.{num}',
@@ -409,8 +409,8 @@ def gui():
             break
 
         # print('Data: ', values)  # Debugging
-        print('Event: ', event)  # Debugging
-        print('selected tab: ', values['main_tabs_group'])
+        logger.debug(f'Event: {event}')  # Debugging
+        logger.debug(f"Selected tab: {values['main_tabs_group']}")
         # print('ADB List Devices', devices_list)  # Debugging
         # print('Devices objects: ', device)
 
@@ -427,7 +427,7 @@ def gui():
                             device_data = watchdog_received
                             del device_data['error'], device_data['action']
 
-                            print("setting {} to row {}".format(watchdog_received['serial'], num))
+                            logger.debug("setting {} to row {}".format(watchdog_received['serial'], num))
 
                             window[f'device_attached.{num}'].Update(text=watchdog_received['serial'],
                                                                     text_color='black',
@@ -444,11 +444,10 @@ def gui():
                             window[f'identify_device_btn.{num}'].Update(visible=True)
                             window[f'ctrl_device_btn.{num}'].Update(visible=True)
 
-                            print('metadata: ', window[f'device_attached.{num}'].metadata)
+                            logger.debug(f"metadata: {window[f'device_attached.{num}'].metadata}")
                             break
                     except KeyError:
-                        print('Devices limit exceeded!')
-                        print(f'num: {num}, max: {constants.MAX_DEVICES_AT_ONE_RUN}')
+                        logger.error('Devices limit exceeded! \nnum: {num}, max: {constants.MAX_DEVICES_AT_ONE_RUN}')
             elif watchdog_received['action'] == 'disconnected':
                 # If device is disconnected
                 for num in range(constants.MAX_DEVICES_AT_ONE_RUN):
@@ -461,11 +460,11 @@ def gui():
                         window[f'device_icon.{num}'].Update(visible=False)
                         break
                 try:
-                    print('device disconnected, detaching')
+                    logger.info('device disconnected, detaching')
                     adb.detach_device(watchdog_received['serial'])
                     del adb_devices[watchdog_received['serial']]
                 except KeyError:
-                    print("Wasn't attached anyway..")
+                    logger.info("Wasn't attached anyway..")
 
         attached_devices_list = adb.get_attached_devices()
 
@@ -476,8 +475,9 @@ def gui():
                 try:
                     adb.attach_device(diff_device)
                 except ValueError as e:
+                    logger.exception("Error while attaching to device...")
                     sg.popup_error("Error while attaching to device...\n", e)
-                    print(adb.attached_devices)
+                    logger.debug(adb.attached_devices)
                     # This next line fixes an issue that it tries to attach device after fail if you try again
                     window[f"device_attached.{event.split('.')[1]}"].Update(False)
                     continue
@@ -492,11 +492,11 @@ def gui():
                         window[f'ctrl_device_btn.{num}'].Update(disabled=False)
                         break
 
-                print('Added {} to attached devices!'.format(diff_device))
+                logger.info('Added {} to attached devices!'.format(diff_device))
 
-                print('Currently opened app: {}'.format(adb_devices[diff_device].get_current_app()))
+                logger.info('Currently opened app: {}'.format(adb_devices[diff_device].get_current_app()))
             else:  # Detach
-                print('User wanted to detach device...')
+                logger.info('User wanted to detach device...')
                 adb.detach_device(diff_device)
 
                 for num in range(constants.MAX_DEVICES_AT_ONE_RUN):
@@ -507,7 +507,7 @@ def gui():
                         window[f'ctrl_device_btn.{num}'].Update(disabled=True)
                         break
 
-                print('{} was detached!'.format(diff_device))
+                logger.info('{} was detached!'.format(diff_device))
 
         # ---- Devices Listing Ends here
 
@@ -523,11 +523,11 @@ def gui():
             window['capture_manual_btn'].Update(disabled=False)
             window['capture_auto_btn'].Update(disabled=False)
             if event.split('.')[0] == 'identify_device_btn':  # Identify Buttons
-                print('Identifying ' + event.split('.')[1])
+                logger.info('Identifying ' + event.split('.')[1])
                 device000 = values[f"device_serial.{event.split('.')[1]}"]
                 adb_devices[device000].identify()
             if event.split('.')[0] == 'ctrl_device_btn':  # Device Control
-                print('Opening device control for ' + event.split('.')[1])
+                logger.info('Opening device control for ' + event.split('.')[1])
                 device000 = values[f"device_serial.{event.split('.')[1]}"]
                 adb_devices[device000].open_device_ctrl()
 
@@ -547,7 +547,7 @@ def gui():
             if event.split('.')[0] == 'device_friendly':
                 device000 = values[f"device_serial.{event.split('.')[1]}"]
                 adb_devices[device000].friendly_name = values[f"device_friendly.{event.split('.')[1]}"]
-                print(f'for {device000} fr name is {adb_devices[device000].friendly_name}')
+                logger.debug(f'for {device000} fr name is {adb_devices[device000].friendly_name}')
 
             if event == 'reboot_device_btn':
                 gui_reboot_device(attached_devices_list, adb_devices)
@@ -556,7 +556,7 @@ def gui():
                 gui_manual_cases(attached_devices_list, adb_devices)
 
             if event == 'capture_auto_btn':
-                print('Launching GUI')
+                logger.info('Launching GUI')
                 gui_automated_cases(adb, values['selected_lights_model'],
                                     values['selected_luxmeter_model'])
 
@@ -612,14 +612,14 @@ def gui():
 
         if event == 'obj_report_build_btn':
             out_dir = os.path.normpath(values['obj_report_output'])
-            print('before file data: \n', templ_data)
+            logger.debug(f'before file data: \n{templ_data}')
             add_filenames_to_data(templ_data, out_dir)
-            print('after file data: \n', templ_data)
+            logger.debug(f'after file data: \n{templ_data}')
 
             # Use images analysis data and insert it into templ_data
             skipped_cases = analyze_images_test_results(templ_data)[1]
 
-            print('With analysis: \n', templ_data)
+            logger.debug('With analysis: \n{templ_data}')
 
             report_filename = (
                     'Report_' +
@@ -710,13 +710,13 @@ def gui():
                     "Artifacts": values['conf_attribute_artifacts_bool']
                 }
             }
-            print(report_config)
+            logger.debug(f"Report Config: {report_config}")
 
             generate_rlt_report(report_config, window, rlt_reports_event)
 
         if event == rlt_reports_event:
             rlt_received = values[rlt_reports_event]
-            print('rlt gui received: ', rlt_received)
+            logger.debug(f'rlt gui received: {rlt_received}')
 
             # TODO: Make object send errors
             try:
@@ -725,6 +725,7 @@ def gui():
                 pass
             else:
                 if rlt_received['error']:
+                    logger.error(f"{rlt_received['from_where']}: {rlt_received['info']}")
                     sg.popup_error(f"{rlt_received['from_where']}: {rlt_received['info']}")
 
             try:
@@ -760,6 +761,7 @@ def gui():
                         if rlt_received['new_file']:
                             done_msg = f"{done_msg}\nNew report:\n{rlt_received['new_file']}"
 
+                    logger.info(done_msg)
                     sg.popup_ok(done_msg)
 
                     window['loading_status_bar'].Update(visible=False)
@@ -769,10 +771,10 @@ def gui():
     # Before exiting...
 
     # Detach attached devices
-    print("Detaching attached devices...")
+    logger.info("Detaching attached devices...")
     attached = attached_devices_list.copy()
     for dev in attached:
-        print(f"Detaching {dev}")
+        logger.info(f"Detaching {dev}")
         adb.detach_device(dev)
 
     window.close()

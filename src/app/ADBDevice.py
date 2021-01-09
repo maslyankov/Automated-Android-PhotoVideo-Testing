@@ -9,6 +9,7 @@ from src.app.Device import Device
 from src.utils.xml_tools import generate_sequence, xml_from_sequence
 
 from src import constants
+from src.logs import logger
 
 
 # ---------- CLASS ADBDevice ----------
@@ -51,7 +52,7 @@ class ADBDevice(Device):
             self.friendly_name = self.get_device_model()
             self.android_ver = int(self.get_android_version().split('.')[0])
         except RuntimeError:
-            print("Device went offline!")
+            logger.error("Device went offline!")
 
         # TODO: Move to parent class
         self.load_settings_file()
@@ -67,7 +68,7 @@ class ADBDevice(Device):
         Root the device
         :return:None
         """
-        print("Rooting device " + self.device_serial)
+        logger.info(f"Rooting device {self.device_serial}")
         self.adb.anticipate_root = True
         CREATE_NO_WINDOW = 0x08000000
         root = subprocess.Popen([constants.ADB, '-s', self.device_serial, 'root'],
@@ -78,12 +79,15 @@ class ADBDevice(Device):
         root.stdin.close()
         stdout, stderr = root.communicate()
         if stderr:
-            if b"unauthorized" in stderr:
-                raise ValueError(f"Device not rooted (probably) or you didn't allow usb debugging.\nRooting Errors: {stderr.decode()}")
-            else:
-                raise ValueError(f'Rooting Errors: {stderr.decode()}')
+            try:
+                if b"unauthorized" in stderr:
+                    raise ValueError(f"Device not rooted (probably) or you didn't allow usb debugging.\nRooting Errors: {stderr.decode()}")
+                else:
+                    raise ValueError(f'Rooting Errors: {stderr.decode()}')
+            except ValueError as e:
+                logger.critical(e)
         if stdout:
-            print("Rooting Output: {}".format(stdout.decode()))
+            logger.info("Rooting Output: {}".format(stdout.decode()))
         root.terminate()
 
     def remount(self):
@@ -91,7 +95,7 @@ class ADBDevice(Device):
         Remount the device
         :return:None
         """
-        print("Remount device serial: " + self.device_serial)
+        logger.info(f"Remount device serial: {self.device_serial}")
         CREATE_NO_WINDOW = 0x08000000
         remount = subprocess.Popen([constants.ADB, '-s', self.device_serial, 'remount'],
                                    stdin=subprocess.PIPE,
@@ -101,9 +105,9 @@ class ADBDevice(Device):
         remount.stdin.close()
         stdout, stderr = remount.communicate()
         if stderr:
-            print("Remonut Errors: ".format(stderr.decode()))
+            logger.error("Remount Errors: ".format(stderr.decode()))
         if stdout:
-            print("Remonut Output: ".format(stdout.decode()))
+            logger.warn("Remount Output: ".format(stdout.decode()))
         remount.terminate()
 
     def disable_verity(self):
@@ -122,12 +126,12 @@ class ADBDevice(Device):
         disver.stdin.close()
         stdout, stderr = disver.communicate()
         if stderr:
-            print("Dis verity Errors: ".format(stderr.decode()))
+            logger.error("Dis verity Errors: ".format(stderr.decode()))
         if stdout:
-            print("Dis verity Output: ".format(stdout.decode()))
+            logger.warn("Dis verity Output: ".format(stdout.decode()))
         disver.terminate()
 
-        print('Rebooting device after disabling verity!')
+        logger.info('Rebooting device after disabling verity!')
         self.reboot()
 
     def exec_shell(self, cmd):
@@ -137,12 +141,14 @@ class ADBDevice(Device):
         :return:None
         """
         try:
-            print('executing', cmd)
+            logger.debug(f'executing {cmd}')
             return self.d.shell(cmd)
-        except AttributeError:
-            raise ValueError('You tried to reach a device that is already disconnected!')
-        except RuntimeError:
-            raise RuntimeError('Device Disconnected!')
+        except AttributeError as e:
+            logger.exception('You tried to reach a device that is already disconnected!')
+            quit(1)
+        except RuntimeError as e:
+            logger.exception('Device Disconnected!')
+            quit(1)
 
     def push_file(self, src, dst):
         """
@@ -151,6 +157,7 @@ class ADBDevice(Device):
         :param dst: Destination on device of file
         :return:None
         """
+        logger.debug(f'Pushing {src} to {dst}')
         self.d.push(src, dst)
 
     def pull_file(self, src, dst):
@@ -160,7 +167,7 @@ class ADBDevice(Device):
         :param dst: Destination to save the file to
         :return:None
         """
-        print(f'pulling {src} into {dst}')  # Debugging
+        logger.debug(f'Pulling {src} into {dst}')  # Debugging
         self.d.pull(src, dst)
 
     # ----- Getters/Setters -----
@@ -229,7 +236,7 @@ class ADBDevice(Device):
         try:  # This works on older Android versions
             current = self.exec_shell("dumpsys activity | grep -E 'mFocusedActivity'").strip().split(' ')[3].split('/')
             if current is None:
-                print('(Get Current App) Focused Activity is empty, trying top-activity...')
+                logger.debug('(Get Current App) Focused Activity is empty, trying top-activity...')
                 current = self.exec_shell("dumpsys activity | grep top-activity").strip().split(' ')[9].split(':')
                 temp = current[1].split('/')
                 temp.append(current[0])  # -> [pkg, activity_id, pid]
@@ -253,14 +260,12 @@ class ADBDevice(Device):
         except IndexError:
             pass
         else:
-            print("Curr app: ", current)
+            logger.debug(f"Current app: {current}")
             return current
         # else
-        print("Can't fetch currently opened app! \nOutput of dumpsys: ")
+        logger.error("Can't fetch currently opened app! \nOutput of dumpsys: ")
 
-        print("==============================")
-        print(self.exec_shell("dumpsys window windows"))
-        print("==============================")
+        logger.error(self.exec_shell("dumpsys window windows"))
         return None
 
     def get_installed_packages(self):
@@ -284,7 +289,7 @@ class ADBDevice(Device):
         """
 
         files_list = self.exec_shell(f"ls {'-d' if get_full_path else ''} {target_dir.rstrip('/')}/*").splitlines()
-        print("Files List: ", files_list)
+        logger.debug(f"Files List: {files_list}")
         try:
             check_for_missing_dir = files_list[0]
         except IndexError:
@@ -316,7 +321,7 @@ class ADBDevice(Device):
         try:
             return self.exec_shell("dumpsys activity | grep -E 'mWakefulness'").split('=')[1]
         except IndexError:
-            print('There was an issue with getting device wakefullness - probably a shell error!')
+            logger.warn('There was an issue with getting device wakefullness - probably a shell error!')
             return None
 
     def get_device_leds(self):
@@ -339,7 +344,7 @@ class ADBDevice(Device):
         after = self.exec_shell("dumpsys deviceidle | grep mScreenOn").split('=')[1].strip()
 
         if before == after:
-            print("Device has no integrated screen!")
+            logger.info("Device has no integrated screen!")
 
         self.exec_shell('input keyevent 26')
 
@@ -371,11 +376,12 @@ class ADBDevice(Device):
         :param coords: tap coordinates to use
         :return:None
         """
-        print("X: ", coords[0][0], "Y: ", coords[0][1])  # Debugging
+        logger.debug(f"X: {coords[0][0]}, Y: {coords[0][1]}")
+
         if self.android_ver <= 5:
             return self.exec_shell("input touchscreen tap {} {}".format(coords[0][0], coords[0][1]))
         else:
-            self.exec_shell("input tap {} {}".format(coords[0][0], coords[0][1]))
+            return self.exec_shell("input tap {} {}".format(coords[0][0], coords[0][1]))
 
     def open_app(self, package):
         """
@@ -384,12 +390,12 @@ class ADBDevice(Device):
         :return:None
         """
         if self.get_current_app()[0] != package:
-            print('Currently opened: ', self.get_current_app())
-            print("Opening {}...".format(package))
+            logger.debug(f'Currently opened: {self.get_current_app()}')
+            logger.debug("Opening {}...".format(package))
             self.exec_shell("monkey -p '{}' -v 1".format(package))
             time.sleep(1)  # Give a bit of time to the device to load the app
         else:
-            print("{} was already opened! Continuing...".format(package))
+            logger.debug("{} was already opened! Continuing...".format(package))
 
     def clear_folder(self, folder):
         """
@@ -397,7 +403,7 @@ class ADBDevice(Device):
         :return:None
         """
         self.exec_shell(f"rm -rf {folder}/*")
-        print(f"Deleting folder {folder} from device!")
+        logger.debug(f"Deleting folder {folder} from device!")
 
     def pull_and_rename(self, dest, filename):
         pulled_files = []
@@ -414,19 +420,22 @@ class ADBDevice(Device):
         return pulled_files
 
     def setup_device_settings(self):
-        print('Making the device an insomniac!')
+        # TODO: Make this save initial settings and set them back on exit
+        logger.info('Making the device an insomniac!')
         self.exec_shell('settings put global stay_on_while_plugged_in 1')
         self.exec_shell('settings put system screen_off_timeout 9999999')
 
     def push_files(self, files_list, files_dest):
+        logger.debug(f'Files list: {files_list}')
+
         for file in files_list.split(';'):
-            print('pushing: ', file)
+            logger.debug(f'Pushing: {file}')
             filename = os.path.basename(file)
             self.push_file(os.path.normpath(file), files_dest + filename)
 
     def turn_on_and_unlock(self):
         state = self.is_sleeping()
-        # print(f"predicate: {state[0] == 'false'}")
+
         if state[0] == 'true':
             self.exec_shell('input keyevent 26')  # Event Power Button
             self.exec_shell('input keyevent 82')  # Unlock
@@ -444,14 +453,14 @@ class ADBDevice(Device):
             self.exec_shell('echo {} > /sys/class/leds/{}/{}'.format(value, led, target))
             self.exec_shell('echo 60 > /sys/class/leds/{}/global_enable'.format(led))  # Poly
         except RuntimeError:
-            print("Device was disconnected before we could detach it properly.. :(")
+            logger.warn("Device was disconnected before we could detach it properly.. :(")
 
     def open_device_ctrl(self):
         """
         Open device screen view and control using scrcpy
         :return:None
         """
-        print("Opening scrcpy for device ", self.device_serial)
+        logger.info(f"Opening scrcpy for device {self.device_serial}")
         CREATE_NO_WINDOW = 0x08000000
         self.scrcpy.append(subprocess.Popen([constants.SCRCPY, '--serial', self.device_serial],
                                             stdin=subprocess.PIPE,
@@ -466,7 +475,8 @@ class ADBDevice(Device):
         :return:None
         """
         leds = self.get_device_leds()
-        print(leds)  # Debugging
+        logger.debug(f"Device leds: {leds}")  # Debugging
+
         # Poly
         self.exec_shell('echo 1 > /sys/class/leds/{}/global_onoff'.format(leds[0]))
 
@@ -481,12 +491,12 @@ class ADBDevice(Device):
                 self.exec_shell('input keyevent 26')  # Event Power Button
 
         self.exec_shell('echo 60 > /sys/class/leds/{}/global_enable'.format(leds[0]))  # Poly
-        print('Finished identifying!')
+        logger.info('Finished identifying!')
 
     def kill_scrcpy(self):
         for process in self.scrcpy:
             process.terminate()
-        print("Killed scrcpy windows")
+        logger.debug("Killed scrcpy windows for device")
 
     # ----- Settings Persistence -----
     def load_settings_file(self):
@@ -498,7 +508,7 @@ class ADBDevice(Device):
         for elem in root:
             for subelem in elem:
                 if subelem.tag == 'serial' and subelem.text != self.device_serial:
-                    print('XML ERROR! Serial mismatch!')
+                    logger.error('XML ERROR! Serial mismatch!')
 
                 if subelem.tag == 'friendly_name':
                     self.friendly_name = subelem.text
@@ -519,7 +529,7 @@ class ADBDevice(Device):
                 for seq_type in list(constants.ACT_SEQUENCES.keys()):
                     if subelem.tag == constants.ACT_SEQUENCES[seq_type]:
                         setattr(self, constants.ACT_SEQUENCES[seq_type], generate_sequence(subelem))
-                        print('Obj Seq List: ', getattr(self, constants.ACT_SEQUENCES[seq_type]))
+                        logger.debug(f'Device Obj Seq List: {getattr(self, constants.ACT_SEQUENCES[seq_type])}')
 
                 if subelem.tag == 'actions_time_gap':
                     self.actions_time_gap = int(subelem.text)
@@ -580,7 +590,7 @@ class ADBDevice(Device):
         actions_time_gap.text = str(self.actions_time_gap)
 
         tree = ET.ElementTree(root)
-        print(f'Writing settings to file {self.device_xml}')
+        logger.info(f'Writing settings to file {self.device_xml}')
         tree.write(self.device_xml, encoding='UTF8', xml_declaration=True)
 
     # ----- Device UI Parsing -----
@@ -593,17 +603,17 @@ class ADBDevice(Device):
         source = self.exec_shell('uiautomator dump').split(': ')[1].rstrip()
         current_app = self.get_current_app()
         if source == "null root node returned by UiTestAutomationBridge.":
-            print("UIAutomator error! :( Try dumping UI elements again. (It looks like a known error)")
+            logger.error("UIAutomator error! :( Try dumping UI elements again. (It looks like a known error)")
             return
 
-        print('Source returned: ', source)  # Debugging
+        logger.debug(f'Source returned: {source}')
 
         self.pull_file(
             source,
             os.path.join(constants.XML_DIR,
                          '{}_{}_{}.xml'.format(self.device_serial, current_app[0], current_app[1]))
         )
-        print('Dumped window elements for current app.')
+        logger.info('Dumped window elements for current app.')
 
     def get_clickable_window_elements(self, force_dump=False):
         """
@@ -611,14 +621,14 @@ class ADBDevice(Device):
         :return:Dict key: element_id or number,
                 value: String of elem description, touch location (a list of x and y)
         """
-        print('Parsing xml...')
+        logger.debug('Parsing UI XML...')
         current_app = self.get_current_app()
 
         if current_app is None:
-            print("Current app unknown... We don't know how to name the xml file so we will say NO! :D ")
+            logger.error("Current app unknown... We don't know how to name the xml file so we will say NO! :D ")
             return {}
 
-        print("Serial {} , app: {}".format(self.device_serial, current_app))
+        logger.debug("Serial {} , app: {}".format(self.device_serial, current_app))
         file = os.path.join(constants.XML_DIR,
                             '{}_{}_{}.xml'.format(self.device_serial, current_app[0], current_app[1]))
 
@@ -630,19 +640,19 @@ class ADBDevice(Device):
         try:
             xml_tree = ET.parse(file)
         except FileNotFoundError:
-            print('XML for this UI not found, dumping a new one...')
+            logger.info('XML for this UI not found, dumping a new one...')
             self.dump_window_elements()
             xml_tree = ET.parse(file)
         except ET.ParseError as error:
-            print("XML Parse Error: ", error)
+            logger.error(f"XML Parse Error: {error}")
 
         try:
             xml_root = xml_tree.getroot()
         except AttributeError:
-            print("XML wasn't opened correctly!")
+            logger.error("XML wasn't opened correctly!")
             return
         except UnboundLocalError:
-            print("UI Elements XML is probably empty... :( Retrying...")
+            logger.warn("UI Elements XML is probably empty... :( Retrying...")
             self.dump_window_elements()
             xml_tree = ET.parse(file)
             xml_root = xml_tree.getroot()
@@ -676,30 +686,30 @@ class ADBDevice(Device):
         """
         self.open_app(self.camera_app)
 
-        print('Doing sequence using device ', self.device_serial)  # DEBUG PRINT
+        logger.debug(f'Doing sequence using device {self.device_serial}')
 
         for action in sequence:
             act_id = action[0]
             act_data = action[1]
             act_type = act_data[2]
             act_value = act_data[1]
-            print(f"Performing {act_id}")
+            logger.debug(f"Performing {act_id}")
             if act_type == 'tap':
                 self.input_tap(act_value)
             if act_type == 'delay':
-                print(f"Sleeping {act_value}")
+                logger.debug(f"Sleeping {act_value}")
                 time.sleep(int(act_value))
             time.sleep(self.actions_time_gap)
 
     def take_photo(self):
-        print("Current mode: ", self.current_camera_app_mode)
+        logger.debug(f"Current mode: {self.current_camera_app_mode}")
         if self.current_camera_app_mode != 'photo':
             self.do(self.goto_photo_seq)
             self.current_camera_app_mode = 'photo'
         self.do(self.shoot_photo_seq)
 
     def start_video(self):
-        print("Current mode: ", self.current_camera_app_mode)
+        logger.debug(f"Current mode: {self.current_camera_app_mode}")
         if self.current_camera_app_mode != 'video':
             self.do(self.goto_video_seq)
             self.current_camera_app_mode = 'video'
@@ -713,15 +723,15 @@ class ADBDevice(Device):
     # ----- Other -----
     def print_attributes(self):
         # For debugging
-        print("Object properties:\n")
-        print(f"Friendly Name: {self.friendly_name}")
-        print(f"Serial: {self.device_serial}")
-        print(f"Cam app: {self.camera_app}")
-        print(f"Logs: enabled ({self.logs_enabled}), filter ({self.logs_filter})")
-        print(f"shoot_photo_seq: {self.shoot_photo_seq}")
-        print(f"start_video_seq: {self.start_video_seq}")
-        print(f"stop_video_seq: {self.stop_video_seq}")
-        print(f"goto_photo_seq: {self.goto_photo_seq}")
-        print(f"goto_video_seq: {self.goto_video_seq}")
-        print(f"actions_time_gap: {self.actions_time_gap}")
-        print(f"settings xml file location: {self.device_xml}")
+        logger.debug("Object properties:\n")
+        logger.debug(f"Friendly Name: {self.friendly_name}")
+        logger.debug(f"Serial: {self.device_serial}")
+        logger.debug(f"Cam app: {self.camera_app}")
+        logger.debug(f"Logs: enabled ({self.logs_enabled}), filter ({self.logs_filter})")
+        logger.debug(f"shoot_photo_seq: {self.shoot_photo_seq}")
+        logger.debug(f"start_video_seq: {self.start_video_seq}")
+        logger.debug(f"stop_video_seq: {self.stop_video_seq}")
+        logger.debug(f"goto_photo_seq: {self.goto_photo_seq}")
+        logger.debug(f"goto_video_seq: {self.goto_video_seq}")
+        logger.debug(f"actions_time_gap: {self.actions_time_gap}")
+        logger.debug(f"settings xml file location: {self.device_xml}")

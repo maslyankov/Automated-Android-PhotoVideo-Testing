@@ -5,6 +5,7 @@ import PySimpleGUI as sg
 from src.app.LightsCtrl import LightsCtrl
 from src.app.Sensor import Sensor
 from src import constants
+from src.logs import logger
 
 
 def gui_test_lights(selected_lights_model, selected_luxmeter_model):
@@ -104,7 +105,7 @@ def gui_test_lights(selected_lights_model, selected_luxmeter_model):
         time.sleep(1)
         lights_status = lights.status()
 
-    print("Initializing Luxmeter...")
+    logger.info("Initializing Luxmeter...")
     luxmeter = Sensor(selected_luxmeter_model_id)
 
 
@@ -116,7 +117,7 @@ def gui_test_lights(selected_lights_model, selected_luxmeter_model):
 
         if selected_lights_model == 'SpectriWave':  # SpectriWave Specific
             if not lights_status[0]['relay']:
-                print("Checking again for status...")
+                logger.info("Checking again for status...")
                 # lights_status = lights.status()
 
             window['is-connected-0-relay'].Update(
@@ -144,8 +145,8 @@ def gui_test_lights(selected_lights_model, selected_luxmeter_model):
         else:
             window['luxmeter_lux_value'].Update("Connection Lost")
 
-        print('vals', values)  # Debugging
-        print('event', event)  # Debugging
+        logger.debug(f'vals: {values}')  # Debugging
+        logger.debug(f'event: {event}')  # Debugging
 
         if event == 'send_settings_btn':
             lights.make_a_party()

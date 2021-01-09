@@ -1,6 +1,8 @@
 # coding=utf-8
 
 from serial import PARITY_EVEN, SEVENBITS, SerialException
+
+from src.logs import logger
 from src.konica.utils import cl200a_cmd_dict, cmd_formatter, write_serial_port, serial_port_luxmeter, connect_serial_port
 
 SKIP_CHECK_LIST = True
@@ -22,7 +24,7 @@ class ChromaMeterKonica(object):
         try:
             self.ser = connect_serial_port(self.port, parity=PARITY_EVEN, bytesize=SEVENBITS)
         except SerialException:
-            print('Error: Could not connect to Lux Meter')
+            logger.error('Error: Could not connect to Lux Meter')
             self.is_alive = False
             return
         try:
@@ -30,8 +32,7 @@ class ChromaMeterKonica(object):
             self.__hold_mode()
             self.__ext_mode()
         except SerialException:
-            err = 'Lux meter not found. Check that the cable is properly connected.'
-            print(f"Error: {err}")
+            logger.error(f"'Lux meter not found. Check that the cable is properly connected.'")
 
     def __connection(self):
         """
@@ -57,12 +58,10 @@ class ChromaMeterKonica(object):
                 if cmd_response in pc_connected_mode:
                     break
                 elif i == 0:
-                    err = 'Attempt one more time'
-                    print(f'Error {err}')
+                    logger.warn(f'Error: Attempt one more time')
                     continue
                 else:
-                    err = 'Konica Minolta CL-200a has an error. Please verify USB cable.'
-                    print(f'Error {err}')
+                    logger.error('Konica Minolta CL-200a has an error. Please verify USB cable.')
 
     def __hold_mode(self):
         """
@@ -96,8 +95,9 @@ class ChromaMeterKonica(object):
                 self.__hold_mode()
                 continue
             elif ext_mode_err[6:7] in ['1', '2', '3']:
-                err = 'Switch off the CL-200A and then switch it back on'
-                print('Set hold mode error')
+                logger.error('Set hold mode error')
+                err = "Switch off the CL-200A and then switch it back on"
+                logger.error(err)
                 raise ConnectionError(err)
             else:
                 break
@@ -124,25 +124,25 @@ class ChromaMeterKonica(object):
             result = self.ser.readline().decode('ascii')
         except SerialException:
             self.is_alive = False
-            print('Connection to Luxmeter was lost.')
+            logger.error('Connection to Luxmeter was lost.')
             return
 
         if result[6] in ['1', '2', '3']:
             err = 'Switch off the CL-200A and then switch it back on'
-            print(f'Error {err}')
+            logger.error(f'Error {err}')
             raise ConnectionResetError(err)
         if result[6] == '5':
-            print('Measurement value over error. The measurement exceed the CL-200A measurement range.')
+            logger.error('Measurement value over error. The measurement exceed the CL-200A measurement range.')
         if result[6] == '6':
             err = 'Low luminance error. Luminance is low, resulting in reduced calculation accuracy ' \
                   'for determining chromaticity'
-            print(f'Error {err}')
+            logger.error(f'{err}')
         # if result[7] == '6':
         #     err= 'Switch off the CL-200A and then switch it back on'
         #     raise Exception(err)
         if result[8] == '1':
             err = 'Battery is low. The battery should be changed immediately or the AC adapter should be used.'
-            print(f'Error {err}')
+            logger.error(err)
             raise ConnectionAbortedError(err)
         # Convert Measurement
         if result[9] == '+':

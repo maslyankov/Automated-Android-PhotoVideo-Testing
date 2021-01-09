@@ -4,6 +4,7 @@ import time
 import PySimpleGUI as sg
 
 from src import constants
+from src.logs import logger
 
 
 def gui_manual_cases(attached_devices, device_obj):  # TODO
@@ -84,7 +85,7 @@ def gui_manual_cases(attached_devices, device_obj):  # TODO
                 # shoot_video(device_obj, values['duration_spinner'], values['logs_bool'], values['logs_filter'],
                 #            "{}/logfile.txt".format(values['save_location']))
                 device_obj[values['selected_device']].start_video()
-                print(f"Video started! Duration is: {values['duration_spinner']}")
+                logger.info(f"Video started! Duration is: {values['duration_spinner']}")
                 time.sleep(values['duration_spinner'])
                 device_obj[values['selected_device']].stop_video()
 
@@ -93,6 +94,6 @@ def gui_manual_cases(attached_devices, device_obj):  # TODO
                     # pull_camera_files(device_obj, values['save_location'], values['clear_files'])
                     pass
                 else:
-                    print("Save Location must be set!")
+                    logger.error("Save Location must be set!")
 
     window.close()

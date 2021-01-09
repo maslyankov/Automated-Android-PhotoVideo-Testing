@@ -170,8 +170,7 @@ class Tree(sg.Tree):
             # If at root
             curr = ndict
         except TypeError as e:
-            print("node.text: ", node.text)
-            print("Exception: ", e)
+            logger.error(f"Exception: {e}\nnode.text: {node.text}")
         else:
             try:
                 ndict[node.text]
@@ -193,14 +192,13 @@ class Tree(sg.Tree):
                     except KeyError:
                         curr[child.text] = {}
                     except TypeError as e:
-                        print("child.text: ", child.text)
-                        print("Exception: ", e)
+                        logger.error(f"Exception: {e}\nchild.text: {child.text}")
                     else:
-                        print('not creating empty dict for ', node.text)
+                        logger.info(f'not creating empty dict for {node.text}')
                     self.dfs(child, curr)
         else:
-            print('ndict: ', ndict)
-            print('key: ', node.text)
+            logger.debug('ndict: ', ndict)
+            logger.debug('key: ', node.text)
             try:
                 ndict[node.text] = float(node.children[0].text)
             except IndexError:
@@ -526,9 +524,9 @@ class Tree(sg.Tree):
     def load_dict(self, dict_in):
         # Clean tree
         if len(self.treedata.tree_dict[''].children):
-            print('cleaning', len(self.treedata.tree_dict[''].children))
+            logger.debug(f"cleaning {len(self.treedata.tree_dict[''].children)}")
             self.delete_all_nodes()
-        print('load dict got: ', dict_in)
+        logger.debug(f'load dict got: {dict_in}')
         self._load_dict_to_tree('', '', dict_in)
         self.expand_all()
 

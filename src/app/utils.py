@@ -6,6 +6,7 @@ import cv2
 from natsort import natsorted
 
 from src import constants
+from src.logs import logger
 
 
 def kelvin_to_illumenant(kelvins):
@@ -17,7 +18,7 @@ def kelvin_to_illumenant(kelvins):
         try:
             kelvins = int(''.join(filter(lambda x: x.isdigit(), kelvins)))
         except ValueError:
-            print('Error is because of: ', kelvins)
+            logger.error(f'Error is because of: {kelvins}')
             return
 
     if isinstance(kelvins, int):
@@ -26,14 +27,15 @@ def kelvin_to_illumenant(kelvins):
                 return temp
         return f"{kelvins}K"
     else:
-        raise ValueError('Wrong input!', str(kelvins), str(type(kelvins)))
+        logger.critical(f'Wrong input! {str(kelvins)}, {str(type(kelvins))}')
+        raise ValueError(f'Wrong input! {str(kelvins), str(type(kelvins))}')
 
 
 def illumenant_to_kelvin(illum):
     try:
         return constants.KELVINS_TABLE[illum][0]
     except KeyError:
-        print('Illumenant not found.')
+        logger.error('Illumenant not found.')
         return illum
 
 
@@ -113,7 +115,7 @@ def analyze_images_test_results(template_data):
                         'lux': lux,
                         'reason': f'{img_results_path} is not a dir!'
                     })
-                    print(f'Not found: {img_results_path}\nSkipping!')
+                    logger.warn(f'Not found: {img_results_path}\nSkipping!')
                     continue
 
                 img_json_filename = [f for f in natsorted(os.listdir(img_results_path)) if
@@ -130,7 +132,7 @@ def analyze_images_test_results(template_data):
                         'lux': lux,
                         'reason': f'{img_json_file} is not a file!'
                     })
-                    print(f'Not found: {img_results_path}\nSkipping!')
+                    logger.warn(f'Not found: {img_results_path}\nSkipping!')
                     continue
 
                 with open(img_json_file) as json_file:
@@ -198,10 +200,10 @@ def analyze_images_test_results(template_data):
                             curr_param_dict['result'] = param_val
                             curr_param_dict['result_calculated'] = param_val_calc
 
-                            print(f'param {param} is: ', param_val)
-                            print(f'calculated value is: {param_val_calc}')
-                            print(f'min is: {curr_param_dict["min"]}')
-                            print(f'max is: {curr_param_dict["max"]}')
+                            logger.debug(f'param {param} is: ', param_val)
+                            logger.debug(f'calculated value is: {param_val_calc}')
+                            logger.debug(f'min is: {curr_param_dict["min"]}')
+                            logger.debug(f'max is: {curr_param_dict["max"]}')
                             if curr_param_dict["min"] < param_val_calc < curr_param_dict["max"]:
                                 curr_param_dict['result_pass_bool'] = True
                                 print('PASS!\n')
@@ -255,7 +257,6 @@ def extract_video_frame(videofile, start_frame, number_of_frames=None, end_frame
         # Create dirs if not exist
         Path(file_path).mkdir(parents=True, exist_ok=True)
 
-
     vidcap = cv2.VideoCapture(videofile)
     success, image = vidcap.read()
 
@@ -268,9 +269,9 @@ def extract_video_frame(videofile, start_frame, number_of_frames=None, end_frame
     if end_frame is None or end_frame == 0:
         end_frame = start_frame + ((number_of_frames * skip_frames) if skip_frames else number_of_frames) - 1
     else:
-        print("end frame is: ", end_frame)
+        logger.info(f"end frame is: {end_frame}")
         if start_frame > end_frame:
-            print('Start frame must be smaller int than end frame!')
+            logger.error('Start frame must be smaller int than end frame!')
             return
     print()
     while success:
@@ -297,7 +298,7 @@ def extract_video_frame(videofile, start_frame, number_of_frames=None, end_frame
             break
 
         success, image = vidcap.read()
-        print('Read a new frame: ', success)
+        logger.debug(f'Read a new frame: {success}')
         current_frame += 1
 
     return output

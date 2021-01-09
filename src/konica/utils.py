@@ -18,6 +18,8 @@ from serial import Serial, SerialException, PARITY_NONE, STOPBITS_ONE, EIGHTBITS
 from serial.tools import list_ports
 from time import sleep
 
+from src.logs import logger
+
 SKIP_CHECK_LIST = True
 
 cl200a_cmd_dict = {'command_01': '',
@@ -44,21 +46,25 @@ def find_all_serial_ports():
     Find all serial ports
     :return: List containing all serial ports.
     """
-    print("Looking for serial ports...")
-    return list_ports.comports()
+    logger.info("Looking for serial ports...")
+    list = list_ports.comports()
+    logger.debug(f"Found ports: {list}")
+    return list
 
 
 def find_all_luxmeters():
     """ Get all lux meters connect into PC."""
-    print("Looking for luxmeters...")
-    return [p.device for p in find_all_serial_ports() if 'FTDI' in p.manufacturer]
+    logger.info("Looking for luxmeters...")
+    list = [p.device for p in find_all_serial_ports() if 'FTDI' in p.manufacturer]
+    logger.debug(f"Found luxmeters: {list}")
+    return list
 
 
 def connection_konica(ser):
     """Switch the CL-200A to PC connection mode. (Command "54").
     In order to perform communication with a PC, this command must be used to set the CL-200A to PC connection mode.
     """
-    print("Setting CL-200A to PC connection mode")
+    logger.info("Setting CL-200A to PC connection mode")
     # cmd_request = utils.cmd_formatter(self.cl200a_cmd_dict['command_54'])
     cmd_request = chr(2) + '00541   ' + chr(3) + '13\r\n'
     cmd_response = cmd_formatter(cl200a_cmd_dict['command_54r'])
@@ -98,7 +104,7 @@ def serial_port_luxmeter():
     try:
         ser.close()
     except AttributeError as e:
-        print(e)
+        logger.critical(e)
     return port
 
 
@@ -155,7 +161,7 @@ def write_serial_port(ser, cmd, sleep_time, obj=None):
     except SerialException:
         if obj:
             obj.isAlive = False
-        print("Connection to Luxmeter was lost.")
+        logger.error("Connection to Luxmeter was lost.")
         return
 
     sleep(sleep_time)

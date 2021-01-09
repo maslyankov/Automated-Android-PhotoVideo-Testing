@@ -4,6 +4,7 @@ import PySimpleGUI as sg
 
 from src.app.utils import extract_video_frame
 from src import constants
+from src.logs import logger
 
 
 def gui_extract_video_frames_tool():
@@ -66,13 +67,7 @@ def gui_extract_video_frames_tool():
 
             # print(values)
             for video_file in videofiles_list:
-                print(
-                    "videofile=",video_file,
-                    "start_frame=",values['start_frame'],
-                    "number_of_frames=",values['number_of_frames'],
-                    "skip_frames=",values['skip_frames'],
-                    "subfolder=",frames_subfolder,
-                    "out_format=", format_out
+                print(f"videofile={video_file}, start_frame={values['start_frame']}, number_of_frames={values['number_of_frames']}, skip_frames={values['skip_frames']}, subfolder={frames_subfolder}, out_format={format_out}"
                 )
                 extract_video_frame(
                     videofile=video_file,
@@ -82,4 +77,5 @@ def gui_extract_video_frames_tool():
                     subfolder=frames_subfolder,
                     out_format=format_out
                 )
+            logger.info("Extraction of frames done!")
             sg.popup_ok("Done")

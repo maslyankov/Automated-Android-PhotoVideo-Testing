@@ -2,11 +2,12 @@ import os
 import PySimpleGUI as sg
 
 from src import constants
+from src.logs import logger
 
 
 def list_from_data(values, fltr):
     seq = []
-    print('List from data got: ', values)
+    logger.debug(f'List from data got: {values}')
     for item in values.keys():
         if values[item] == 'Empty':
             continue  # Skip empty items
@@ -26,12 +27,12 @@ def list_from_data(values, fltr):
                     values[item.replace("action", "action_type")]
                 ]
             ])
-    print('Created seq: ', seq)
+    logger.info(f'Created seq: {seq}')
     return seq
 
 
 def device_data_to_gui(device, window):
-    print("Parsing device object data and updating GUI accordingly...\n")
+    logger.info("Parsing device object data and updating GUI accordingly...\n")
 
     device.print_attributes()
 
@@ -68,7 +69,7 @@ def device_data_to_gui(device, window):
         for act_num, action in enumerate(getattr(device, constants.ACT_SEQUENCES[seq_type])):
             print('Populating row ', act_num)
             if act_num > constants.MAX_ACTIONS_DISPLAY:
-                print("Max displayable actions reached!")
+                logger.error("Max displayable actions reached!")
                 break
 
             window[f'{seq_type}_selected_action.' + str(act_num)].Update(
@@ -116,7 +117,7 @@ def device_data_to_gui(device, window):
 
 def build_seq_gui(obj, prop_key, clickable_elements):  # TODO - Fix list of actions to choose from
     gui_seq = []
-    print("GUI Builder got: ", obj, prop_key, clickable_elements)
+    logger.debug(f"GUI Builder got: {obj}, {prop_key}, {clickable_elements}")
 
     for num in range(constants.MAX_ACTIONS_DISPLAY):
         if getattr(obj, constants.ACT_SEQUENCES[prop_key]) != [] and len(
@@ -224,7 +225,7 @@ def gui_setup_device(attached_devices, device_obj):
                 size=(15, 1))
     ], ]
 
-    print('Device Logs filter:', device_obj[attached_devices[0]].logs_filter)
+    logger.info(f'Device Logs filter:{device_obj[attached_devices[0]].logs_filter}')
 
     logs_frame = [  # TODO Update with element info if available
         [sg.Checkbox('Capture Logs',
@@ -306,8 +307,8 @@ def gui_setup_device(attached_devices, device_obj):
         if event == sg.WIN_CLOSED or event == 'Close':  # if user closes window or clicks cancel
             break
 
-        print('vals', values)  # Debugging
-        print('event', event)  # Debugging
+        logger.debug(f'vals: {values}')  # Debugging
+        logger.debug(f'event {event}')  # Debugging
 
         current_app = device_obj[attached_devices[0]].get_current_app()
         if current_app is None:
@@ -371,7 +372,7 @@ def gui_setup_device(attached_devices, device_obj):
                     ]
                     device_obj[values['selected_device']].input_tap(data[1])
                 except KeyError:
-                    print("Element not found! :(")
+                    logger.error("Element not found! :(")
 
                 new_ui_elements = constants.CUSTOM_ACTIONS + list(
                     device_obj[values['selected_device']].get_clickable_window_elements(force_dump=True).keys())
@@ -394,8 +395,8 @@ def gui_setup_device(attached_devices, device_obj):
 
             # Save to file
             device.save_settings()
-            print("Device logs settings: ", device_obj[values['selected_device']].logs_enabled,
-                  device_obj[values['selected_device']].logs_filter)
-            print('Device photo seq: ', device_obj[values['selected_device']].shoot_photo_seq)
+            logger.debug(f"Device logs settings: {device_obj[values['selected_device']].logs_enabled} {device_obj[values['selected_device']].logs_filter}"
+                  )
+            logger.debug(f"Device photo seq: {device_obj[values['selected_device']].shoot_photo_seq}")
 
     window.close()

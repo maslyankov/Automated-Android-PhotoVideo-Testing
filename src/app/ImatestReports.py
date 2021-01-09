@@ -2,20 +2,18 @@ import json
 import os
 import threading
 
-# Excel
-
+# Local
+from src import constants
+from src.logs import logger
 
 # Imatest
 try:
     from imatest.it import ImatestLibrary, ImatestException
 except RuntimeError:
-    print('Imatest Import error (Check MathLAB path)!')
+    logger.error('Imatest Import error (Check MathLAB path)!')
 except ModuleNotFoundError:
-    print('Imatest IT Python Library not found!')
+    logger.warn('Imatest IT Python Library not found!')
     SKIP_IMATEST_IT = True
-
-# Local
-from src import constants
 
 
 class ImatestReports:
@@ -26,11 +24,13 @@ class ImatestReports:
         try:
             self.imatest = ImatestLibrary()
         except ImatestException.MatlabException as e:
+            logger.exception('Imatest: MathLab Error!')
             raise RuntimeWarning('Imatest: MathLab Error!\n', e)
         except ImatestException.LicenseException as e:
+            logger.exception('Imatest: License Error!')
             raise RuntimeWarning('Imatest: License Error!\n', e)
         except RuntimeError as e:
-            print('Imatest: Runtime Error!\n', e)
+            logger.exception('Imatest: Runtime Error!\n')
 
     def analyze_images(self, test_type, root_dir, images_list):
         result = None
@@ -50,7 +50,7 @@ class ImatestReports:
         for image in images_list:
             input_files.append(image)
 
-        print('Input list: ', input_files)
+        logger.debug(f'Input list: {input_files}')
 
         # Only other modules are "Arbitrary Charts" and "OIS" - they want different arguments
         test_type_call = self.imatest_analysis_type(test_type, parallel=False)
@@ -66,16 +66,16 @@ class ImatestReports:
                                     op_mode=op_mode,
                                     ini_file=ini_file)
 
-            print(result)
+            logger.debug(f"Result: {result}")
         except ImatestException as iex:
             if iex.error_id == ImatestException.FloatingLicenseException:
-                print("All floating license seats are in use.  Exit Imatest on another computer and try again.")
+                logger.error("All floating license seats are in use. Exit Imatest on another computer and try again.")
             elif iex.error_id == ImatestException.LicenseException:
-                print("License Exception: " + iex.message)
+                logger.error("License Exception: " + iex.message)
             else:
-                print(iex.message)
-        except Exception as ex:
-            print(str(ex))
+                logger.error(iex.message)
+        except Exception as e:
+            logger.exception(str(e))
 
         return json.loads(result)  # Return readable json object
 
@@ -84,7 +84,7 @@ class ImatestReports:
 
         for device_serial in images.keys():
             for test_num, test_dict in enumerate(images[device_serial]):
-                print(f"ADDING TASK - {test_dict['analysis_type']}\n{test_dict['image_files']}")
+                logger.info(f"ADDING TASK - {test_dict['analysis_type']}\n{test_dict['image_files']}")
                 tasks.append(
                     self.imatest.new_parallel_task(
                         image_files=test_dict['image_files'],
@@ -108,13 +108,13 @@ class ImatestReports:
 
         for tt in test_types_dict.keys():
             if test_type == tt:
-                print(f'For analysis type {test_type} we found {getattr(self.imatest, test_types_dict[tt])}')  # DEBUG
+                logger.debug(f'For analysis type {test_type} we found {getattr(self.imatest, test_types_dict[tt])}')  # DEBUG
                 return getattr(self.imatest, test_types_dict[tt])
         # if it still hasn't returned, then will come through here
-        print('Analysis Type not found in IMATEST_TEST_TYPES: ', test_type)
+        logger.error('Analysis Type not found in IMATEST_TEST_TYPES: ', test_type)
 
     def __del__(self):
-        print("Terminating Imatest Library")
+        logger.info("Terminating Imatest Library")
         # When finished terminate the library
         self.imatest.terminate_library()
 
@@ -156,7 +156,7 @@ class ImatestReports:
                 elif os.path.exists(img_file + '.png'):
                     img_file += '.png'
                 else:
-                    print('FAILED TO FIND IMAGE FOR', img_file)
+                    logger.error(f'FAILED TO FIND IMAGE FOR {img_file}')
                     continue
 
                 new_dict = {
@@ -166,17 +166,17 @@ class ImatestReports:
 
                 tests_list.append(new_dict)
 
-            print('Created images dict:\n', images_dict)
+            logger.debug(f'Created images dict:\n {images_dict}')
             result = report_obj.analyze_images_parallel(images_dict, ini_file)
             # open output file for writing
             result_out_file = os.path.join(constants.DATA_DIR, 'imatest_all_tests_results.json')
             with open(result_out_file, 'w') as outfile:
                 json.dump(result, outfile)
 
-            print('Analysis Result:\n', result)
+            logger.debug(f'Analysis Result:\n{result}')
         else:
             if test_type is None:
-                print('UPD_IMATEST_PARAMS: JSON_FILE not None, but test_type is None.')
+                logger.error('UPD_IMATEST_PARAMS: JSON_FILE not None, but test_type is None.')
                 return
 
             # Load current params file
@@ -184,13 +184,13 @@ class ImatestReports:
                 last_params_readable = json.load(params_file_old)
             tests_params = last_params_readable
 
-            print('tests_params: \n', tests_params)
+            logger.debug(f'tests_params: \n{tests_params}')
 
             with open(json_file) as json_file_l:
                 image_analysis_readable = json.load(json_file_l)
             result = [image_analysis_readable]
 
-            print('result: \n', result)
+            logger.debug(f'result: \n{result}')
 
         # Parse received list to params file
         filter_params = [
@@ -231,7 +231,7 @@ class ImatestReports:
                     val_type = type(value).__name__
                     if val_type == type(str).__name__ or key[-1] in filter_params:
                         # Skip string or filtered params
-                        print(f'Skipping {key[-1]} because it is a string or in filter!')
+                        logger.info(f'Skipping {key[-1]} because it is a string or in filter!')
                         continue
                     if val_type == 'list' and len(value) == 1:
                         val_type = type(value[0]).__name__

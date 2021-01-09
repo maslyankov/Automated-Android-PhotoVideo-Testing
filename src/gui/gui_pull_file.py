@@ -2,10 +2,11 @@ import os
 import PySimpleGUI as sg
 
 from src import constants
+from src.logs import logger
 
 
 def gui_pull_file(attached_devices, device_obj):
-    #STARTING_PATH = sg.PopupGetFolder('Folder to display')
+    # STARTING_PATH = sg.PopupGetFolder('Folder to display')
 
     current_device = device_obj[attached_devices[0]]
 
@@ -17,8 +18,8 @@ def gui_pull_file(attached_devices, device_obj):
     def add_files_in_folder(parent, dirname):
         folders = current_device.get_dirs_list(dirname)
         files = current_device.get_only_files_list(dirname)
-        print(f"folders:'{files}'\n")
-        print(f"files:'{files}'\n\n\n")
+        logger.debug(f"folders:'{files}'")
+        logger.debug(f"files:'{files}'")
 
         for f in folders:
             fullname = os.path.join(dirname, f)
@@ -32,12 +33,11 @@ def gui_pull_file(attached_devices, device_obj):
             treedata.Insert(parent, fullname, f, values=["14/12/2020 01:22", "22.5 MB"],
                             icon=file_icon)
 
-
     add_files_in_folder('', "/")
 
     layout = [[sg.Text('File and folder browser Test')],
               [sg.Tree(data=treedata, headings=['date', 'size'], auto_size_columns=True, num_rows=20,
-                       col0_width=30, key='_TREE_', show_expanded=False, enable_events=True, ),],
+                       col0_width=30, key='_TREE_', show_expanded=False, enable_events=True, ), ],
               [sg.Button('Ok'), sg.Button('Cancel')]]
     # Create the Window
     window = sg.Window('Pull file/s', layout,
@@ -49,7 +49,7 @@ def gui_pull_file(attached_devices, device_obj):
         if event == sg.WIN_CLOSED or event == 'Close':  # if user closes window or clicks cancel
             break
 
-        print('vals', values)  # Debugging
-        print('event', event)  # Debugging
+        logger.debug(f'vals: {values}')  # Debugging
+        logger.debug(f'event: {event}')  # Debugging
 
     window.close()

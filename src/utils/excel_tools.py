@@ -10,10 +10,13 @@ import win32com.client as win32
 
 # Local
 from src import constants
+from src.logs import logger
 from src.app.utils import kelvin_to_illumenant, only_digits, only_chars, extract_video_frame
 
 
 def xls_to_xlsx(xls_file) -> str:
+    logger.info(f"Starting Converting of {xls_file} to xlsx")
+
     excel = win32.gencache.EnsureDispatch('Excel.Application')
     wb = excel.Workbooks.Open(xls_file)
     new_file = xls_file + "x"
@@ -44,7 +47,7 @@ def get_value_merged(sheet: worksheet, cell: xlcell) -> any:
 
 def is_merged(cell) -> bool:
     if type(cell).__name__ == 'MergedCell':
-        return True
+        return Truetvbjdkiftbkgkebbevlfbnjvflivhfdj
     else:
         return False
 
@@ -70,12 +73,12 @@ def parse_excel_template(excel_file) -> dict:
     # Config end
 
     excel_file = os.path.normpath(excel_file)
-    print(f'Parsing "{excel_file}"...')
+    logger.info(f'Parsing "{excel_file}"...')
 
     ext = excel_file.split('.')[-1]
 
     if ext == 'xls':
-        print("Got .XLS.. Converting it to XLSX")
+        logger.info("Got .XLS.. Converting it to XLSX")
         excel_file = xls_to_xlsx(excel_file)
 
     wb = load_workbook(filename=excel_file)
@@ -96,7 +99,7 @@ def parse_excel_template(excel_file) -> dict:
     for cell in header:
         if cell.column < conf_min_col:
             continue
-        print('value is: ', cell.value)
+        logger.debug(f'value is: {cell.value}')
         if header_mapping['test_type'] in cell.value.lower():
             test_type_col = cell.column_letter
 
@@ -138,7 +141,7 @@ def parse_excel_template(excel_file) -> dict:
                         tests_seq[current_tt]
                     except KeyError:
                         tests_seq[current_tt] = {}
-                    print('\n\nType: ' + current_tt)
+                    logger.debug(f'\n\nType: {current_tt}')
                 else:
                     current_tt = None
 
@@ -150,8 +153,8 @@ def parse_excel_template(excel_file) -> dict:
                     except KeyError:
                         tests_seq[current_tt][current_temp] = {}
 
-                        print('value:', value)
-                    print('Light Temp: ' + current_temp)
+                        logger.debug(f'value: {value}')
+                    logger.debug(f'Light Temp: {current_temp}')
                 else:
                     current_temp = None
 
@@ -163,7 +166,7 @@ def parse_excel_template(excel_file) -> dict:
                     except KeyError:
                         tests_seq[current_tt][current_temp][current_lux] = {}
                         tests_seq[current_tt][current_temp][current_lux]['params'] = {}
-                    print('- LUX: ' + str(current_lux))
+                    logger.debug(f'- LUX: {str(current_lux)}')
                 else:
                     current_lux = None
 
@@ -171,7 +174,7 @@ def parse_excel_template(excel_file) -> dict:
                 if value is not None and current_lux is not None:
                     current_param = value
                     tests_seq[current_tt][current_temp][current_lux]['params'][current_param] = {}
-                    print('\tPARAM: ' + str(current_param))
+                    logger.debug(f'\tPARAM: {str(current_param)}')
                 else:
                     current_param = None
 
@@ -181,7 +184,7 @@ def parse_excel_template(excel_file) -> dict:
                         tests_seq[current_tt][current_temp][current_lux]['params'][current_param] = {}
 
                     tests_seq[current_tt][current_temp][current_lux]['params'][current_param]['min'] = value
-                    print('\tMin: ' + str(value))
+                    logger.debug(f'\tMin: {str(value)}')
 
             if col == max_col:  # Max
                 if current_param is not None:
@@ -189,14 +192,14 @@ def parse_excel_template(excel_file) -> dict:
                         tests_seq[current_tt][current_temp][current_lux]['params'][current_param] = {}
 
                     tests_seq[current_tt][current_temp][current_lux]['params'][current_param]['max'] = value
-                    print('\tMax: ' + str(value) + '\n')
+                    logger.debug('\tMax: ' + str(value) + '\n')
 
     return tests_seq
 
 
 def export_to_excel_file(template_data, dest_file, add_images_bool: bool):
     # Pass template data with analysis results and requirements
-    print('exporting to excel...')
+    logger.debug('Exporting to excel...')
     workbook = Workbook()
     sheet = workbook.active
     current_row = 1
@@ -305,7 +308,7 @@ def xls_draw_results_table(template_data: dict, sheet, start_col: int, start_row
 
     current_row += 1
 
-    print('Columns are', columns)
+    logger.debug('Columns are', columns)
 
     test_types_list = list(template_data.keys())
     for type_num, test_type in enumerate(test_types_list):
@@ -439,7 +442,7 @@ def xls_draw_results_table(template_data: dict, sheet, start_col: int, start_row
                     set_row_height = 70
                     # Merge image rows
                     if lux_start_row < current_row - 1:
-                        print('lqlqlq: ', lux_start_row, current_row)
+                        logger.debug(f'start row: {lux_start_row} /current_row: {current_row}')
                         merged_row_height = set_row_height / (current_row - lux_start_row)
                         if merged_row_height < 15:
                             merged_row_height = 15
@@ -451,19 +454,20 @@ def xls_draw_results_table(template_data: dict, sheet, start_col: int, start_row
                         sheet.merge_cells(start_column=columns['image'][1], start_row=lux_start_row,
                                           end_column=columns['image'][1], end_row=current_row - 1)
                     else:
-                        print('lqlqlq2: ', lux_start_row, current_row)
+                        logger.debug(f'start row: {lux_start_row} /current_row: {current_row}')
                         if sheet.row_dimensions[lux_start_row].height is None:
                             sheet.row_dimensions[lux_start_row].height = set_row_height
                         elif sheet.row_dimensions[lux_start_row].height < set_row_height:
                             sheet.row_dimensions[lux_start_row].height = set_row_height
 
-                print(f"{test_type}>{light_color}>{lux}")
-                print('islast: ', (lux_num == len(luxes) - 1))
-                print('merge cells would be: ')
-                print(f"start_col: {columns['lux'][1]}, start_row: {lux_start_row}")
-                print(f"end_col: {columns['lux'][1]}, end_row: {current_row}")
+                logger.debug(f"{test_type}>{light_color}>{lux}")
+                logger.debug(f'islast: {(lux_num == len(luxes) - 1)}')
+                logger.debug('merge cells would be: ')
+                logger.debug(f"start_col: {columns['lux'][1]}, start_row: {lux_start_row}")
+                logger.debug(f"end_col: {columns['lux'][1]}, end_row: {current_row}")
                 if lux_num == len(luxes) - 1:
                     # If last one
+                    logger.debug("Last lux!")
                     pass
 
                 if lux_start_row < current_row - 1:
@@ -473,6 +477,7 @@ def xls_draw_results_table(template_data: dict, sheet, start_col: int, start_row
             # After each color temp
             if light_color_num == len(light_colors_list) - 1:
                 # If last one
+                logger.debug("Last color temp!")
                 pass
 
             # Merge cells
@@ -481,7 +486,7 @@ def xls_draw_results_table(template_data: dict, sheet, start_col: int, start_row
                                   end_column=columns['light_temp'][1], end_row=current_row - 1)
 
         # After each Test Type
-        if type_start_row < current_row - 1 :
+        if type_start_row < current_row - 1:
             sheet.merge_cells(start_column=columns['test_type'][1], start_row=type_start_row,
                               end_column=columns['test_type'][1], end_row=current_row - 1)
         else:
@@ -499,7 +504,7 @@ def xls_draw_results_table(template_data: dict, sheet, start_col: int, start_row
             xls_fill_cells(sheet, start_col, current_row, end_col, current_row, secondary_fill)
             current_row += 1
 
-    print('columns after: ', columns)
+    logger.debug(f'columns after: {columns}')
 
     # Set columns' widths
     for col_key in columns.values():
@@ -552,7 +557,7 @@ def xls_import_image(img_file, sheet, img_cell):
 
     # If file is a video
     if img_file.endswith('mp4'):
-        print('File ', img_file, 'is a video! Extracting frames!')
+        logger.info(f'File {img_file} is a video! Extracting frames!')
         extracted_frames = extract_video_frame(img_file, start_frame=3)
         img_file = extracted_frames[0]
 

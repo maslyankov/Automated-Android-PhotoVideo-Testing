@@ -2,6 +2,7 @@ import os
 import PySimpleGUI as sg
 
 from src import constants
+from src.logs import logger
 from src.app.ImatestReports import ImatestReports
 
 def gui_imatest_params_upd():

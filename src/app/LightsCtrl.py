@@ -7,6 +7,7 @@ from os import devnull
 from vendor.wireless_lighting.wireless_lighting_api import IQL_Dual_WiFi_Wireless_Lighting_API
 
 from src import constants
+from src.logs import logger
 
 
 class LightsCtrl:
@@ -16,12 +17,12 @@ class LightsCtrl:
         self.anything_on = False
         self.lights_on = []
 
-        print('Selected light model: ', constants.LIGHTS_MODELS.get(model, "Invalid light model"))
+        logger.info(f'Selected light model: {constants.LIGHTS_MODELS.get(model, "Invalid light model")}')
         self.lights_model = constants.LIGHTS_MODELS[model]
 
         self.available_lights = constants.AVAILABLE_LIGHTS[self.lights_model]
         if self.lights_model == constants.LIGHTS_MODELS['SpectriWave']:
-            print('Initiating SpectriWave lights')
+            logger.info('Initiating SpectriWave lights')
             # Instance API object
             self.api = IQL_Dual_WiFi_Wireless_Lighting_API()
 
@@ -35,6 +36,7 @@ class LightsCtrl:
 
     def turn_on(self, color_temp, selected_target_light='all'):
         if color_temp not in self.available_lights:
+            logger.critical(f'Cannot turn on a color temp that is not available for his lights model.')
             raise ValueError(f'Cannot turn on a color temp that is not available for his lights model.')
 
         if self.lights_model == constants.LIGHTS_MODELS['SpectriWave']:
@@ -46,21 +48,22 @@ class LightsCtrl:
                     self.api.cbox_right.set_lamp(color_temp, target_light, 1)
             else:
                 self.api.cbox_right.set_lamp(color_temp, int(selected_target_light), 1)
-                print('I did: ', color_temp, selected_target_light, 1)
+                logger.debug(f'I did: {color_temp} {selected_target_light} 1')
 
         # if self.lights_model == constants.LIGHTS_MODELS['test']:
 
         self.current_color_temp = color_temp
-        print(f"[{color_temp}] turning on")
+        logger.info(f"[{color_temp}] turning on")
 
         if color_temp not in self.lights_on:
             self.lights_on.append(color_temp)
             self.anything_on = True
 
-        print('Lights on: ', self.lights_on)
+        logger.debug('Lights on: ', self.lights_on)
 
     def turn_off(self, color_temp, selected_target_light='all'):
         if color_temp not in self.available_lights:
+            logger.critical(f'Cannot turn on a color temp that is not available for his lights model.')
             raise ValueError(f'Cannot turn on a color temp that is not available for his lights model.')
 
         if color_temp in self.lights_on:
@@ -73,46 +76,46 @@ class LightsCtrl:
                         self.api.cbox_right.set_lamp(color_temp, target_light, 0)
                 else:
                     self.api.cbox_right.set_lamp(color_temp, int(selected_target_light), 0)
-                    print('I did: ', color_temp, selected_target_light, 0)
+                    logger.info(f'I did: {color_temp} {selected_target_light} 0')
 
-            print(f"[{color_temp}] turning off")
+            logger.info(f"[{color_temp}] turning off")
             self.current_color_temp = color_temp
             self.lights_on.remove(color_temp)
             if not self.lights_on:
                 self.anything_on = False
         else:
-            print('This light color was not turned on anyway...')
+            logger.warn('This light color was not turned on anyway...')
 
-        print('Lights on: ', self.lights_on)
+        logger.info('Lights on: ', self.lights_on)
 
     def set_brightness(self, target_brightness):
         if not self.anything_on:
-            print("You need to turn on any light color in order to change it's brightness!")
+            logger.error("You need to turn on any light color in order to change it's brightness!")
             return
 
         if self.current_color_temp is None:
-            print("Color temp not set.")
+            logger.error("Color temp not set.")
             return
 
         if target_brightness > 100 or target_brightness < 0:
-            print("Target brightness invalid.")
+            logger.error("Target brightness invalid.")
             return
 
         if self.lights_model == constants.LIGHTS_MODELS['SpectriWave']:
             self.api.cbox_right.set_dimmer(self.current_color_temp, target_brightness)
 
         self.current_brightness = target_brightness
-        print(f"Set [{self.current_color_temp}] to {target_brightness}")
+        logger.info(f"Set [{self.current_color_temp}] to {target_brightness}")
 
     def set_color_temp(self, color_temp):
         self.current_color_temp = color_temp
 
     def set_lux(self, luxmeter_obj, target_lux):
         if not self.anything_on:
-            print('Cannot set desired lux as none of the lights are turned on!')
+            logger.error('Cannot set desired lux as none of the lights are turned on!')
             return
 
-        print(f"\n\nSetting lux to {target_lux}")
+        logger.info(f"\n\nSetting lux to {target_lux}")
 
         if self.lights_model == constants.LIGHTS_MODELS['test']:
             luxmeter_obj.fake_lux = target_lux
@@ -121,6 +124,7 @@ class LightsCtrl:
 
         curr_lux = luxmeter_obj.get_lux()
         if curr_lux is None:
+            logger.critical("LuxMeter not connected!")
             raise ValueError("LuxMeter not connected!")
 
         threshold = 10  # How much can we vary with lux value
@@ -145,7 +149,7 @@ class LightsCtrl:
             step = temp_steps[0]
 
         while abs(curr_lux - target_lux) > threshold:
-            print(f"Target lux: {target_lux}, current lux: {curr_lux}, step: {step}")
+            logger.info(f"Target lux: {target_lux}, current lux: {curr_lux}, step: {step}")
 
             if curr_lux > target_lux:  # We need to go down
                 was_bigger = True
@@ -167,10 +171,10 @@ class LightsCtrl:
 
             # Min/Max check
             if self.current_brightness >= 100:
-                print("Max Brightness reached!")
+                logger.info("Max Brightness reached!")
                 break
             elif self.current_brightness == 0:
-                print("Minimum brightness reached!")
+                logger.info("Minimum brightness reached!")
                 break
 
             # Set back the step
@@ -180,14 +184,14 @@ class LightsCtrl:
             # Update lux measurement
             curr_lux = luxmeter_obj.get_lux()
 
-        print(f"[Set Lux] Target LUX was {target_lux}, we got it to {curr_lux}, because the threshold is {threshold}")
+        logger.info(f"[Set Lux] Target LUX was {target_lux}, we got it to {curr_lux}, because the threshold is {threshold}")
         return curr_lux
 
     def disconnect(self):
-        print("Disconnecting from lights...")
+        logger.info("Disconnecting from lights...")
         if self.lights_model == constants.LIGHTS_MODELS['SpectriWave']:
             for light_color in self.available_lights:
-                print(f"Turning off {light_color}")
+                logger.info(f"Turning off {light_color}")
                 self.turn_off(light_color)
             time.sleep(1)  # Added delay, because the API is slow
             self.api.cbox_left.disconnect()

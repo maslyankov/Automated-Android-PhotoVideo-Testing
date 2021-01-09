@@ -19,6 +19,7 @@ import shutil
 from datetime import datetime
 
 from src import constants
+from src.logs import logger
 from src.gui.utils_gui import send_progress_to_gui, send_error_to_gui
 
 np.warnings.filterwarnings('ignore')
@@ -75,19 +76,21 @@ np.warnings.filterwarnings('ignore')
 # }
 #
 def _generate_rlt_report(report_config: dict, gui_window=None, gui_event=None):
-    print("Creating object... ")
+    logger.info("Creating object... ")
 
     new_report = RLReports(report_config, gui_window, gui_event)
 
-    print("Creating Presentation... ")
+    logger.info("Creating Presentation... ")
     new_report.create_presentation()
 
-    del (new_report)
+    del new_report
 
 
 def generate_rlt_report(report_config: dict, gui_window=None, gui_event=None):
     rlt_thread = threading.Thread(target=_generate_rlt_report, args=(report_config, gui_window, gui_event), daemon=True)
     rlt_thread.name = 'RLTReportsGeneration'
+
+    logger.info(f"Starting {rlt_thread.name} Thread")
     rlt_thread.start()
 
 
@@ -104,13 +107,14 @@ class RLReports:
             self.summary_items = config_dict['summary_items']
             self.attribute = config_dict['attribute']
         except KeyError:
-            print("RLReports class got wrong data!")
+            logger.critical("RLReports class got wrong data!")
             raise ValueError("RLReports class got wrong data in dict!")
 
     # Create presentation
     def create_presentation(self):
 
         if self.gui_window is not None and self.gui_event is not None:
+            logger.info("Starting RLReports Generation")
             send_progress_to_gui(self.gui_window, self.gui_event, 0, 'Starting')
 
         image_path = self.config['image_path']
@@ -136,6 +140,7 @@ class RLReports:
             return [atoi(c) for c in re.split('(\d+)', input)]
 
         if self.gui_window is not None and self.gui_event is not None:
+            logger.info("Initializing RLReports")
             send_progress_to_gui(self.gui_window, self.gui_event, 3, 'Initializing')
 
         images.sort(key=natural_keys)
@@ -147,11 +152,13 @@ class RLReports:
         title.text_frame.paragraphs[0].alignment = PP_ALIGN.RIGHT
 
         if self.gui_window is not None and self.gui_event is not None:
+            logger.info("Generating Thumbnails")
             send_progress_to_gui(self.gui_window, self.gui_event, 30, 'Generating Thumbnails')
         create_thumbnail(prs, slide, images, image_path, image_outpath)
 
         shutil.rmtree(image_outpath)
         if self.gui_window is not None and self.gui_event is not None:
+            logger.info("Generating Report")
             send_progress_to_gui(self.gui_window, self.gui_event, 38, 'Generating Report')
         set_images_to_slide(prs, images, self)
 
@@ -161,7 +168,7 @@ class RLReports:
 
         if self.gui_window is not None and self.gui_event is not None:
             send_progress_to_gui(self.gui_window, self.gui_event, 100, 'Done!', 'new_file', output_file)
-        print(f"RLReport {presentation_name} Done\nSaved to: {output_file}")
+        logger.info(f"RLReport {presentation_name} Done\nSaved to: {output_file}")
 
     # Get image stats
     def show_req(self, rgb_copy, img_iso):
@@ -397,7 +404,7 @@ def create_thumbnail(prs, slide, files, path, outpath):
     picture_to_slide = 1
     num_file = 0
 
-    print("Generating thumbnails...")
+    logger.info("Generating thumbnails...")
 
     for g in files:
         image_number += 1
@@ -499,7 +506,7 @@ def set_images_to_slide(prs, files, obj):
     # set_summary_to_slide(prs)
     fff = False
 
-    print("Generating slides...")
+    logger.info("Generating slides...")
 
     while True:
         slide = prs.slides.add_slide(prs.slide_layouts[7])
@@ -571,13 +578,13 @@ def set_images_to_slide(prs, files, obj):
                             pic_left += int(prs.slide_width * 0.37)  # 16:9
                         second_stats_list = set_image_stats(g, obj)
                         # xlsx_data(second_stats_list, tail, image_on_slide, slide_counter)
-                        print("image:", tail)
+                        logger.info(f"image: {tail}")
                         device2_name = get_device_name(tail)
                     else:
                         pic_left = int(prs.slide_width * 0.01)
                         first_stats_list = set_image_stats(g, obj)
                         # xlsx_data(first_stats_list, tail, image_on_slide, slide_counter)
-                        print("image:", tail)
+                        logger.info(f"image: {tail}")
                         device1_name = get_device_name(tail)
                 else:
                     pic_width = int(prs.slide_width / 5.3)
@@ -586,13 +593,13 @@ def set_images_to_slide(prs, files, obj):
                         pic_left += int(prs.slide_width * 0.195)
                         second_stats_list = set_image_stats(g, obj)
                         # xlsx_data(second_stats_list, tail, image_on_slide, slide_counter)
-                        print("image:", tail)
+                        logger.info(f"image: {tail}")
                         device2_name = get_device_name(tail)
                     else:
                         pic_left = int(prs.slide_width * 0.01)
                         first_stats_list = set_image_stats(g, obj)
                         # xlsx_data(first_stats_list, tail, image_on_slide, slide_counter)
-                        print("image:", tail)
+                        logger.info(f"image: {tail}")
                         device1_name = get_device_name(tail)
 
                 progress += progress_step

@@ -3,6 +3,7 @@ import PySimpleGUI as sg
 from pathlib import Path
 
 from src import constants
+from src.logs import logger
 from src.app.AutomatedCase import parse_lights_xml_seq
 from src.gui.utils_gui import Tree
 
@@ -10,10 +11,8 @@ from src.gui.utils_gui import Tree
 def lights_xml_gui(seq_xml_name):
     treedata = sg.TreeData()
     data = parse_lights_xml_seq(os.path.join(constants.ROOT_DIR, 'lights_seq', f"{seq_xml_name}.xml"))
-    print(
-        "Name: ", data[0],
-        "\nDesc: ", data[1],
-        "\nContents: ", data[2]
+    logger.debug(
+        f"Name: {data[0]} \nDesc: {data[1]} \nContents: {data[2]}"
     )
 
     for light_temp in data[2].keys():
@@ -62,30 +61,34 @@ def lights_xml_gui(seq_xml_name):
         if event == sg.WIN_CLOSED or event == 'Close':  # if user closes window or clicks cancel
             break
 
-        print('vals', values)  # Debugging
-        print('event', event)  # Debugging
+        logger.debug(f'vals {values}')  # Debugging
+        logger.debug(f'event {event}')  # Debugging
 
         if event == 'add_temp_btn':
+            logger.info("Add temp")
+
             tree.insert_node('', f"{values['add_temp_value']}", values['add_temp_value'])
             # window['-TREE-'].Update(values=treedata)
-            print(treedata, type(treedata))
-            print(values['-TREE-'])
+            logger.debug(f"treedata - {treedata} is {type(treedata)}")
+            logger.debug(values['-TREE-'])
             num += 1
-            print(treedata.tree_dict)
+            logger.debug(f"Treedata dict: {treedata.tree_dict}")
 
         if event == 'add_lux_btn':
+            logger.info("Add lux")
+
             if values["-TREE-"] != '':
                 tree.insert_node(values['-TREE-'][0], f"{values['-TREE-'][0]}_{values['add_lux_value']}_key_lux", values['add_lux_value'])
                 # window['-TREE-'].Update(values=treedata)
-                print(treedata, type(treedata))
-                print(values['-TREE-'][0])
+                logger.debug(f"treedata - {treedata} is {type(treedata)}")
+                logger.debug(values['-TREE-'][0])
                 num += 1
-                print(treedata.tree_dict)
+                logger.debug(f"Treedata dict: {treedata.tree_dict}")
             else:
-                print('Select temp first')
+                logger.error('Select temp first')
 
         if event == 'mv_up_btn':
-            print(f'Move up {values["-TREE-"]}')
+            logger.info(f'Move up {values["-TREE-"]}')
             tree.move_up()
             # foodict = {k: v for k, v in treedata.tree_dict.items() if k.endswith('_temp')}
             # prev = get_prev_item(foodict, values["-TREE-"][0])
@@ -95,7 +98,7 @@ def lights_xml_gui(seq_xml_name):
             #     window['-TREE-'].Update(values=treedata)
 
         if event == 'mv_down_btn':
-            print(f'Move down {values["-TREE-"]}')
+            logger.info(f'Move down {values["-TREE-"]}')
             tree.move_down()
             # foodict = {k: v for k, v in treedata.tree_dict.items() if k.endswith('_temp')}
             # print('data: ', foodict)
@@ -106,9 +109,10 @@ def lights_xml_gui(seq_xml_name):
             #     window['-TREE-'].Update(values=treedata)
 
         if event == 'delete_btn':
-            print(f'Delete {values["-TREE-"]}')
-            print("Action was successful: ", treedata.delete(values["-TREE-"][0]))
+            logger.info(f'Delete {values["-TREE-"]}')
+            logger.info(f"Action was successful: {treedata.delete(values['-TREE-'][0])}")
             window['-TREE-'].Update(values=treedata)
-        print('vals: ', values)
+
+        logger.debug(f'vals: {values}')
 
     window.close()

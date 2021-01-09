@@ -2,11 +2,13 @@ import time
 
 from src.konica.ChromaMeterKonica import ChromaMeterKonica
 from src import constants
+from src.logs import logger
 
 
 class Sensor:
     def __init__(self, device):
         if device not in constants.LUXMETERS_MODELS.values():
+            logger.critical(f'Invalid sensor device!\n Sensor: {device}')
             raise ValueError(f'Invalid sensor device!\n Sensor: {device}')
         if device == constants.LUXMETERS_MODELS['Konita Minolta CL-200A']:
             # For Konita Minolta CL-200A

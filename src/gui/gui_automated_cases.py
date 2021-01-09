@@ -3,6 +3,7 @@ import os
 import PySimpleGUI as sg
 
 from src import constants
+from src.logs import logger
 from src.app.AutomatedCase import AutomatedCase
 from src.app.ImatestReports import ImatestReports
 
@@ -27,7 +28,7 @@ def configurable_tab_logic(window, values, event,
 
     if event == "capture_cases_btn":
         if values['pull_files'] and values['save_location_browse_btn'] == '':
-            print("Save Location must be set!")
+            logger.error("Save Location must be set!")
         else:
             try:
                 if not cases.is_running:
@@ -42,8 +43,10 @@ def configurable_tab_logic(window, values, event,
                                           'selected_device'])
                     except ValueError as e:
                         cases.stop_signal = True
+                        logger.error(e)
                         sg.popup_error(e)
                 else:
+                    logger.info("Finishing up and stopping cases creation!")
                     sg.cprint("Finishing up and stopping cases creation!", window=window, key='-OUT-',
                               colors='white on grey')
                     cases.stop_signal = True
@@ -84,7 +87,7 @@ def template_tab_logic(window, values, event,
 
             template_data = gui_project_req_file(
                 values['template_browse_btn'] if values['template_browse_btn'] != '' else None, return_val=True)['dict']
-            print('template_data: ', template_data)
+            logger.debug('template_data: ', template_data)
 
             if template_data is not None:
                 try:
@@ -102,6 +105,7 @@ def template_tab_logic(window, values, event,
             # If cases are running then button should stop them
             window['capture_cases_btn'].Update(disabled=True)
             cases.stop_signal = True
+            logger.info("Finishing up and stopping cases creation!")
             sg.cprint("Finishing up and stopping cases creation!", window=window, key='-OUT-',
                       colors='white on grey')
 
@@ -113,6 +117,7 @@ def template_tab_logic(window, values, event,
             window['run_template_automation_btn'].Update('Stop', disabled=False)
 
         if values[auto_cases_event]['current_action'] == 'Finished':
+            logger.info("Cases done!")
             sg.Popup('Cases done!')
 
     try:
@@ -269,7 +274,7 @@ def gui_automated_cases(adb, selected_lights_model, selected_luxmeter_model):
             break
 
         if event == devices_watchdog_event:
-            print(values[devices_watchdog_event])
+            logger.debug(f"Data from devices watchdog: {values[devices_watchdog_event]}")
 
         if event == 'selected_device':
             window['device-friendly'].Update(devices_obj[values['selected_device']].friendly_name)
@@ -287,7 +292,7 @@ def gui_automated_cases(adb, selected_lights_model, selected_luxmeter_model):
 
         if values['auto_cases_tabs_group'] == 'configurable_cases_tab':
             if event == 'auto_cases_tabs_group':
-                print('tab is at configurable cases')
+                logger.debug('tab is at configurable cases')
             configurable_tab_logic(
                 window, values, event,
                 cases, auto_cases_event
@@ -295,14 +300,14 @@ def gui_automated_cases(adb, selected_lights_model, selected_luxmeter_model):
 
         if values['auto_cases_tabs_group'] == 'template_cases_tab':
             if event == 'auto_cases_tabs_group':
-                print('tab is at template cases')
+                logger.debug('tab is at template cases')
             template_tab_logic(
                 window, values, event,
                 cases, auto_cases_event
             )
 
         if cases is None:
-            print('cases init in gui')
+            logger.info('cases thread init from gui')
             cases = AutomatedCase(adb, selected_lights_model, selected_luxmeter_model,
                                   window, '-OUT-', auto_cases_event)
             # Start Auto Cases Thread

@@ -9,6 +9,7 @@ from src.app.Device import Device
 from src.utils.xml_tools import generate_sequence, xml_from_sequence
 
 from src import constants
+from src.logs import logger
 
 
 class USBCamDevice(Device):

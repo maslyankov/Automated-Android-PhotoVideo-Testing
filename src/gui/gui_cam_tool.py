@@ -5,6 +5,7 @@ import acapture
 
 from src.app.USBCamClient import list_ports
 from src import constants
+from src.logs import logger
 
 
 def gui_cam_tool():
@@ -12,7 +13,7 @@ def gui_cam_tool():
     cameras_list = list(ports_dict.keys())
     preview_cam = ports_dict[cameras_list[-1]]
 
-    print("Ports Dict1:", ports_dict)
+    logger.debug(f"Ports Dict1: {ports_dict}")
 
     layout = [
         [
@@ -39,11 +40,11 @@ def gui_cam_tool():
                        icon=os.path.join(constants.ROOT_DIR, 'images', 'automated-video-testing-header-icon.ico'),
                        grab_anywhere=True)
 
-    print('initiating camera')
+    logger.info('initiating camera')
     cap = cv2.VideoCapture(preview_cam, cv2.CAP_DSHOW)
     #cap = acapture.open(preview_cam)
     get_camera_resolution(cap)
-    print('Loading camera')
+    logger.info('Loading camera')
     while True:
         event, values = window.read(timeout=20)
 
@@ -52,7 +53,7 @@ def gui_cam_tool():
 
         if event == 'selected_camera':
             preview_cam = ports_dict[values['selected_camera']]
-            print('Switching preview to camera', preview_cam)
+            logger.info(f'Switching preview to camera {preview_cam}')
             cap = cv2.VideoCapture(preview_cam, cv2.CAP_DSHOW)
             #cap = acapture.open(preview_cam)
             get_camera_resolution(cap)
@@ -60,11 +61,12 @@ def gui_cam_tool():
 
         if event == 'set_res_btn' and values['res_height'] != '' and values['res_width'] != '':
             set_camera_resolution(cap, values['res_width'], values['res_height'])
-            print('Now at:')
+            logger.info('Now at:')
             get_camera_resolution(cap)
 
         if event == 'take_photo_btn':
             save_loc = os.path.join(values['save_location'], 'image_out.jpg')
+            logger.info(f"Capturing photo to {save_loc}")
             cam_take_photo(frame, save_loc)
 
         # Update Preview
@@ -76,7 +78,7 @@ def gui_cam_tool():
 def get_camera_resolution(cam):
     height = cam.get(cv2.CAP_PROP_FRAME_HEIGHT)
     width = cam.get(cv2.CAP_PROP_FRAME_WIDTH)
-    print(f'Cam res: {width}x{height}')
+    logger.info(f'Cam res: {width}x{height}')
 
 def get_max_camera_resolution(cam):
     max = 10000

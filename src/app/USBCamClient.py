@@ -8,6 +8,7 @@ import time
 from src.app.utils import compare_lists
 from src.app.USBCamDevice import USBCamDevice
 from src import constants
+from src.logs import logger
 
 
 def list_ports():
@@ -80,6 +81,8 @@ class USBCamClient:
     def watchdog(self):
         self.watchdog_thread = threading.Thread(target=self._watchdog, args=(), daemon=True)
         self.watchdog_thread.name = 'USBCameras-Watchdog'
+
+        logger.info(f"Starting {self.watchdog_thread.name} Thread")
         self.watchdog_thread.start()
 
     def attach_device(self, device_serial, port):
@@ -90,6 +93,8 @@ class USBCamClient:
         :param device_obj: Device object
         :return: None
         """
+        logger.info(f"Attaching device {device_serial} at {port}")
+
         self.devices_obj[device_serial] = USBCamDevice(device_serial, port)  # Assign device to object
         self.attached_devices.append(device_serial)
 
@@ -100,12 +105,11 @@ class USBCamClient:
         :param device_obj: Device object
         :return: None
         """
-        print('Detaching device ', device_serial)
+        logger.info(f'Detaching device {device_serial}')
 
         # Finally detach device
         try:
             self.attached_devices.remove(device_serial)
             del self.devices_obj[device_serial]
         except ValueError:
-            print("Not found in attached devices list")
-            print(self.attached_devices)
+            logger.error(f"Not found in attached devices list\n{self.attached_devices}")

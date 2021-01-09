@@ -4,6 +4,7 @@ import os
 import PySimpleGUI as sg
 
 from src import constants
+from src.logs import logger
 from src.utils.xml_tools import convert_dict_to_xml, convert_xml_to_dict
 from src.gui.utils_gui import Tree, place, collapse
 from src.gui.gui_imatest_params_upd import gui_imatest_params_upd
@@ -13,7 +14,7 @@ is_excel = False
 
 
 def gui_project_req_file(proj_req=None, proj_req_file=None, return_val=False):
-    print('proj req got file: ', proj_req_file)
+    logger.debug(f'proj req got file: {proj_req_file}')
     current_file = None
 
     global is_excel
@@ -247,7 +248,7 @@ def gui_project_req_file(proj_req=None, proj_req_file=None, return_val=False):
         if not done:
             done = True
             if proj_req is not None:
-                print('Proj Req: ', proj_req)
+                logger.debug(f'Proj Req: {proj_req}')
                 if isinstance(proj_req, dict):
                     current_file = import_templ(proj_req, tree, templ_in_file=proj_req_file)
                 else:
@@ -319,14 +320,14 @@ def gui_project_req_file(proj_req=None, proj_req_file=None, return_val=False):
             if current_test_type is None:
                 current_test_type = str(tree.get_text(curr_sel_test_type)).lower()
                 # Update list accordingly
-                print(f'now at {current_test_type} test type ')
+                logger.debug(f'now at {current_test_type} test type ')
             else:
                 if str(tree.get_text(curr_sel_test_type)).lower() != current_test_type:
                     current_test_type = str(tree.get_text(curr_sel_test_type)).lower()
                     # Update list accordingly
                     if current_test_type == 'root':
                         continue
-                    print(f'now at {current_test_type} test type ')
+                    logger.debug(f'now at {current_test_type} test type ')
 
             if current_test_type is not None:
                 # print(f'current text: "{current_text}"')
@@ -334,8 +335,8 @@ def gui_project_req_file(proj_req=None, proj_req_file=None, return_val=False):
                     # print(f'"{paramm} ({paramm_type})",  ?= , "{current_text}"')
 
                     if paramm == current_text:
-                        print('param found!!!')
-                        print('its type is: ', paramm_type)
+                        logger.debug('param found!!!')
+                        logger.debug(f'its type is: {paramm_type}')
                         window['-SUBSEC_RESTRICTS-'].Update(visible=paramm_type == 'list')
 
                         has_abs_val = tree.search(text='absolute_value_bool', mode='Current')
@@ -379,6 +380,7 @@ def gui_project_req_file(proj_req=None, proj_req_file=None, return_val=False):
                         else:
                             tree.set_text(has_end_val, values['restrict_end_val'])
             else:
+                logger.warn("You can only add restrictors to the parameter.")
                 sg.popup_ok("You can only add restrictors to the parameter.")
 
         if event == 'params_search_filter' or event == 'params_search_bool' or current_test_type != last_test_type:
@@ -400,6 +402,7 @@ def gui_project_req_file(proj_req=None, proj_req_file=None, return_val=False):
             try:
                 selected_val = values['params_search_list'][0]
             except IndexError:
+                logger.error("No parameter selected!")
                 sg.popup_ok('Select parameter first!')
             else:
                 try:
@@ -408,6 +411,7 @@ def gui_project_req_file(proj_req=None, proj_req_file=None, return_val=False):
                         tree.insert_node(current, f"{selected_val}", selected_val)
                         tree.select(parent_id)
                     else:
+                        logger.warn("Trying to add params to something else than params")
                         sg.popup_ok('You can only add params to "params"!')
                 except IndexError:
                     print('Tree empty.')
@@ -417,9 +421,10 @@ def gui_project_req_file(proj_req=None, proj_req_file=None, return_val=False):
                 if tree.get_text(values['-TREE-'][0]) in test_modules_list:
                     tree.insert_node(current, f"{values['add_light_temp_value']}", values['add_light_temp_value'])
                 else:
+                    logger.warn('You can only add light temps to test type elements!')
                     sg.popup_ok('You can only add light temps to test type elements!')
             except IndexError:
-                print('Tree empty.')
+                logger.error('Tree empty.')
 
         if event == 'add_lux_btn':
             try:
@@ -427,6 +432,7 @@ def gui_project_req_file(proj_req=None, proj_req_file=None, return_val=False):
                     new_elem = tree.insert_node(current, values['add_lux_value'], values['add_lux_value'])
                     tree.insert_node(new_elem, 'params', 'params')
                 else:
+                    logger.warn("no temp selected!")
                     sg.popup_ok('Select temp first')
             except IndexError:
                 print('Tree empty.')
@@ -450,34 +456,35 @@ def gui_project_req_file(proj_req=None, proj_req_file=None, return_val=False):
 
                 tree.select(parent_id)
             else:
+                logger.warn(f"Trying to add min,max to invalid place. \nparent val: {curr_parent_val}")
                 sg.popup_ok("Trying to add min,max to invalid place. \nparent val: ", curr_parent_val)
 
         if event == 'mv_up_btn':
-            print(f'Move up {values["-TREE-"]}')
+            logger.info(f'Move up {values["-TREE-"]}')
             tree.move_up()
 
         if event == 'mv_down_btn':
-            print(f'Move down {values["-TREE-"]}')
+            logger.info(f'Move down {values["-TREE-"]}')
             tree.move_down()
 
         if event == 'delete_btn' or event == 'Delete:46':
             try:
                 select_next = tree.get_prev_next_of_current()
 
-                print(f"Delete {tree.get_text(values['-TREE-'][0])}")
-                print("Action was successful: ", tree.delete_node(values["-TREE-"][0]))
+                logger.info(f"Delete {tree.get_text(values['-TREE-'][0])}")
+                logger.info(f"Action was successful: {tree.delete_node(values['-TREE-'][0])}")
 
                 tree.select(select_next)
             except IndexError:
-                print('Trying to delete something that is not there.. :(')
+                logger.error('Trying to delete something that is not there.. :(')
 
         if event == 'expand_btn':
+            logger.info('expanding nodes')
             tree.expand_all()
-            print('expanding nodes')
 
         if event == 'collapse_btn':
+            logger.info('expanding nodes')
             tree.collapse_all()
-            print('expanding nodes')
 
         if event == 'update_params_btn':
             # Save stuff just in case
@@ -485,7 +492,7 @@ def gui_project_req_file(proj_req=None, proj_req_file=None, return_val=False):
                 dump_dict = tree.dump_tree_dict()
                 # open output file for writing
                 xml = convert_dict_to_xml(dump_dict, 'projreq_file')
-                print("Out XML:\n", xml)
+                logger.debug(f"Out XML:\n{xml}")
                 with open(current_file, 'wb') as outfile:
                     outfile.write(xml)
 
@@ -495,6 +502,7 @@ def gui_project_req_file(proj_req=None, proj_req_file=None, return_val=False):
             imatest_params_file = open(imatest_params_file_location)
             imatest_params = json.load(imatest_params_file)
 
+            logger.info('All Imatest parameters were dumped successfully!')
             sg.popup_ok('All Imatest parameters were dumped successfully!')
 
         if event == 'import_btn':
@@ -510,7 +518,7 @@ def gui_project_req_file(proj_req=None, proj_req_file=None, return_val=False):
                 dump_dict = tree.dump_tree_dict()
                 # open output file for writing
                 xml = convert_dict_to_xml(dump_dict, 'projreq_file', file_is_new)
-                print("Out XML:\n", xml)
+                logger.debug(f"Out XML:\n{xml}")
                 with open(current_file, 'wb') as outfile:
                     outfile.write(xml)
 
@@ -528,7 +536,7 @@ def gui_project_req_file(proj_req=None, proj_req_file=None, return_val=False):
                 dump_dict = tree.dump_tree_dict()
                 # open output file for writing
                 xml = convert_dict_to_xml(dump_dict, 'projreq_file', file_is_new)
-                print("Out XML:\n", xml)
+                logger.debug(f"Out XML:\n{xml}")
                 with open(current_file, 'wb') as outfile:
                     outfile.write(xml)
 
@@ -560,7 +568,7 @@ def gui_project_req_file(proj_req=None, proj_req_file=None, return_val=False):
 
 def filter_params(imatest_params: dict, fltr: str, current_test_type: str = None, search_everywhere: bool = True):
     out_list = []
-    print(f'filter params got: \n{imatest_params}\n, {fltr}\n, {current_test_type}')
+    logger.debug(f'filter params got: \n{imatest_params}\n, {fltr}\n, {current_test_type}')
 
     for key, value in imatest_params.items():
         for param in list(value.keys()):
@@ -581,15 +589,15 @@ def filter_params(imatest_params: dict, fltr: str, current_test_type: str = None
 
 def import_templ(templ_in, tree, templ_in_file=None):
     global is_excel
-    print('proj req got file: ', templ_in_file)
-    print('proj req got: ', templ_in)
+    logger.debug(f'proj req got file: {templ_in_file}')
+    logger.debug(f'proj req got: {templ_in}')
     if templ_in is not None:
         if isinstance(templ_in, str):
             templ_in = os.path.normpath(templ_in)
             # Check if it is an Excel file
             for ext in constants.EXCEL_FILETYPES:
                 if templ_in.endswith(ext):
-                    print('input file: ', templ_in)
+                    logger.debug(f'input file: {templ_in}')
                     templ_in_file = templ_in
                     template_data = parse_excel_template(templ_in)
                     is_excel = True
@@ -601,19 +609,20 @@ def import_templ(templ_in, tree, templ_in_file=None):
                 if templ_in.endswith('projreq'):
                     templ_in_file = templ_in
                     file_data = convert_xml_to_dict(templ_in)['projreq_file']
-                    print("file data: ", file_data)
+                    logger.debug(f"file data: {file_data}")
                     try:
-                        print(f"created {file_data['time_created']}")
+                        logger.info(f"created {file_data['time_created']}")
                     except KeyError:
                         pass
                     try:
-                        print(f" was last modified {file_data['time_updated']} ")
+                        logger.info(f" was last modified {file_data['time_updated']} ")
                     except KeyError:
                         pass
-                    print(f"is \n{file_data['proj_req']}")
+                    logger.info(f"is \n{file_data['proj_req']}")
                     template_data = file_data['proj_req']
                     is_excel = False
                 else:
+                    logger.error('Unknown proj_req filetype.')
                     sg.popup_error('Unknown proj_req filetype.')
         # Check if it is a dict
         elif isinstance(templ_in, dict):

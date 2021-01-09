@@ -7,9 +7,9 @@ import time
 from ppadb.client import Client as AdbPy
 
 from src import constants
+from src.logs import logger
 from src.app.ADBDevice import ADBDevice
 from src.app.utils import compare_lists
-
 
 class AdbClient:
     """
@@ -19,7 +19,7 @@ class AdbClient:
         self.gui_window = gui_window
         self.gui_event = gui_event
 
-        print("Starting the ADB Server...")
+        logger.info("Starting the ADB Server...")
         try:
             self.adb = subprocess.Popen(
                 [constants.ADB, 'start-server'],
@@ -29,12 +29,12 @@ class AdbClient:
             self.adb.stdin.close()
             stdout, stderr = self.adb.communicate()
             if stdout:
-                print("ADB Start Output: " + stdout.decode())  # Debugging
+                logger.warn("ADB Start Output: " + stdout.decode())  # Debugging
             if stderr:
-                print("ADB Start Error: " + stderr.decode())  # Debugging
+                logger.error("ADB Start Error: " + stderr.decode())  # Debugging
             self.adb.wait()
         except FileNotFoundError:
-            print("Fatal error: adb not found!")
+            logger.critical("Fatal error: adb not found!")
             return
 
         self.client = AdbPy(host="127.0.0.1", port=5037)
@@ -57,7 +57,7 @@ class AdbClient:
             try:
                 devices_list = self.list_devices()
             except ConnectionResetError:
-                print('ADB Server connection lost.')
+                logger.error('ADB Server connection lost.')
 
             if len(devices_list) > len(self.connected_devices):  # If New devices found
                 for count, diff_device in enumerate(compare_lists(self.connected_devices, devices_list)):
@@ -72,7 +72,7 @@ class AdbClient:
                             }
                         )
                     except RuntimeError:
-                        print('Device not ready!')
+                        logger.warn('Device not ready!')
             elif len(devices_list) < len(self.connected_devices):  # If a device has disconnected
                 for count, diff_device in enumerate(compare_lists(self.connected_devices, devices_list)):
                     try:
@@ -86,7 +86,7 @@ class AdbClient:
                             }
                         )
                     except RuntimeError:
-                        print('Device not ready!')
+                        logger.warn('Device not ready!')
 
             self.connected_devices = devices_list
 
@@ -150,5 +150,5 @@ class AdbClient:
             self.attached_devices.remove(device_serial)
             del self.devices_obj[device_serial]
         except ValueError:
-            print("Not found in attached devices list")
+            logger.warn("Not found in attached devices list")
             print(self.attached_devices)

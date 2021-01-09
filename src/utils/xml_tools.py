@@ -3,11 +3,15 @@ from datetime import datetime
 
 # Local
 from src import constants
+from src.logs import logger
 from src.app.utils import parses_to_integer
+
 
 # XML Utils
 def generate_sequence(subelem):
     seq_temp = []
+
+    logger.info("Generating Sequence")
 
     for action_num, action in enumerate(subelem):
 
@@ -17,14 +21,14 @@ def generate_sequence(subelem):
         # self.shoot_photo_seq.append(action.tag)
         for action_elem_num, action_elem in enumerate(action):
             # import pdb; pdb.set_trace()
-            print("\naction elem: ", action_elem)
-            print("data_list before", data_list)
+            logger.debug(f"action elem: {action_elem}")
+            logger.debug(f"data_list before {data_list}")
             if action_elem.tag == 'id':
                 action_list.append(action_elem.text)
-                print(action_elem_num, action_elem.text)
+                logger.debug(f"Elem num: {action_elem_num}, elem text: {action_elem.text}")
 
             elif action_elem.tag == 'description':
-                print('description be: ', action_elem.text)
+                logger.debug(f'description: {action_elem.text}')
                 if action_elem.text is not None:
                     data_list.append(action_elem.text)
                 else:
@@ -43,16 +47,16 @@ def generate_sequence(subelem):
             elif action_elem.tag == 'value':
                 data_list.append(action_elem.text)
 
-            print("data_list after", data_list)
+            logger.debug(f"data_list after {data_list}")
         try:
             data_list.append(action.attrib["type"])  # Set type
         except KeyError:
-            print("Error! Invalid XML!")
+            logger.error("Error! Invalid XML!")
 
         action_list.append(data_list)
 
         seq_temp.append(action_list)
-        print('Generated list for action: ', action_list)
+        logger.debug(f'Generated list for action: {action_list}')
     return seq_temp
 
 
@@ -154,6 +158,7 @@ def merge_dicts(a, b, path=None):
             elif a[key] == b[key]:
                 pass  # same leaf value
             else:
+                logger.error('Conflict at %s' % '.'.join(path + [str(key)]))
                 raise Exception('Conflict at %s' % '.'.join(path + [str(key)]))
         else:
             a[key] = b[key]
@@ -247,5 +252,6 @@ def convert_xml_to_dict(root, dictclass=dict):
     if type(root) == type('') or type(root) == type(u''):
         root = ET.parse(root).getroot()  # ET.fromstring(root)
     elif not isinstance(root, ET.Element):
+        logger.error('Expected ElementTree.Element or file path string')
         raise TypeError('Expected ElementTree.Element or file path string')
     return {root.tag: _convert_xml_to_dict_recurse(root, dictclass)}

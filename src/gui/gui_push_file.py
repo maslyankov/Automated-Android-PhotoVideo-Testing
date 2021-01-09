@@ -2,6 +2,7 @@ import os
 import PySimpleGUI as sg
 
 from src import constants
+from src.logs import logger
 
 
 def gui_push_file(attached_devices, device_obj):
@@ -49,8 +50,8 @@ def gui_push_file(attached_devices, device_obj):
         if event == sg.WIN_CLOSED or event == 'Close':  # if user closes window or clicks cancel
             break
 
-        print('vals', values)  # Debugging
-        print('event', event)  # Debugging
+        logger.debug(f'vals: {values}')  # Debugging
+        logger.debug(f'event: {event}')  # Debugging
 
         if event == 'selected_device':
             window['device-friendly'].Update(device_obj[values['selected_device']].friendly_name)
@@ -63,20 +64,22 @@ def gui_push_file(attached_devices, device_obj):
 
             curr_device.disable_verity()
 
-            sg.popup_ok('Verity Disabled!\nYou might need to reattach to device.')
+            logger.info(f'Verity Disabled!\nDevice reattachment is necessary.')
+            sg.popup_ok(f'Verity Disabled!\nYou might need to reattach to device.')
 
         if event == 'push_file_btn':
             curr_device = device_obj[values['selected_device']]
             files_dest = values['dest_folder']
 
-            print(values['source_file'].split(';'))
+            logger.debug(values['source_file'].split(';'))
 
-            print("Remounting Device...")
+            logger.info("Remounting Device...")
             curr_device.remount()
-            print("Pushing new file to device...")
+            logger.info("Pushing new file to device...")
 
             curr_device.push_files(values['source_file'], files_dest)
 
+            logger.info('Files pushed!')
             sg.popup_ok('Files pushed!')
 
     window.close()
