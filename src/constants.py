@@ -32,7 +32,7 @@ SCRCPY = os.path.join(VENDOR_DIR, 'scrcpy-win64-v1.16', 'scrcpy.exe')
 
 
 # Logs settings
-LOG_FILE = 'logfile.log'
+LOG_FILE = 'ac_debug.log'
 LOG_LEVEL = 'INFO'
 LOG_LEVEL_FILE = 'DEBUG'
 
