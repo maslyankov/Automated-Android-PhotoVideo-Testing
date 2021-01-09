@@ -30,8 +30,10 @@ Path(XML_DIR).mkdir(parents=True, exist_ok=True)
 ADB = os.path.join(VENDOR_DIR, 'scrcpy-win64-v1.16', 'adb.exe')
 SCRCPY = os.path.join(VENDOR_DIR, 'scrcpy-win64-v1.16', 'scrcpy.exe')
 
+
+# Logs settings
 LOG_FILE = 'logfile.log'
-LOG_LEVEL = 'DEBUG'
+LOG_LEVEL = 'INFO'
 LOG_LEVEL_FILE = 'DEBUG'
 
 
