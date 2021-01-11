@@ -7,7 +7,7 @@ from src import constants
 logger = logging.getLogger()
 logger.setLevel(logging.DEBUG)
 
-log_prefix = '%(filename)20s:%(lineno)4s - %(funcName)15s()'
+log_prefix = '%(filename)20s:%(lineno)4s - %(funcName)20s()'
 
 # - Create handlers
 # Console log
