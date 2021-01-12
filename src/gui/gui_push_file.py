@@ -63,6 +63,7 @@ def gui_push_file(attached_devices, device_obj):
             curr_device = device_obj[values['selected_device']]
 
             curr_device.disable_verity()
+            curr_device.detach_device()
 
             logger.info(f'Verity Disabled!\nDevice reattachment is necessary.')
             sg.popup_ok(f'Verity Disabled!\nYou might need to reattach to device.')

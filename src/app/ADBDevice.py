@@ -147,8 +147,8 @@ class ADBDevice(Device):
             logger.exception('You tried to reach a device that is already disconnected!')
             quit(1)
         except RuntimeError as e:
-            logger.exception('Device Disconnected!')
-            quit(1)
+            logger.error('Device Disconnected unexpectedly! Detaching...')
+            self.detach_device()
 
     def push_file(self, src, dst):
         """
@@ -169,6 +169,9 @@ class ADBDevice(Device):
         """
         logger.debug(f'Pulling {src} into {dst}')  # Debugging
         self.d.pull(src, dst)
+
+    def detach_device(self):
+        self.adb.detach(self.device_serial)
 
     # ----- Getters/Setters -----
     def set_shoot_photo_seq(self, seq):
