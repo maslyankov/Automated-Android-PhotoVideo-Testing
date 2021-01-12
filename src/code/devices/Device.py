@@ -4,6 +4,7 @@ import xml.etree.cElementTree as ET
 from src import constants
 from src.logs import logger
 
+
 class Device:
     def __init__(self, serial, logs_enabled: bool = False, logs_filter: str = ''):
         logger.info("Attaching to device...")

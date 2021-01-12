@@ -1,7 +1,7 @@
 import PySimpleGUI as sg
 
 from src import constants
-from src.app.utils import convert_to_int_float
+from src.code.utils.utils import convert_to_int_float
 
 
 def place(elem):

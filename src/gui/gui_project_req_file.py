@@ -5,10 +5,10 @@ import PySimpleGUI as sg
 
 from src import constants
 from src.logs import logger
-from src.utils.xml_tools import convert_dict_to_xml, convert_xml_to_dict
+from src.code.utils.xml_tools import convert_dict_to_xml, convert_xml_to_dict
 from src.gui.utils_gui import Tree, place, collapse
 from src.gui.gui_imatest_params_upd import gui_imatest_params_upd
-from src.utils.excel_tools import parse_excel_template
+from src.code.utils.excel_tools import parse_excel_template
 
 is_excel = False
 

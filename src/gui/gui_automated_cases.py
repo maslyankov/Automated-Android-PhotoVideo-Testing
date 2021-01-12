@@ -4,13 +4,11 @@ import PySimpleGUI as sg
 
 from src import constants
 from src.logs import logger
-from src.app.AutomatedCase import AutomatedCase
-from src.app.ImatestReports import ImatestReports
+from src.code.AutomatedCase import AutomatedCase
 
 from src.gui.gui_automated_cases_lights_xml_gui import lights_xml_gui
 from src.gui.utils_gui import place, Tabs
 from src.gui.gui_project_req_file import gui_project_req_file
-import threading
 
 
 def configurable_tab_logic(window, values, event,

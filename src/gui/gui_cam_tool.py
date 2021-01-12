@@ -1,9 +1,7 @@
 import os
-import time
 import cv2, PySimpleGUI as sg
-import acapture
 
-from src.app.USBCamClient import list_ports
+from src.code.devices.USBCamClient import list_ports
 from src import constants
 from src.logs import logger
 

@@ -2,8 +2,7 @@ import os
 import PySimpleGUI as sg
 
 from src import constants
-from src.logs import logger
-from src.app.ImatestReports import ImatestReports
+from src.code.reports.ImatestReports import ImatestReports
 
 def gui_imatest_params_upd():
     test_modules_list = list(constants.IMATEST_PARALLEL_TEST_TYPES.keys())

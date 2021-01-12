@@ -1,13 +1,10 @@
-import subprocess
-import os
 import threading
 import time
 
 # from pygrabber.dshow_graph import FilterGraph
 
-from src.app.utils import compare_lists
-from src.app.USBCamDevice import USBCamDevice
-from src import constants
+from src.code.utils.utils import compare_lists
+from src.code.devices.USBCamDevice import USBCamDevice
 from src.logs import logger
 
 

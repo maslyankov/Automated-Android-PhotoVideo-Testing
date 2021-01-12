@@ -5,8 +5,8 @@ import os
 import xml.etree.cElementTree as ET
 from natsort import natsorted
 
-from src.app.Device import Device
-from src.utils.xml_tools import generate_sequence, xml_from_sequence
+from src.code.devices.Device import Device
+from src.code.utils.xml_tools import generate_sequence, xml_from_sequence
 
 from src import constants
 from src.logs import logger

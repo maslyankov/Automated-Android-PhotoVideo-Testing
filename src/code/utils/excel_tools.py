@@ -11,7 +11,7 @@ import win32com.client as win32
 # Local
 from src import constants
 from src.logs import logger
-from src.app.utils import kelvin_to_illumenant, only_digits, only_chars, extract_video_frame
+from src.code.utils.utils import kelvin_to_illumenant, only_digits, only_chars, extract_video_frame
 
 
 def xls_to_xlsx(xls_file) -> str:

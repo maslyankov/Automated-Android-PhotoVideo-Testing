@@ -1,6 +1,5 @@
 # Uses https://github.com/Swind/pure-python-adb
 import subprocess
-import os
 import threading
 import time
 
@@ -8,13 +7,15 @@ from ppadb.client import Client as AdbPy
 
 from src import constants
 from src.logs import logger
-from src.app.ADBDevice import ADBDevice
-from src.app.utils import compare_lists
+from src.code.devices.ADBDevice import ADBDevice
+from src.code.utils.utils import compare_lists
+
 
 class AdbClient:
     """
     AdbClient class takes care of starting ADB, keeping connected devices list and etc.
     """
+
     def __init__(self, gui_window, gui_event):
         self.gui_window = gui_window
         self.gui_event = gui_event

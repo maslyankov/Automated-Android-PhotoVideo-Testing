@@ -6,12 +6,11 @@ import PySimpleGUI as sg
 from src import constants
 from src.logs import logger
 
-from src.app.AdbClient import AdbClient
-from src.app.USBCamClient import USBCamClient
+from src.code.devices.AdbClient import AdbClient
 
-from src.app.utils import analyze_images_test_results, add_filenames_to_data
-from src.utils.excel_tools import export_to_excel_file
-from src.app.RLReports import generate_rlt_report
+from src.code.utils.utils import analyze_images_test_results, add_filenames_to_data
+from src.code.utils.excel_tools import export_to_excel_file
+from src.code.reports.RLReports import generate_rlt_report
 
 from src.gui.gui_help import gui_help
 from src.gui.gui_camxoverride import gui_camxoverride

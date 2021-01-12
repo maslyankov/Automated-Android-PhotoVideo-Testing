@@ -4,7 +4,7 @@ from datetime import datetime
 # Local
 from src import constants
 from src.logs import logger
-from src.app.utils import parses_to_integer
+from src.code.utils.utils import parses_to_integer
 
 
 # XML Utils

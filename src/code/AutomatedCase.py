@@ -9,12 +9,11 @@ from PySimpleGUI import cprint as gui_print
 
 from src import constants
 from src.logs import logger
-from src.app.LightsCtrl import LightsCtrl
-from src.app.Sensor import Sensor
+from src.code.LightsCtrl import LightsCtrl
+from src.code.devices.Sensor import Sensor
 
-from src.app.ImatestReports import ImatestReports
-from src.app.utils import analyze_images_test_results
-from src.utils.excel_tools import export_to_excel_file
+from src.code.utils.utils import analyze_images_test_results
+from src.code.utils.excel_tools import export_to_excel_file
 
 
 def dict_len(dictionary):
