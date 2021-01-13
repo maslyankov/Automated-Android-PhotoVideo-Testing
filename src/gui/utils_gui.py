@@ -1,6 +1,8 @@
 import PySimpleGUI as sg
 
 from src import constants
+from src.logs import logger
+
 from src.code.utils.utils import convert_to_int_float
 
 
@@ -25,6 +27,10 @@ def collapse(layout, key, visible=False):
 
 
 def send_progress_to_gui(gui_window: sg.Window, gui_event, progress, info, misc_key: str = None, misc_value=None):
+    logger.debug(f"gui_event: {gui_event}; prog: {progress}; info: {info}; misc: {misc_key}->{misc_value}")
+    if gui_window is None or gui_event is None:
+        return
+
     # progress = round(progress, 2)
     progress = int(progress)
 
@@ -39,10 +45,14 @@ def send_progress_to_gui(gui_window: sg.Window, gui_event, progress, info, misc_
     gui_window.write_event_value(gui_event, out_dict)
 
 
-def send_error_to_gui(gui_window: sg.Window, gui_event, from_where=None, info=None):
+def send_error_to_gui(gui_window: sg.Window, gui_event, reason=None, info=None):
+    logger.error(f"{reason}: {info}")
+    if gui_window is None or gui_event is None:
+        return
+
     out_dict = {
         'error': True,
-        'from_where': from_where,
+        'reason': reason,
         'info': info
     }
 
@@ -780,23 +790,3 @@ class Tabs(sg.TabGroup):
                          theme=theme, key=key, k=k,
                          tooltip=tooltip, visible=visible, metadata=metadata
                          )
-
-
-def skipped_cases_to_str(skipped_cases):
-    output_str = ''
-
-    for case in skipped_cases:
-        try:
-            parameter = f"> {case['param']}"
-        except KeyError:
-            parameter = ''
-
-        output_str += f"Skipped: {case['test_type']} > {case['light_temp']} > {case['lux']} {parameter}\n"
-        try:
-            output_str += f"Results file: {case['results_file']}"
-        except KeyError:
-            pass
-
-        output_str += f"Reason: {case['reason']}\n\n"
-
-    return output_str.strip()

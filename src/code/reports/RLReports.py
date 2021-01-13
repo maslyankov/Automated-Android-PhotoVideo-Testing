@@ -81,13 +81,15 @@ def _generate_rlt_report(report_config: dict, gui_window=None, gui_event=None):
     new_report = RLReports(report_config, gui_window, gui_event)
 
     logger.info("Creating Presentation... ")
-    new_report.create_presentation()
+    new_report.generate_report()
 
     del new_report
 
 
 def generate_rlt_report(report_config: dict, gui_window=None, gui_event=None):
-    rlt_thread = threading.Thread(target=_generate_rlt_report, args=(report_config, gui_window, gui_event), daemon=True)
+    rlt_thread = threading.Thread(target=_generate_rlt_report,
+                                  args=(report_config, gui_window, gui_event),
+                                  daemon=True)
     rlt_thread.name = 'RLTReportsGeneration'
 
     logger.info(f"Starting {rlt_thread.name} Thread")
@@ -112,12 +114,13 @@ class RLReports:
             logger.critical("RLReports class got wrong data!")
             raise ValueError("RLReports class got wrong data in dict!")
 
-    # Create presentation
-    def create_presentation(self):
+        logger.debug("RLReports Initialized")
 
-        if self.gui_window is not None and self.gui_event is not None:
-            logger.info("Starting RLReports Generation")
-            send_progress_to_gui(self.gui_window, self.gui_event, 0, 'Starting')
+    # Create presentation
+    def generate_report(self):
+
+        logger.info("Starting RLReport Generation")
+        send_progress_to_gui(self.gui_window, self.gui_event, 0, 'Starting')
 
         image_path = self.config['image_path']
         image_outpath = self.config['thumbnail_path']
@@ -125,7 +128,7 @@ class RLReports:
         if presentation_name == "":
             presentation_name = "RealLife Report"
 
-        date_str = datetime.now().strftime("%Y%m%d-%H%M%S")
+        date_str = datetime.now().strftime('%Y%m%d-%H%M%S')
         output_file = os.path.join(self.config['image_path'], os.path.pardir, f"{presentation_name}_{date_str}.pptm")
 
         prs = pptx.Presentation(os.path.join(constants.VENDOR_DIR, 'rltreport', 'RLTv1.pptm'))
@@ -141,9 +144,8 @@ class RLReports:
         def natural_keys(input):
             return [atoi(c) for c in re.split('(\d+)', input)]
 
-        if self.gui_window is not None and self.gui_event is not None:
-            logger.info("Initializing RLReports")
-            send_progress_to_gui(self.gui_window, self.gui_event, 3, 'Initializing')
+        logger.info("Initializing RLReports")
+        send_progress_to_gui(self.gui_window, self.gui_event, 3, 'Initializing')
 
         images.sort(key=natural_keys)
 
@@ -153,24 +155,18 @@ class RLReports:
         title.text_frame.paragraphs[0].font.size = Pt(26)
         title.text_frame.paragraphs[0].alignment = PP_ALIGN.RIGHT
 
-        if self.gui_window is not None and self.gui_event is not None:
-            logger.info("Generating Thumbnails")
-            send_progress_to_gui(self.gui_window, self.gui_event, 30, 'Generating Thumbnails')
+        send_progress_to_gui(self.gui_window, self.gui_event, 30, 'Generating Thumbnails')
         create_thumbnail(prs, slide, images, image_path, image_outpath)
 
         shutil.rmtree(image_outpath)
-        if self.gui_window is not None and self.gui_event is not None:
-            logger.info("Generating Report")
-            send_progress_to_gui(self.gui_window, self.gui_event, 38, 'Generating Report')
+        send_progress_to_gui(self.gui_window, self.gui_event, 38, 'Generating Report')
         set_images_to_slide(prs, images, self)
 
-        if self.gui_window is not None and self.gui_event is not None:
-            send_progress_to_gui(self.gui_window, self.gui_event, 95, 'Saving')
+        send_progress_to_gui(self.gui_window, self.gui_event, 95, 'Saving')
         prs.save(output_file)
 
-        if self.gui_window is not None and self.gui_event is not None:
-            send_progress_to_gui(self.gui_window, self.gui_event, 100, 'Done!', 'new_file', output_file)
-        logger.info(f"RLReport {presentation_name} Done\nSaved to: {output_file}")
+        logger.info(f"RLReport {presentation_name} Done")
+        send_progress_to_gui(self.gui_window, self.gui_event, 100, 'Done!', 'new_file', output_file)
 
     # Get image stats
     def show_req(self, rgb_copy, img_iso):

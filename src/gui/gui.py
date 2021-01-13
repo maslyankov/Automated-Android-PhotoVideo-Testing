@@ -1,5 +1,4 @@
 import os
-from datetime import datetime
 
 import PySimpleGUI as sg
 
@@ -8,9 +7,8 @@ from src.logs import logger
 
 from src.code.devices.AdbClient import AdbClient
 
-from src.code.utils.utils import analyze_images_test_results, add_filenames_to_data
-from src.code.utils.excel_tools import export_to_excel_file
 from src.code.reports.RLReports import generate_rlt_report
+from src.code.reports.ObjectiveReports import generate_obj_report
 
 from src.gui.gui_help import gui_help
 from src.gui.gui_camxoverride import gui_camxoverride
@@ -24,7 +22,7 @@ from src.gui.gui_test_lights import gui_test_lights
 from src.gui.gui_project_req_file import gui_project_req_file
 from src.gui.gui_cam_tool import gui_cam_tool
 from src.gui.gui_extract_video_frames_tool import gui_extract_video_frames_tool
-from src.gui.utils_gui import place, Tabs, skipped_cases_to_str, collapse
+from src.gui.utils_gui import place, Tabs, collapse
 
 
 def gui():
@@ -119,6 +117,7 @@ def gui():
     ]
 
     # Tab 2
+    global templ_data
     objective_frame_layout = [
         [
             sg.T('Project Requirements: ', size=(18, 1)),
@@ -394,6 +393,8 @@ def gui():
     # usbcam_client.watchdog()
     # usbcam_devices = usbcam_client.devices_obj
 
+    reports_loading_event = None
+    obj_reports_event = "RLTReport_Thread"
     rlt_reports_event = "RLTReport_Thread"
 
     progress_bar = window['progressbar']
@@ -446,7 +447,7 @@ def gui():
                             logger.debug(f"metadata: {window[f'device_attached.{num}'].metadata}")
                             break
                     except KeyError:
-                        logger.error('Devices limit exceeded! \nnum: {num}, max: {constants.MAX_DEVICES_AT_ONE_RUN}')
+                        logger.critical('Devices limit exceeded! \nnum: {num}, max: {constants.MAX_DEVICES_AT_ONE_RUN}')
             elif watchdog_received['action'] == 'disconnected':
                 # If device is disconnected
                 for num in range(constants.MAX_DEVICES_AT_ONE_RUN):
@@ -575,6 +576,9 @@ def gui():
         if event == 'help_btn':
             gui_help()
 
+        # ####################
+        # Tools tab
+
         if event == 'project_req_tool_btn':
             gui_project_req_file()
 
@@ -584,7 +588,13 @@ def gui():
         if event == 'usb_cam_tool_btn':
             gui_cam_tool()
 
+        # ####################
         # Reports tab
+
+        # ##########
+        # Objective Reports
+
+        # Grabbing Project requirements
         if event == 'obj_report_projreq_btn':
             try:
                 ret_data
@@ -605,39 +615,26 @@ def gui():
                 else:
                     window['obj_report_projreq_field'].Update('New unsaved file')
 
+        # Disable Build btn when output field is empty
         if event == 'obj_report_output':
             window['obj_report_build_btn'].Update(
                 disabled=not (ret_data is not None and values['obj_report_output'] != ''))
 
+        # On Build btn press
         if event == 'obj_report_build_btn':
-            out_dir = os.path.normpath(values['obj_report_output'])
-            logger.debug(f'before file data: \n{templ_data}')
-            add_filenames_to_data(templ_data, out_dir)
-            logger.debug(f'after file data: \n{templ_data}')
-
-            # Use images analysis data and insert it into templ_data
-            skipped_cases = analyze_images_test_results(templ_data)[1]
-
-            logger.debug('With analysis: \n{templ_data}')
-
-            report_filename = (
-                    'Report_' +
-                    f"{os.path.basename(values['obj_report_projreq_field']).split('.')[0]}_" +  # Device friendly name
-                    datetime.now().strftime("%Y%m%d-%H%M%S")
+            generate_obj_report(
+                templ_data, values['obj_report_projreq_field'], values['obj_report_output'], window, rlt_reports_event
             )
+            reports_loading_event = obj_reports_event
 
-            excel_filename = report_filename + '.xlsx'
-            excel_file_path = os.path.join(out_dir, os.path.pardir, excel_filename)
+        # ##########
+        # RLT Reports
 
-            export_to_excel_file(templ_data, excel_file_path, add_images_bool=True)
-
-            sg.popup_ok("File generated!")
-            if len(skipped_cases) > 0:
-                sg.popup_scrolled(skipped_cases_to_str(skipped_cases))
-
+        # Disable/Enable Go button based on files field
         if event == 'rlt_report_input_files':
             window['rlt_report_build_btn'].Update(disabled=not (values['rlt_report_input_files'] != ''))
 
+        # Dropdowns
         if event.startswith('-OPEN SEC_CONF_MAIN'):
             opened_conf_main, opened_conf_summ_params, opened_conf_summ_items, opened_conf_attribute = not opened_conf_main, False, False, False
         elif event.startswith('-OPEN SEC_CONF_SUMM_PARAMS'):
@@ -662,6 +659,7 @@ def gui():
             constants.SYMBOL_DOWN if opened_conf_attribute else constants.SYMBOL_UP)
         window['-SEC_CONF_ATTRIBUTE-'].update(visible=opened_conf_attribute)
 
+        # Hit Build RLT Report Button
         if event == 'rlt_report_build_btn':
             report_config = {
                 "config": {
@@ -712,56 +710,60 @@ def gui():
             logger.debug(f"Report Config: {report_config}")
 
             generate_rlt_report(report_config, window, rlt_reports_event)
+            reports_loading_event = rlt_reports_event
 
-        if event == rlt_reports_event:
-            rlt_received = values[rlt_reports_event]
-            logger.debug(f'rlt gui received: {rlt_received}')
+        # ##########
+        # Reports Loading Bar
+
+        if event == reports_loading_event:
+            gui_received = values[reports_loading_event]
+            logger.debug(f'gui loading indicator received: \n{gui_received}')
 
             # TODO: Make object send errors
             try:
-                rlt_received['error']
+                gui_received['error']
             except KeyError:
                 pass
             else:
-                if rlt_received['error']:
-                    logger.error(f"{rlt_received['from_where']}: {rlt_received['info']}")
-                    sg.popup_error(f"{rlt_received['from_where']}: {rlt_received['info']}")
+                if gui_received['error']:
+                    sg.popup_scrolled(f"{gui_received['reason']}: \n{gui_received['info']}")
+            try:
+                gui_received['info']
+            except KeyError:
+                pass
+            else:
+                progress_bar_status.Update(gui_received['info'])
 
             try:
-                rlt_received['info']
+                gui_received['progress']
             except KeyError:
                 pass
             else:
-                progress_bar_status.Update(rlt_received['info'])
-
-            try:
-                rlt_received['progress']
-            except KeyError:
-                pass
-            else:
-                if rlt_received['progress'] == 0:
+                if gui_received['progress'] == 0:
                     # make visible
                     window['loading_status_bar'].Update(visible=True)
 
                     window['rlt_report_build_btn'].Update(disabled=True)
                     window['rlt_report_output_browse'].Update(disabled=True)
 
-                progress_bar.Update(current_count=rlt_received['progress'])
-                progress_bar_percent.Update(rlt_received['progress'])
+                progress_bar.Update(current_count=gui_received['progress'])
+                progress_bar_percent.Update(gui_received['progress'])
 
-                if rlt_received['progress'] == 100:
-                    done_msg = rlt_received['info']
+                if gui_received['progress'] == 100:
+                    done_msg = gui_received['info']
 
                     try:
-                        rlt_received['new_file']
+                        gui_received['new_file']
                     except KeyError:
                         pass
                     else:
-                        if rlt_received['new_file']:
-                            done_msg = f"{done_msg}\nNew report:\n{rlt_received['new_file']}"
+                        if gui_received['new_file']:
+                            done_msg = f"{done_msg}\nNew report:\n{gui_received['new_file']}"
 
                     logger.info(done_msg)
                     sg.popup_ok(done_msg)
+
+                    reports_loading_event = None
 
                     window['loading_status_bar'].Update(visible=False)
 
