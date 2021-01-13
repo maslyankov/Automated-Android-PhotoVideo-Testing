@@ -590,6 +590,11 @@ def gui():
 
         # ####################
         # Reports tab
+        tab2_elems = [
+            'loading_status_bar',
+            'obj_report_projreq_btn', 'obj_report_output_browse', 'obj_report_build_btn',
+            'rlt_report_build_btn', 'rlt_report_output_browse'
+        ]
 
         # ##########
         # Objective Reports
@@ -741,10 +746,7 @@ def gui():
             else:
                 if gui_received['progress'] == 0:
                     # make visible
-                    window['loading_status_bar'].Update(visible=True)
-
-                    window['rlt_report_build_btn'].Update(disabled=True)
-                    window['rlt_report_output_browse'].Update(disabled=True)
+                    set_buttons(window, tab2_elems, True)
 
                 progress_bar.Update(current_count=gui_received['progress'])
                 progress_bar_percent.Update(gui_received['progress'])
@@ -765,10 +767,7 @@ def gui():
 
                     reports_loading_event = None
 
-                    window['loading_status_bar'].Update(visible=False)
-
-                    window['rlt_report_build_btn'].Update(disabled=False)
-                    window['rlt_report_output_browse'].Update(disabled=False)
+                    set_buttons(window, tab2_elems, False)
     # Before exiting...
 
     # Detach attached devices
@@ -779,6 +778,17 @@ def gui():
         adb.detach_device(dev)
 
     window.close()
+
+
+def set_buttons(window, elements_list: list, disabledBool: bool):
+    # Sets Disabled = True/False to what can be disabled
+    # Sets Visible = False/True to what can be hidden
+
+    for elem in elements_list:
+        try:
+            window[elem].Update(disabled=disabledBool)
+        except TypeError:
+            window[elem].Update(visible=disabledBool)
 
 
 def set_gui_theme():
