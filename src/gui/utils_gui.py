@@ -207,8 +207,8 @@ class Tree(sg.Tree):
                         logger.info(f'not creating empty dict for {node.text}')
                     self.dfs(child, curr)
         else:
-            logger.debug('ndict: ', ndict)
-            logger.debug('key: ', node.text)
+            logger.debug(f'ndict: {str(ndict)}')
+            logger.debug(f'key: {str(node.text)}')
             try:
                 ndict[node.text] = float(node.children[0].text)
             except IndexError:
@@ -536,7 +536,7 @@ class Tree(sg.Tree):
         if len(self.treedata.tree_dict[''].children):
             logger.debug(f"cleaning {len(self.treedata.tree_dict[''].children)}")
             self.delete_all_nodes()
-        logger.debug(f'load dict got: {dict_in}')
+        logger.debug(f'load dict got: {str(dict_in)}')
         self._load_dict_to_tree('', '', dict_in)
         self.expand_all()
 

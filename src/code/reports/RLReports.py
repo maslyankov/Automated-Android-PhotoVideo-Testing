@@ -1,4 +1,5 @@
 #########imports###############################################################
+from threading import Thread
 import colorsys
 import cv2
 import exifread
@@ -87,7 +88,7 @@ def _generate_rlt_report(report_config: dict, gui_window=None, gui_event=None):
 
 
 def generate_rlt_report(report_config: dict, gui_window=None, gui_event=None):
-    rlt_thread = threading.Thread(target=_generate_rlt_report,
+    rlt_thread = Thread(target=_generate_rlt_report,
                                   args=(report_config, gui_window, gui_event),
                                   daemon=True)
     rlt_thread.name = 'RLTReportsGeneration'

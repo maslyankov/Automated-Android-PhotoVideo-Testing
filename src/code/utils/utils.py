@@ -200,16 +200,16 @@ def analyze_images_test_results(template_data):
                             curr_param_dict['result'] = param_val
                             curr_param_dict['result_calculated'] = param_val_calc
 
-                            logger.debug(f'param {param} is: ', param_val)
+                            logger.debug(f'param {param} is: {str(param_val)}')
                             logger.debug(f'calculated value is: {param_val_calc}')
                             logger.debug(f'min is: {curr_param_dict["min"]}')
                             logger.debug(f'max is: {curr_param_dict["max"]}')
                             if curr_param_dict["min"] < param_val_calc < curr_param_dict["max"]:
                                 curr_param_dict['result_pass_bool'] = True
-                                print('PASS!\n')
+                                logger.debug('PASS!\n')
                             else:
                                 curr_param_dict['result_pass_bool'] = False
-                                print('FAIL!\n')
+                                logger.debug('FAIL!\n')
 
     return template_data, skipped_cases
 
@@ -273,7 +273,7 @@ def extract_video_frame(videofile, start_frame, number_of_frames=None, end_frame
         if start_frame > end_frame:
             logger.error('Start frame must be smaller int than end frame!')
             return
-    print()
+
     while success:
         if start_frame <= current_frame <= end_frame:
             if skip_frames:

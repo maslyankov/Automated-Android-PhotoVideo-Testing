@@ -87,7 +87,7 @@ def parse_excel_template(excel_file) -> dict:
     tests_seq = {}
 
     header = list(ws.rows)[conf_min_row - 1]
-    print(list(ws.rows))
+    logger.debug(f"Rows: {list(ws.rows)}")
 
     test_type_col = None
     light_temp_col = None
@@ -243,7 +243,7 @@ def xls_draw_results_table(template_data: dict, sheet, start_col: int, start_row
     """
     center = Alignment(horizontal='center', vertical='center')
 
-    print(template_data)
+    logger.debug(f"Template data: \n{template_data}")
 
     columns = {
         'test_type': ['Test Target'],
@@ -404,7 +404,7 @@ def xls_draw_results_table(template_data: dict, sheet, start_col: int, start_row
                         except IndexError:
                             columns['param_calc'].append(data_len)
                     except KeyError:
-                        print(f'Missing result at {test_type}>{light_color}>{lux}>{param} -> {param_templ_data}')
+                        logger.warn(f'Missing result at {test_type}>{light_color}>{lux}>{param} -> {param_templ_data}')
                         continue
                     current_col += 1
 
@@ -413,12 +413,12 @@ def xls_draw_results_table(template_data: dict, sheet, start_col: int, start_row
                     pass_fail_cell.alignment = center
                     if param_templ_data['result_pass_bool']:
                         # Passed
-                        print('pass')
+                        logger.debug('pass')
                         pass_fail_cell.fill = PatternFill(fgColor="00FF00", fill_type="solid")
                         pass_fail_cell.value = 'Pass'
                     else:
                         # Failed
-                        print('fail')
+                        logger.debug('fail')
                         pass_fail_cell.fill = PatternFill(fgColor="FF0000", fill_type="solid")
                         pass_fail_cell.value = 'Fail'
                     data_len = len(str(pass_fail_cell.value))
@@ -437,7 +437,7 @@ def xls_draw_results_table(template_data: dict, sheet, start_col: int, start_row
                     img_cell = sheet.cell(lux_start_row, columns['image'][1])
                     img_cell.style = cells_style
                     img_file = template_data[test_type][light_color][lux]['filename']
-                    print('img: ', img_file)
+                    logger.debug(f'img: {img_file}')
                     xls_import_image(img_file, sheet, img_cell)
                     set_row_height = 70
                     # Merge image rows

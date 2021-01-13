@@ -1,8 +1,8 @@
-from datetime import datetime
 import os
 import time
-import threading
 import xml.etree.cElementTree as ET
+from datetime import datetime
+from threading import Thread
 from pathlib import Path
 
 from PySimpleGUI import cprint as gui_print
@@ -55,10 +55,10 @@ def parse_lights_xml_seq(seq_xml):
     return seq_name, seq_desc, seq
 
 
-class AutomatedCase(threading.Thread):
+class AutomatedCase(Thread):
     def __init__(self, adb, lights_model, luxmeter_model, gui_window, gui_output, gui_event):
         # super(AutomatedCase, self).__init__()
-        threading.Thread.__init__(self)
+        Thread.__init__(self)
         self.name = 'AutomatedCasesThread'
 
         # Class initialization
@@ -116,7 +116,7 @@ class AutomatedCase(threading.Thread):
         # self.output_gui("Unsupported lights selected!", msg_type='error')
 
     # def run_prereq(self):
-    #     prereq_thread = threading.Thread(
+    #     prereq_thread = Thread(
     #         target=self._run_prereq,
     #         args=(),
     #         daemon=True)
@@ -374,7 +374,7 @@ class AutomatedCase(threading.Thread):
                 lights_seq_in=None, seq_name=None,
                 video_duration: int = None):
         self.stop_signal = False
-        threading.Thread(target=self._execute,
+        Thread(target=self._execute,
                          args=(lights_seq_xml,
                                pull_files_bool, pull_files_location,
                                photo_bool, video_bool,
@@ -529,7 +529,7 @@ class AutomatedCase(threading.Thread):
                              reports_bool: bool, reports_excel_bool: bool, reports_pdf_bool: bool,
                              specific_device=None):
         self.stop_signal = False
-        threading.Thread(target=self._execute_req_template,
+        Thread(target=self._execute_req_template,
                          args=(requirements_dict, files_destination,
                                reports_bool, reports_excel_bool, reports_pdf_bool,
                                specific_device),
