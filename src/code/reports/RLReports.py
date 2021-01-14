@@ -89,8 +89,8 @@ def _generate_rlt_report(report_config: dict, gui_window=None, gui_event=None):
 
 def generate_rlt_report(report_config: dict, gui_window=None, gui_event=None):
     rlt_thread = Thread(target=_generate_rlt_report,
-                                  args=(report_config, gui_window, gui_event),
-                                  daemon=True)
+                        args=(report_config, gui_window, gui_event),
+                        daemon=True)
     rlt_thread.name = 'RLTReportsGeneration'
 
     logger.info(f"Starting {rlt_thread.name} Thread")
@@ -235,8 +235,8 @@ class RLReports:
 
         #### saturattion ######
         if self.config['Peak Saturation 1'] \
-                or self.config['Peak Saturation 2']\
-                or self.config['Peak Hue 1']\
+                or self.config['Peak Saturation 2'] \
+                or self.config['Peak Hue 1'] \
                 or self.config['Peak Hue 2']:
             img_peak_sat = np.asarray(img)
             peak_sat = peak_saturation(img_peak_sat)
@@ -539,7 +539,7 @@ def set_images_to_slide(prs, files, obj):
         tf.paragraphs[0].font.size = Pt(16)
         tf.paragraphs[0].alignment = PP_ALIGN.RIGHT
 
-        progress_step = 50/len(files)
+        progress_step = 50 / len(files)
 
         for g in files:
             img = Image.open(g)
