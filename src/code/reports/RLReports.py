@@ -124,7 +124,7 @@ class RLReports:
         send_progress_to_gui(self.gui_window, self.gui_event, 0, 'Starting')
 
         image_path = self.config['image_path']
-        image_outpath = self.config['thumbnail_path']
+        image_outpath = os.path.realpath(self.config['thumbnail_path'])
         presentation_name = self.config['presentation_name']
         if presentation_name == "":
             presentation_name = "RealLife Report"
@@ -407,7 +407,7 @@ def create_thumbnail(prs, slide, files, path, outpath):
 
     for g in files:
         image_number += 1
-        if os.path.exists(outpath) is False:
+        if not os.path.exists(outpath):
             os.mkdir(outpath)
 
         img = Image.open(g)
@@ -428,7 +428,11 @@ def create_thumbnail(prs, slide, files, path, outpath):
                 resize_width = 1920
                 resize_height = 1080
         img1 = img.resize((resize_width, resize_height), Image.ANTIALIAS)
-        img1.save(outpath + str(image_number) + tail)
+        img_name = str(image_number) + tail
+        out = os.path.join(outpath, img_name)
+
+        logger.debug(f"Saving {img_name} to {path}")
+        img1.save(out)
 
     thumbnails = [g for g in glob.glob(outpath + "/**/*case*.jpg", recursive=True)]
 
@@ -826,7 +830,7 @@ def hist_image(prs, slide, width, height, image_hist, image_on_slide):
 # Get device name
 def get_device_name(image_name):
     devices = image_name.split("_")[-1].split(".")[0]
-    devices = devices[1:-1]
+    # devices = devices[1:-1]
     return devices
 
 
