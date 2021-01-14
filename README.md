@@ -41,6 +41,7 @@ Tools:
 - Reboot Device
 - View device info (build, android versions etc)
 - Device screen control and mirroring
+- Record device screen
 
 for automated/semi-automated testing:
 
