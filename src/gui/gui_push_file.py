@@ -30,8 +30,8 @@ def gui_push_file(attached_devices, device_obj):
             sg.Combo(file_destinations, size=(20, 20), key='dest_folder', default_value=file_destinations[0])
         ],
         [
-            sg.Text('File:', size=(9, 1)),
-            sg.InputText(size=(35, 1), key='source_file', enable_events=True),
+            sg.Text('File/s:', size=(9, 1)),
+            sg.InputText(size=(40, 1), key='source_file', enable_events=True),
             sg.FilesBrowse()
         ],
         [

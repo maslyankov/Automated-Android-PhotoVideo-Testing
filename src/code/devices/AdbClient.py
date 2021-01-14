@@ -1,7 +1,7 @@
 # Uses https://github.com/Swind/pure-python-adb
-import subprocess
-import threading
-import time
+from subprocess import PIPE, Popen
+from time import sleep
+from threading import Thread
 
 from ppadb.client import Client as AdbPy
 
@@ -22,11 +22,11 @@ class AdbClient:
 
         logger.info("Starting the ADB Server...")
         try:
-            self.adb = subprocess.Popen(
+            self.adb = Popen(
                 [constants.ADB, 'start-server'],
-                stdin=subprocess.PIPE,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE)
+                stdin=PIPE,
+                stdout=PIPE,
+                stderr=PIPE)
             self.adb.stdin.close()
             stdout, stderr = self.adb.communicate()
             if stdout:
@@ -50,10 +50,10 @@ class AdbClient:
 
     # ----- Main Stuff -----
     def _watchdog(self):
-        time.sleep(1)  # Let's give the GUI time to load
+        sleep(1)  # Let's give the GUI time to load
         while True:
             if self.anticipate_root:
-                time.sleep(2)
+                sleep(2)
                 self.anticipate_root = False
             try:
                 devices_list = self.list_devices()
@@ -92,7 +92,7 @@ class AdbClient:
             self.connected_devices = devices_list
 
     def watchdog(self):
-        self.watchdog_thread = threading.Thread(target=self._watchdog, args=(), daemon=True)
+        self.watchdog_thread = Thread(target=self._watchdog, args=(), daemon=True)
         self.watchdog_thread.name = 'ADBDevices-Watchdog'
         self.watchdog_thread.start()
 

@@ -1,8 +1,9 @@
-import subprocess
-import time
-import re
-import os
 import xml.etree.cElementTree as ET
+from subprocess import Popen, PIPE
+from time import sleep
+from re import findall
+from os import path
+from datetime import datetime
 from natsort import natsorted
 
 from src.code.devices.Device import Device
@@ -71,10 +72,10 @@ class ADBDevice(Device):
         logger.info(f"Rooting device {self.device_serial}")
         self.adb.anticipate_root = True
         CREATE_NO_WINDOW = 0x08000000
-        root = subprocess.Popen([constants.ADB, '-s', self.device_serial, 'root'],
-                                stdin=subprocess.PIPE,
-                                stdout=subprocess.PIPE,
-                                stderr=subprocess.PIPE,
+        root = Popen([constants.ADB, '-s', self.device_serial, 'root'],
+                                stdin=PIPE,
+                                stdout=PIPE,
+                                stderr=PIPE,
                                 creationflags=CREATE_NO_WINDOW)
         root.stdin.close()
         stdout, stderr = root.communicate()
@@ -98,10 +99,10 @@ class ADBDevice(Device):
         """
         logger.info(f"Remount device serial: {self.device_serial}")
         CREATE_NO_WINDOW = 0x08000000
-        remount = subprocess.Popen([constants.ADB, '-s', self.device_serial, 'remount'],
-                                   stdin=subprocess.PIPE,
-                                   stdout=subprocess.PIPE,
-                                   stderr=subprocess.PIPE,
+        remount = Popen([constants.ADB, '-s', self.device_serial, 'remount'],
+                                   stdin=PIPE,
+                                   stdout=PIPE,
+                                   stderr=PIPE,
                                    creationflags=CREATE_NO_WINDOW)
         remount.stdin.close()
         stdout, stderr = remount.communicate()
@@ -119,10 +120,10 @@ class ADBDevice(Device):
         print("Dis verity device serial: " + self.device_serial)
         CREATE_NO_WINDOW = 0x08000000
         self.adb.anticipate_root = True
-        disver = subprocess.Popen([constants.ADB, '-s', self.device_serial, 'disable-verity'],
-                                  stdin=subprocess.PIPE,
-                                  stdout=subprocess.PIPE,
-                                  stderr=subprocess.PIPE,
+        disver = Popen([constants.ADB, '-s', self.device_serial, 'disable-verity'],
+                                  stdin=PIPE,
+                                  stdout=PIPE,
+                                  stderr=PIPE,
                                   creationflags=CREATE_NO_WINDOW)
         disver.stdin.close()
         stdout, stderr = disver.communicate()
@@ -343,7 +344,7 @@ class ADBDevice(Device):
         """
         before = self.exec_shell("dumpsys deviceidle | grep mScreenOn").split('=')[1].strip()
         self.exec_shell('input keyevent 26')
-        time.sleep(0.5)
+        sleep(0.5)
         after = self.exec_shell("dumpsys deviceidle | grep mScreenOn").split('=')[1].strip()
 
         if before == after:
@@ -396,7 +397,7 @@ class ADBDevice(Device):
             logger.debug(f'Currently opened: {self.get_current_app()}')
             logger.debug("Opening {}...".format(package))
             self.exec_shell("monkey -p '{}' -v 1".format(package))
-            time.sleep(1)  # Give a bit of time to the device to load the app
+            sleep(1)  # Give a bit of time to the device to load the app
         else:
             logger.debug("{} was already opened! Continuing...".format(package))
 
@@ -417,7 +418,7 @@ class ADBDevice(Device):
         for num, file in enumerate(files_list):
             if num > 0:
                 suffix = f"_{str(num)}"
-            new_filename = os.path.join(dest, f"{filename}{suffix if suffix else ''}.{file.split('.')[1]}")
+            new_filename = path.join(dest, f"{filename}{suffix if suffix else ''}.{file.split('.')[1]}")
             self.pull_file(f"sdcard/DCIM/Camera/{file}", new_filename)
             pulled_files.append(new_filename)
         return pulled_files
@@ -433,8 +434,8 @@ class ADBDevice(Device):
 
         for file in files_list.split(';'):
             logger.debug(f'Pushing: {file}')
-            filename = os.path.basename(file)
-            self.push_file(os.path.normpath(file), files_dest + filename)
+            filename = path.basename(file)
+            self.push_file(path.normpath(file), files_dest + filename)
 
     def turn_on_and_unlock(self):
         state = self.is_sleeping()
@@ -465,13 +466,24 @@ class ADBDevice(Device):
         """
         logger.info(f"Opening scrcpy for device {self.device_serial}.")
         logger.debug(f"Scrcpy extra_args: {extra_args}")
+        extra_args = extra_args.split(" ")
 
-        self.scrcpy.append(subprocess.Popen([constants.SCRCPY, '--serial', self.device_serial, extra_args],
-                                            stdin=subprocess.PIPE,
-                                            stdout=subprocess.PIPE,
-                                            stderr=subprocess.PIPE,
+        self.scrcpy.append(Popen([constants.SCRCPY, '--serial', self.device_serial, extra_args],
+                                            stdin=PIPE,
+                                            stdout=PIPE,
+                                            stderr=PIPE,
                                             creationflags=constants.CREATE_NO_WINDOW))
         self.scrcpy[len(self.scrcpy) - 1].stdin.close()
+
+    def record_device_ctrl(self, save_dest):
+        self.kill_scrcpy()
+
+        filename = f"{self.friendly_name}_screenrec_{datetime.now().strftime('%Y%m%d-%H%M%S')}.mp4"
+        save_dest = path.join(save_dest, filename)
+
+        logger.info(f"Starting device screen recording to: {save_dest}")
+
+        self.open_device_ctrl(f"-r {save_dest}")
 
     def identify(self):
         """
@@ -487,7 +499,7 @@ class ADBDevice(Device):
         for k in range(1, 60, 5):  # Blink Leds and screen
             # Poly
             if k != 1:
-                time.sleep(0.3)
+                sleep(0.3)
             self.exec_shell('echo {}{}{} > /sys/class/leds/{}/global_enable'.format(k, k, k, leds[0]))  # Poly
 
             # Devices with screen
@@ -614,7 +626,7 @@ class ADBDevice(Device):
 
         self.pull_file(
             source,
-            os.path.join(constants.XML_DIR,
+            path.join(constants.XML_DIR,
                          '{}_{}_{}.xml'.format(self.device_serial, current_app[0], current_app[1]))
         )
         logger.info('Dumped window elements for current app.')
@@ -633,7 +645,7 @@ class ADBDevice(Device):
             return {}
 
         logger.debug("Serial {} , app: {}".format(self.device_serial, current_app))
-        file = os.path.join(constants.XML_DIR,
+        file = path.join(constants.XML_DIR,
                             '{}_{}_{}.xml'.format(self.device_serial, current_app[0], current_app[1]))
 
         if force_dump:
@@ -665,7 +677,7 @@ class ADBDevice(Device):
         for num, element in enumerate(xml_root.iter("node")):
             elem_res_id = element.attrib['resource-id'].split('/')
             elem_desc = element.attrib['content-desc']
-            elem_bounds = re.findall(r'\[([^]]*)]', element.attrib['bounds'])[0].split(',')
+            elem_bounds = findall(r'\[([^]]*)]', element.attrib['bounds'])[0].split(',')
 
             if (elem_res_id or elem_desc) and int(elem_bounds[0]) > 0:
                 elem_bounds[0] = int(elem_bounds[0]) + 1
@@ -702,8 +714,8 @@ class ADBDevice(Device):
                 self.input_tap(act_value)
             if act_type == 'delay':
                 logger.debug(f"Sleeping {act_value}")
-                time.sleep(int(act_value))
-            time.sleep(self.actions_time_gap)
+                sleep(int(act_value))
+            sleep(self.actions_time_gap)
 
     def take_photo(self):
         logger.debug(f"Current mode: {self.current_camera_app_mode}")

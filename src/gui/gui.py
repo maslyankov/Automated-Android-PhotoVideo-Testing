@@ -17,6 +17,7 @@ from src.gui.gui_automated_cases import gui_automated_cases
 from src.gui.gui_push_file import gui_push_file
 from src.gui.gui_pull_file import gui_pull_file
 from src.gui.gui_reboot_device import gui_reboot_device
+from src.gui.gui_screenrec import gui_screenrec
 from src.gui.gui_setup_device import gui_setup_device
 from src.gui.gui_test_lights import gui_test_lights
 from src.gui.gui_project_req_file import gui_project_req_file
@@ -90,6 +91,10 @@ def gui():
             sg.Button('Pull file/s',
                       size=(12, 3),
                       key='pull_file_btn',
+                      disabled=True),
+            sg.Button('Record Screen',
+                      size=(12, 3),
+                      key='record_screen_btn',
                       disabled=True)
         ]
     ]
@@ -519,6 +524,7 @@ def gui():
             window['reboot_device_btn'].Update(disabled=False)
             window['push_file_btn'].Update(disabled=False)
             # window['pull_file_btn'].Update(disabled=False)
+            window['record_screen_btn'].Update(disabled=False)
             window['setup_device_btn'].Update(disabled=False)
             window['capture_manual_btn'].Update(disabled=False)
             window['capture_auto_btn'].Update(disabled=False)
@@ -540,6 +546,9 @@ def gui():
 
             if event == "pull_file_btn":
                 gui_pull_file(attached_devices_list, adb_devices)
+
+            if event == "record_screen_btn":
+                gui_screenrec(attached_devices_list, adb_devices)
 
             if event == "setup_device_btn":
                 gui_setup_device(attached_devices_list, adb_devices)
@@ -566,6 +575,7 @@ def gui():
             window['reboot_device_btn'].Update(disabled=True)
             window['push_file_btn'].Update(disabled=True)
             window['pull_file_btn'].Update(disabled=True)
+            window['record_screen_btn'].Update(disabled=True)
             window['setup_device_btn'].Update(disabled=True)
             window['capture_manual_btn'].Update(disabled=True)
             window['capture_auto_btn'].Update(disabled=True)
