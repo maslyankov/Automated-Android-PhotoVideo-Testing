@@ -130,7 +130,7 @@ class RLReports:
             presentation_name = "RealLife Report"
 
         date_str = datetime.now().strftime('%Y%m%d-%H%M%S')
-        output_file = os.path.join(self.config['image_path'], os.path.pardir, f"{presentation_name}_{date_str}.pptm")
+        output_file = os.path.realpath(os.path.join(self.config['image_path'], os.path.pardir, f"{presentation_name}_{date_str}.pptm"))
 
         prs = pptx.Presentation(os.path.join(constants.VENDOR_DIR, 'rltreport', 'RLTv1.pptm'))
 

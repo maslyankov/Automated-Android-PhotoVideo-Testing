@@ -89,7 +89,7 @@ class ObjectiveReports:
         report_filename = f"Report_{self.report_name}_{datetime.now().strftime('%Y%m%d-%H%M%S')}"
 
         excel_filename = report_filename + '.xlsx'
-        excel_file_path = path.join(self.out_dir, path.pardir, excel_filename)
+        excel_file_path = path.realpath(path.join(self.out_dir, path.pardir, excel_filename))
 
         self.progress += 70  # 90%
         send_progress_to_gui(self.gui_window, self.gui_event, self.progress, 'Generating report...')
