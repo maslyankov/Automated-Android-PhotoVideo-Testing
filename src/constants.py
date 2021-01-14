@@ -27,8 +27,8 @@ Path(DEVICES_SETTINGS_DIR).mkdir(parents=True, exist_ok=True)
 Path(DATA_DIR).mkdir(parents=True, exist_ok=True)
 Path(XML_DIR).mkdir(parents=True, exist_ok=True)
 
-ADB = os.path.join(VENDOR_DIR, 'scrcpy-win64-v1.16', 'adb.exe')
-SCRCPY = os.path.join(VENDOR_DIR, 'scrcpy-win64-v1.16', 'scrcpy.exe')
+ADB = os.path.join(VENDOR_DIR, 'scrcpy-win64-v1.17', 'adb.exe')
+SCRCPY = os.path.join(VENDOR_DIR, 'scrcpy-win64-v1.17', 'scrcpy.exe')
 
 
 # Logs settings
