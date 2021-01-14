@@ -23,7 +23,7 @@ from src.gui.gui_test_lights import gui_test_lights
 from src.gui.gui_project_req_file import gui_project_req_file
 from src.gui.gui_cam_tool import gui_cam_tool
 from src.gui.gui_extract_video_frames_tool import gui_extract_video_frames_tool
-from src.gui.utils_gui import place, Tabs, collapse
+from src.gui.utils_gui import place, Tabs, collapse, explorer_open_file
 
 
 def gui():
@@ -763,6 +763,7 @@ def gui():
 
                 if gui_received['progress'] == 100:
                     done_msg = gui_received['info']
+                    new_file = None
 
                     try:
                         gui_received['new_file']
@@ -770,10 +771,14 @@ def gui():
                         pass
                     else:
                         if gui_received['new_file']:
-                            done_msg = f"{done_msg}\nNew report:\n{gui_received['new_file']}"
+                            new_file = gui_received['new_file']
+                            done_msg += f"\nNew report:\n{new_file}"
 
                     logger.info(done_msg)
                     sg.popup_ok(done_msg)
+
+                    if new_file:
+                        explorer_open_file(new_file)
 
                     reports_loading_event = None
 

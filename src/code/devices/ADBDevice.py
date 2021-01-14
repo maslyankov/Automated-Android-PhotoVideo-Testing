@@ -2,7 +2,8 @@ import xml.etree.cElementTree as ET
 from subprocess import Popen, PIPE
 from time import sleep
 from re import findall
-from os import path
+from os import path, kill
+from signal import CTRL_C_EVENT, SIGINT
 from datetime import datetime
 from natsort import natsorted
 
@@ -73,10 +74,10 @@ class ADBDevice(Device):
         self.adb.anticipate_root = True
         CREATE_NO_WINDOW = 0x08000000
         root = Popen([constants.ADB, '-s', self.device_serial, 'root'],
-                                stdin=PIPE,
-                                stdout=PIPE,
-                                stderr=PIPE,
-                                creationflags=CREATE_NO_WINDOW)
+                     stdin=PIPE,
+                     stdout=PIPE,
+                     stderr=PIPE,
+                     creationflags=CREATE_NO_WINDOW)
         root.stdin.close()
         stdout, stderr = root.communicate()
         if stderr:
@@ -100,10 +101,10 @@ class ADBDevice(Device):
         logger.info(f"Remount device serial: {self.device_serial}")
         CREATE_NO_WINDOW = 0x08000000
         remount = Popen([constants.ADB, '-s', self.device_serial, 'remount'],
-                                   stdin=PIPE,
-                                   stdout=PIPE,
-                                   stderr=PIPE,
-                                   creationflags=CREATE_NO_WINDOW)
+                        stdin=PIPE,
+                        stdout=PIPE,
+                        stderr=PIPE,
+                        creationflags=CREATE_NO_WINDOW)
         remount.stdin.close()
         stdout, stderr = remount.communicate()
         if stderr:
@@ -121,10 +122,10 @@ class ADBDevice(Device):
         CREATE_NO_WINDOW = 0x08000000
         self.adb.anticipate_root = True
         disver = Popen([constants.ADB, '-s', self.device_serial, 'disable-verity'],
-                                  stdin=PIPE,
-                                  stdout=PIPE,
-                                  stderr=PIPE,
-                                  creationflags=CREATE_NO_WINDOW)
+                       stdin=PIPE,
+                       stdout=PIPE,
+                       stderr=PIPE,
+                       creationflags=CREATE_NO_WINDOW)
         disver.stdin.close()
         stdout, stderr = disver.communicate()
         if stderr:
@@ -459,21 +460,26 @@ class ADBDevice(Device):
         except RuntimeError:
             logger.warn("Device was disconnected before we could detach it properly.. :(")
 
-    def open_device_ctrl(self, extra_args = None):
+    def open_device_ctrl(self, extra_args=None):
         """
         Open device screen view and control using scrcpy
         :return:None
         """
-        logger.info(f"Opening scrcpy for device {self.device_serial}.")
-        logger.debug(f"Scrcpy extra_args: {extra_args}")
-        extra_args = extra_args.split(" ")
+        exec_data = [constants.SCRCPY, '--serial', self.device_serial]
 
-        self.scrcpy.append(Popen([constants.SCRCPY, '--serial', self.device_serial, extra_args],
-                                            stdin=PIPE,
-                                            stdout=PIPE,
-                                            stderr=PIPE,
-                                            creationflags=constants.CREATE_NO_WINDOW))
-        self.scrcpy[len(self.scrcpy) - 1].stdin.close()
+        logger.info(f"Opening scrcpy for device {self.device_serial}.")
+
+        logger.debug(f"Scrcpy extra_args: {extra_args}")
+        if extra_args:
+            extra_args = extra_args.split(" ")
+            exec_data.append(extra_args)
+
+        self.scrcpy.append(Popen(exec_data,
+                                 stdin=PIPE,
+                                 stdout=PIPE,
+                                 stderr=PIPE,
+                                 creationflags=constants.CREATE_NO_WINDOW))
+        # self.scrcpy[-1].stdin.close()
 
     def record_device_ctrl(self, save_dest):
         self.kill_scrcpy()
@@ -510,9 +516,23 @@ class ADBDevice(Device):
         logger.info('Finished identifying!')
 
     def kill_scrcpy(self):
-        for process in self.scrcpy:
+        logger.debug(f"Scrcpy list: {self.scrcpy}")
+        scrcpy_list = self.scrcpy.copy()
+
+        for process in scrcpy_list:
+            try:
+                stdout_data = process.communicate(input=b'\x03')[0]  # Send Ctrl+C
+                logger.debug(stdout_data)
+            except ValueError:
+                logger.warn("Window was already closed!")
+
+            logger.debug(f"killing {process.pid}")
             process.terminate()
+
+            self.scrcpy.remove(process)
+
         logger.debug("Killed scrcpy windows for device")
+        del scrcpy_list
 
     # ----- Settings Persistence -----
     def load_settings_file(self):
@@ -627,7 +647,7 @@ class ADBDevice(Device):
         self.pull_file(
             source,
             path.join(constants.XML_DIR,
-                         '{}_{}_{}.xml'.format(self.device_serial, current_app[0], current_app[1]))
+                      '{}_{}_{}.xml'.format(self.device_serial, current_app[0], current_app[1]))
         )
         logger.info('Dumped window elements for current app.')
 
@@ -646,7 +666,7 @@ class ADBDevice(Device):
 
         logger.debug("Serial {} , app: {}".format(self.device_serial, current_app))
         file = path.join(constants.XML_DIR,
-                            '{}_{}_{}.xml'.format(self.device_serial, current_app[0], current_app[1]))
+                         '{}_{}_{}.xml'.format(self.device_serial, current_app[0], current_app[1]))
 
         if force_dump:
             self.dump_window_elements()

@@ -27,7 +27,10 @@ def gui_screenrec(attached_devices, device_obj):
         ],
         [
             sg.Button('Start Recording', size=(15, 2),
-                   key='start_rec_btn', disabled=True)]
+                   key='start_rec_btn', disabled=True),
+            sg.Button('Stop', size=(15, 2),
+                      key='stop_rec_btn', disabled=True),
+        ]
     ]
 
     # Create the Window
@@ -57,6 +60,14 @@ def gui_screenrec(attached_devices, device_obj):
             curr_device.record_device_ctrl(files_dest)
 
             logger.info('Recording started!')
-            sg.popup_ok('Recording started!')
+            sg.popup_auto_close("Recording started!")
+
+            window['stop_rec_btn'].Update(disabled=False)
+
+        if event == 'stop_rec_btn':
+            curr_device = device_obj[values['selected_device']]
+            window['stop_rec_btn'].Update(disabled=True)
+
+            curr_device.kill_scrcpy()
 
     window.close()

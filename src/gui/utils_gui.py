@@ -1,4 +1,5 @@
 import PySimpleGUI as sg
+from subprocess import Popen
 
 from src import constants
 from src.logs import logger
@@ -58,6 +59,11 @@ def send_error_to_gui(gui_window: sg.Window, gui_event, reason=None, info=None):
 
     gui_window.write_event_value(gui_event, out_dict)
 
+
+def explorer_open_file(path):
+    logger.info(f"Opening {path} in Explorer")
+
+    Popen(f'explorer /select,{path}')
 
 class Tree(sg.Tree):
     """
