@@ -215,3 +215,6 @@ DEVICE_ICONS = {
     'linux': os.path.join(ROOT_DIR, 'images', 'device-icons', 'linux-32.png'),
     'usb_cam': os.path.join(ROOT_DIR, 'images', 'device-icons', 'usb-circular-32.png')
 }
+
+#SCRCPY NO WINDOW MASK
+CREATE_NO_WINDOW = 0x08000000

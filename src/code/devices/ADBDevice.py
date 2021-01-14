@@ -21,7 +21,7 @@ class ADBDevice(Device):
     # ----- INITIALIZER -----
     def __init__(self, adb, device_serial):
         super().__init__(
-            serial=device_serial,   # Assign device serial as received in arguments
+            serial=device_serial,  # Assign device serial as received in arguments
         )
 
         # Object Parameters #
@@ -81,7 +81,8 @@ class ADBDevice(Device):
         if stderr:
             try:
                 if b"unauthorized" in stderr:
-                    raise ValueError(f"Device not rooted (probably) or you didn't allow usb debugging.\nRooting Errors: {stderr.decode()}")
+                    raise ValueError(
+                        f"Device not rooted (probably) or you didn't allow usb debugging.\nRooting Errors: {stderr.decode()}")
                 else:
                     raise ValueError(f'Rooting Errors: {stderr.decode()}')
             except ValueError as e:
@@ -299,14 +300,13 @@ class ADBDevice(Device):
             return []
         else:
             if 'No such file or directory' in check_for_missing_dir \
-            or "Not a directory" in check_for_missing_dir:
+                    or "Not a directory" in check_for_missing_dir:
                 return None
             else:
                 return files_list
 
     def get_camera_files_list(self):
         self.get_files_list("sdcard/DCIM/Camera", get_full_path=True)
-
 
     def get_screen_resolution(self):
         """
@@ -458,18 +458,19 @@ class ADBDevice(Device):
         except RuntimeError:
             logger.warn("Device was disconnected before we could detach it properly.. :(")
 
-    def open_device_ctrl(self):
+    def open_device_ctrl(self, extra_args = None):
         """
         Open device screen view and control using scrcpy
         :return:None
         """
-        logger.info(f"Opening scrcpy for device {self.device_serial}")
-        CREATE_NO_WINDOW = 0x08000000
-        self.scrcpy.append(subprocess.Popen([constants.SCRCPY, '--serial', self.device_serial],
+        logger.info(f"Opening scrcpy for device {self.device_serial}.")
+        logger.debug(f"Scrcpy extra_args: {extra_args}")
+
+        self.scrcpy.append(subprocess.Popen([constants.SCRCPY, '--serial', self.device_serial, extra_args],
                                             stdin=subprocess.PIPE,
                                             stdout=subprocess.PIPE,
                                             stderr=subprocess.PIPE,
-                                            creationflags=CREATE_NO_WINDOW))
+                                            creationflags=constants.CREATE_NO_WINDOW))
         self.scrcpy[len(self.scrcpy) - 1].stdin.close()
 
     def identify(self):

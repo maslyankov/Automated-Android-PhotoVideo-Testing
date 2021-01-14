@@ -47,7 +47,7 @@ def get_value_merged(sheet: worksheet, cell: xlcell) -> any:
 
 def is_merged(cell) -> bool:
     if type(cell).__name__ == 'MergedCell':
-        return Truetvbjdkiftbkgkebbevlfbnjvflivhfdj
+        return True
     else:
         return False
 
