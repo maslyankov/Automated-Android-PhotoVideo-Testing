@@ -15,7 +15,7 @@ from src.gui.gui_camxoverride import gui_camxoverride
 from src.gui.gui_manual_cases import gui_manual_cases
 from src.gui.gui_automated_cases import gui_automated_cases
 from src.gui.gui_push_file import gui_push_file
-from src.gui.gui_pull_file import gui_pull_file
+from src.gui.gui_pull_file import gui_android_file_browser
 from src.gui.gui_reboot_device import gui_reboot_device
 from src.gui.gui_screenrec import gui_screenrec
 from src.gui.gui_setup_device import gui_setup_device
@@ -351,7 +351,7 @@ def gui():
             sg.Button('Extract Frames From Video', size=(30, 2), key='extract_video_frames_tool_btn', pad=(15, 15))
         ],
         [
-            sg.Button('Test USB Camera', size=(30, 2), key='usb_cam_tool_btn', pad=(15, 15))
+            sg.Button('Test USB Camera', size=(30, 2), key='usb_cam_tool_btn', pad=(15, 15), visible=constants.DEBUG_MODE)
         ],
 
         # [sg.T('RAW Converter')],
@@ -545,7 +545,7 @@ def gui():
                 gui_push_file(attached_devices_list, adb_devices)
 
             if event == "pull_file_btn":
-                gui_pull_file(attached_devices_list, adb_devices)
+                gui_android_file_browser(attached_devices_list, adb_devices, pull_button=True)
 
             if event == "record_screen_btn":
                 gui_screenrec(attached_devices_list, adb_devices)

@@ -1,6 +1,7 @@
 import json
 import os
 from pathlib import Path
+from hurry.filesize import size
 
 import cv2
 from natsort import natsorted
@@ -96,6 +97,9 @@ def convert_to_int_float(s):
             s = int(s)
     return s
 
+
+def pretty_size(num: int):
+    return size(num)
 
 # Deeper stuff
 def analyze_images_test_results(template_data):
