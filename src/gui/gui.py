@@ -363,9 +363,9 @@ def gui():
         [
             Tabs([
                 [
-                    sg.Tab('Tools', tab3_layout),
-                    sg.Tab('Reporting', tab2_layout),
                     sg.Tab('Testing', tab_main),
+                    sg.Tab('Reporting', tab2_layout),
+                    sg.Tab('Tools', tab3_layout),
                 ]],
                 key='main_tabs_group',
             )],

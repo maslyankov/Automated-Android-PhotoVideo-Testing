@@ -99,7 +99,7 @@ def convert_to_int_float(s):
 
 
 def pretty_size(num: int):
-    return size(num)
+    return size(num) if num else "-"
 
 # Deeper stuff
 def analyze_images_test_results(template_data):

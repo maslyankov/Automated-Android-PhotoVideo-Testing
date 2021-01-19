@@ -174,7 +174,7 @@ class ADBDevice(Device):
         self.d.pull(src, dst)
 
     def detach_device(self):
-        self.adb.detach(self.device_serial)
+        self.adb.detach_device(self.device_serial)
 
     # ----- Getters/Setters -----
     def set_shoot_photo_seq(self, seq):
@@ -334,7 +334,10 @@ class ADBDevice(Device):
                 item_time = item_split[-2]
                 item_name = item_split[-1]
                 if file_type == 'file':
-                    item_size = int(item_split[-4])
+                    try:
+                        item_size = int(item_split[-4])
+                    except ValueError:
+                        item_size = None
             else:
                 item_date = item_split[3]
                 item_time = item_split[4]
