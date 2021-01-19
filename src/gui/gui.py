@@ -523,7 +523,7 @@ def gui():
             window['camxoverride_btn'].Update(disabled=False)
             window['reboot_device_btn'].Update(disabled=False)
             window['push_file_btn'].Update(disabled=False)
-            # window['pull_file_btn'].Update(disabled=False)
+            window['pull_file_btn'].Update(disabled=not constants.DEBUG_MODE)
             window['record_screen_btn'].Update(disabled=False)
             window['setup_device_btn'].Update(disabled=False)
             window['capture_manual_btn'].Update(disabled=False)

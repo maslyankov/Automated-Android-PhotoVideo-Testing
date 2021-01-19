@@ -284,9 +284,84 @@ class ADBDevice(Device):
         return sorted(self.exec_shell("pm list packages").replace('package:', '').splitlines())
 
     def get_recursive_files_list(self, target_dir):
-        files_list = self.exec_shell(f"du -a {target_dir}").splitlines()
-        for num, f in enumerate(files_list):
-            files_list[num] = f.split()
+        files_list = self.exec_shell(f"ls -R {target_dir}").splitlines()
+
+        return files_list
+        # for num, f in enumerate(files_list):
+        #     files_list[num] = f.split()
+
+    def get_files_and_folders(self, target_dir):
+        files_list = self.exec_shell(f"ls -l {target_dir}").splitlines()
+        # links: lrwxrwxrwx root     root              1970-01-01 02:00 fg_algo_cos -> /sbin/fg_algo_cos
+        # folders: drwxrwx--- system   cache             2020-09-04 15:20 cache
+        # files: -rwxr-x--- root     root       526472 1970-01-01 02:00 init
+
+        try:
+            check_for_missing_dir = files_list[0]
+        except IndexError:
+            return []
+
+        if 'No such file or directory' in check_for_missing_dir \
+                or "Not a directory" in check_for_missing_dir:
+            return None
+
+        ret_list = list()
+
+        for item in files_list:
+            item_split = list()
+
+            for listed_item in item.split(" "):
+                if listed_item != '':
+                    item_split.append(listed_item)
+
+            item_flags = item_split[0]
+
+            if 'd' in item_flags:
+                # It's a dir
+                file_type = 'dir'
+            elif 'l' in item_flags:
+                # It's a link
+                file_type = 'link'
+            else:
+                # It's a file
+                file_type = 'file'
+
+            item_owner = item_split[1]
+            item_owner_group = item_split[2]
+
+            if file_type != 'link':
+                item_date = item_split[-3]
+                item_time = item_split[-2]
+                item_name = item_split[-1]
+                if file_type == 'file':
+                    item_size = item_split[-4]
+            else:
+                item_date = item_split[3]
+                item_time = item_split[4]
+                item_name = item_split[5]
+                item_link_endpoint = item_split[7]
+
+            ret_list.append(
+                {
+                    'file_type': file_type,
+                    'owner': item_owner,
+                    'owner_group': item_owner_group,
+                    'date': item_date,
+                    'time': item_time,
+                    'name': item_name
+                }
+            )
+
+            print(f"{file_type} '{item_name}' owned by {item_owner}:{item_owner_group} from {item_date} {item_time} \t {item_flags}")
+            if file_type == 'file':
+                ret_list[-1]['file_size'] = item_size
+            elif file_type == 'link':
+                ret_list[-1]['link_endpoint'] = item_link_endpoint
+
+        ret_list.sort(key=lambda x: x['file_type'])
+        logger.debug(f"Returning list: {ret_list}")
+
+        return ret_list
 
     def get_files_list(self, target_dir, get_full_path=False):
         """
@@ -300,12 +375,12 @@ class ADBDevice(Device):
             check_for_missing_dir = files_list[0]
         except IndexError:
             return []
+
+        if 'No such file or directory' in check_for_missing_dir \
+                or "Not a directory" in check_for_missing_dir:
+            return None
         else:
-            if 'No such file or directory' in check_for_missing_dir \
-                    or "Not a directory" in check_for_missing_dir:
-                return None
-            else:
-                return files_list
+            return files_list
 
     def get_camera_files_list(self):
         self.get_files_list("sdcard/DCIM/Camera", get_full_path=True)

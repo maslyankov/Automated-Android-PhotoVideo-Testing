@@ -16,22 +16,30 @@ def gui_pull_file(attached_devices, device_obj):
     treedata = sg.TreeData()
 
     def add_files_in_folder(parent, dirname):
-        folders = current_device.get_dirs_list(dirname)
-        files = current_device.get_only_files_list(dirname)
-        logger.debug(f"folders:'{files}'")
-        logger.debug(f"files:'{files}'")
+        # out_f = "files_out.txt"
+        # f = open(out_f, "a")
 
-        for f in folders:
-            fullname = os.path.join(dirname, f)
-            # if os.path.isdir(fullname):  # if it's a folder, add folder and recurse
-            treedata.Insert(parent, fullname, f, values=[],
-                            icon=folder_icon)
-            add_files_in_folder(fullname, fullname)
+        files = current_device.get_files_and_folders(dirname)
 
-        for f in files:
-            fullname = os.path.join(dirname, f)
-            treedata.Insert(parent, fullname, f, values=["14/12/2020 01:22", "22.5 MB"],
-                            icon=file_icon)
+        logger.debug(f"Files and folders: {files}")
+        # f.write(str(files))
+        # f.close()
+
+
+
+        # logger.debug(f"files:'{files}'")
+
+        # for f in folders:
+        #     fullname = os.path.join(dirname, f)
+        #     # if os.path.isdir(fullname):  # if it's a folder, add folder and recurse
+        #     treedata.Insert(parent, fullname, f, values=[],
+        #                     icon=folder_icon)
+        #     add_files_in_folder(fullname, fullname)
+        #
+        # for f in files:
+        #     fullname = os.path.join(dirname, f)
+        #     treedata.Insert(parent, fullname, f, values=["14/12/2020 01:22", "22.5 MB"],
+        #                     icon=file_icon)
 
     add_files_in_folder('', "/")
 
