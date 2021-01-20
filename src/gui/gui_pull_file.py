@@ -21,22 +21,26 @@ def gui_android_file_browser(attached_devices, device_obj, pull_button=False, si
         # out_f = "files_out.txt"
         # f = open(out_f, "a")
 
-
-
         files = current_device.get_files_and_folders(dirname)
 
         logger.debug(f"Files and folders: {files}")
 
-        for item in files:
-            fullname = os.path.join(
-                dirname, item['name']
-            ).replace("\\", "/")  # Convert windows type slashes to unix type
+        if files is None:
+            return
 
-            if item['file_type'] == 'dir':
+        for item in files:
+            if item['file_type'] == 'link':
+                fullname = item['link_endpoint']
+            else:
+                fullname = os.path.join(
+                    dirname, item['name']
+                ).replace("\\", "/")  # Convert windows type slashes to unix type
+
+            if item['file_type'] == 'dir' or item['file_type'] == 'link':
                 # if it's a folder, add folder and recurse
                 if fullname not in listed_dirs:
                     treedata.Insert(parent, fullname, item['name'], values=[],
-                                icon=constants.FOLDER_ICON)
+                                    icon=constants.FOLDER_ICON)
                     listed_dirs.append(fullname)
                 if level != 0:
                     add_files_in_folder(fullname, fullname, level=level - 1)
@@ -63,7 +67,7 @@ def gui_android_file_browser(attached_devices, device_obj, pull_button=False, si
               [sg.Input(readonly=True, key='save_dir', size=(52, 1)), sg.FolderBrowse(size=(10, 1))],
               [sg.Button('Pull', size=(57, 1)) if pull_button else sg.Button('Done', size=(57, 1))]]
     # Create the Window
-    window = sg.Window('File and folder browser', layout,
+    window = sg.Window('File and folder browser', layout, finalize=True,
                        icon=os.path.join(constants.ROOT_DIR, 'images', 'automated-video-testing-header-icon.ico'))
 
     while True:
@@ -72,6 +76,8 @@ def gui_android_file_browser(attached_devices, device_obj, pull_button=False, si
         # window['_TREE_'].bind('<Double-Button-1>', '_double_clicked')
         # window['_TREE_'].bind('<ButtonRelease-1>', '_released')
         # window['_TREE_'].bind('<ButtonPress-1>', '_pressed')
+        window['_TREE_'].bind("<<TreeviewOpen>>", "EXPAND_")
+        window['_TREE_'].bind("<<TreeviewClose>>", "COLLAPSE_")
 
         if event == sg.WIN_CLOSED or event == 'Done':  # if user closes window or clicks cancel
             if event == 'Done':
@@ -79,12 +85,22 @@ def gui_android_file_browser(attached_devices, device_obj, pull_button=False, si
 
             break
 
-        # test = 2
-        # if event == '_TREE_':
-        #     if test == 2:
-        #         add_files_in_folder(values['_TREE_'][0], values['_TREE_'][0], 1)
-        #         files_tree.update(values=treedata)
-        #     test -= 1
+        if event == '_TREE_EXPAND_':
+            try:
+                add_files_in_folder(values['_TREE_'][0], values['_TREE_'][0], 1)
+                files_tree.update(values=treedata)
+
+                iid = None
+                for k, v in files_tree.IdToKey.items():
+                    if v == 'Blah':
+                        iid = k
+                        break
+                if iid:
+                    files_tree.Widget.see(iid)
+                    tree.Widget.selection_set(iid)
+
+            except IndexError as e:
+                pass
 
         logger.debug(f'vals: {values}')  # Debugging
         logger.debug(f'event: {event}')  # Debugging
