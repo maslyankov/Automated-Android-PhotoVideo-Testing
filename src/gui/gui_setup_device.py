@@ -366,7 +366,7 @@ def gui_setup_device(attached_devices, device_obj):
                         visible=True)
                     window[f"{seq_type}_selected_action_test_btn.{str(next_elem)}"].Update(
                         disabled=False,
-                        visible=T:wq
+                        visible=True)
             if event.split('.')[
                 0] == f"{seq_type}_selected_action_test_btn":  # TODO - Make this use the GUI values not obj values
                 try:
