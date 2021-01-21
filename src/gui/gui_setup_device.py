@@ -348,13 +348,17 @@ def gui_setup_device(attached_devices, device_obj):
                 elif values[f"{seq_type}_selected_action.{event.split('.')[1]}"] == 'Empty':
                     pass
                 else:
-                    data = device_obj[values['selected_device']].get_clickable_window_elements()[
+                    try:
+                        data = device_obj[values['selected_device']].get_clickable_window_elements()[
                         values[f'{seq_type}_selected_action.' + event.split('.')[1]]
-                    ]
-                    window[f"{seq_type}_selected_action_type.{event.split('.')[1]}"].Update('tap')
-                    window[f"{seq_type}_selected_action_desc.{event.split('.')[1]}"].Update(data[0])  # save for later
-                    window[f"{seq_type}_selected_action_x.{event.split('.')[1]}"].Update(data[1][0])  # save for later
-                    window[f"{seq_type}_selected_action_y.{event.split('.')[1]}"].Update(data[1][1])  # save for later
+                        ]
+                        window[f"{seq_type}_selected_action_type.{event.split('.')[1]}"].Update('tap')
+                        window[f"{seq_type}_selected_action_desc.{event.split('.')[1]}"].Update(data[0])  # save for later
+                        window[f"{seq_type}_selected_action_x.{event.split('.')[1]}"].Update(data[1][0])  # save for later
+                        window[f"{seq_type}_selected_action_y.{event.split('.')[1]}"].Update(data[1][1])  # save for later
+                    except KeyError as e:
+                        logger.error(e)
+
                 next_elem = int(event.split(".")[1]) + 1
                 if next_elem < constants.MAX_ACTIONS_DISPLAY:
                     window[f"{seq_type}_selected_action.{str(next_elem)}"].Update(
@@ -362,8 +366,7 @@ def gui_setup_device(attached_devices, device_obj):
                         visible=True)
                     window[f"{seq_type}_selected_action_test_btn.{str(next_elem)}"].Update(
                         disabled=False,
-                        visible=True)
-
+                        visible=T:wq
             if event.split('.')[
                 0] == f"{seq_type}_selected_action_test_btn":  # TODO - Make this use the GUI values not obj values
                 try:

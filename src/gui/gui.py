@@ -384,7 +384,7 @@ def gui():
         layout,
         icon=os.path.join(constants.ROOT_DIR, 'images', 'automated-video-testing-header-icon.ico'),
         no_titlebar=False,
-        grab_anywhere=True
+        grab_anywhere=False
     )
 
     # Watchdogs

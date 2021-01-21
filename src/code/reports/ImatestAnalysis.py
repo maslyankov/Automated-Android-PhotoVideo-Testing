@@ -16,7 +16,7 @@ except ModuleNotFoundError:
     SKIP_IMATEST_IT = True
 
 
-class ImatestReports:
+class ImatestAnalysis:
     def __init__(self):
         if SKIP_IMATEST_IT:
             return
@@ -123,7 +123,7 @@ class ImatestReports:
     def recurse_dict(d, keys=()):
         if type(d) == dict:
             for k in d:
-                for rv in ImatestReports.recurse_dict(d[k], keys + (k,)):
+                for rv in ImatestAnalysis.recurse_dict(d[k], keys + (k,)):
                     yield rv
         else:
             yield keys, d
@@ -139,7 +139,7 @@ class ImatestReports:
         params_out_file = os.path.join(constants.DATA_DIR, 'imatest_params.json')
 
         if json_file is None:
-            report_obj = ImatestReports()
+            report_obj = ImatestAnalysis()
             images_dict = {'test_serial': []}
             tests_params = {}
             curr_progress = 0
@@ -203,7 +203,7 @@ class ImatestReports:
         # for res_dict in images_analysis_readable:
         for res_dict in result:
             current_type = None
-            for key, value in ImatestReports.recurse_dict(res_dict[list(res_dict.keys())[0]]):
+            for key, value in ImatestAnalysis.recurse_dict(res_dict[list(res_dict.keys())[0]]):
                 if current_type is None or key[0] == 'title' or key[0] == 'image_file':
                     # First find the title
                     # Turns out dotpattern has neither title, nor image_file keys..
@@ -249,6 +249,6 @@ class ImatestReports:
 
     @staticmethod
     def update_imatest_params_threaded():
-        threading.Thread(target=ImatestReports.update_imatest_params,
+        threading.Thread(target=ImatestAnalysis.update_imatest_params,
                          args=(),
                          daemon=True).start()
