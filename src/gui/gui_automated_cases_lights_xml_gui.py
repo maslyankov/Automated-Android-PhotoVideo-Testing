@@ -4,7 +4,7 @@ from pathlib import Path
 
 from src import constants
 from src.logs import logger
-from src.code.AutomatedCase import parse_lights_xml_seq
+from src.base.AutomatedCase import parse_lights_xml_seq
 from src.gui.utils_gui import Tree
 
 

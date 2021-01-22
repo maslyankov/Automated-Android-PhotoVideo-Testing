@@ -3,8 +3,8 @@ import time
 
 # from pygrabber.dshow_graph import FilterGraph
 
-from src.code.utils.utils import compare_lists
-from src.code.devices.USBCamDevice import USBCamDevice
+from src.base.utils.utils import compare_lists
+from src.base.devices.USBCamDevice import USBCamDevice
 from src.logs import logger
 
 

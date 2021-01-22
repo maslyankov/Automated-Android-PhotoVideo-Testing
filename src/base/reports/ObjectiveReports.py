@@ -4,8 +4,8 @@ from os import path
 
 from src import constants
 from src.logs import logger
-from src.code.utils.utils import analyze_images_test_results, add_filenames_to_data
-from src.code.utils.excel_tools import export_to_excel_file
+from src.base.utils.utils import analyze_images_test_results, add_filenames_to_data
+from src.base.utils.excel_tools import export_to_excel_file
 
 from src.gui.utils_gui import send_progress_to_gui, send_error_to_gui
 

@@ -33,7 +33,7 @@ if __name__ == '__main__':
             'imatest.library'
         ],
         package_data={'imatest.library': ['*.ctf']},
-        # Executes the custom code above in order to delete the build area.
+        # Executes the custom base above in order to delete the build area.
         cmdclass={'install': InstallRuntime},
     )
 

@@ -7,8 +7,8 @@ from ppadb.client import Client as AdbPy
 
 from src import constants
 from src.logs import logger
-from src.code.devices.ADBDevice import ADBDevice
-from src.code.utils.utils import compare_lists
+from src.base.devices.ADBDevice import ADBDevice
+from src.base.utils.utils import compare_lists
 
 
 class AdbClient:
@@ -141,15 +141,19 @@ class AdbClient:
         :param device_obj: Device object
         :return: None
         """
-        print('Detaching device ', device_serial)
-        self.devices_obj[device_serial].kill_scrcpy()
 
-        self.devices_obj[device_serial].set_led_color('FFFFFF', 'RGB1', 'global_rgb')  # Poly
 
         # Finally detach device
         try:
+            logger.info(f'Detaching device {device_serial}')
+            self.devices_obj[device_serial].kill_scrcpy()
+
+            self.devices_obj[device_serial].set_led_color('FFFFFF', 'RGB1', 'global_rgb')  # Poly
             self.attached_devices.remove(device_serial)
             del self.devices_obj[device_serial]
-        except ValueError:
-            logger.warn("Not found in attached devices list")
-            print(self.attached_devices)
+        except ValueError as e:
+            logger.warn(f"Not found in attached devices list {e}")
+            logger.debug(self.attached_devices)
+        except KeyError as e:
+            logger.warn(f"Not found in attached devices list {e}")
+            logger.debug(self.attached_devices)

@@ -1,6 +1,6 @@
 import time
 
-from src.code.devices.konica.ChromaMeterKonica import ChromaMeterKonica
+from src.base.devices.konica.ChromaMeterKonica import ChromaMeterKonica
 from src import constants
 from src.logs import logger
 

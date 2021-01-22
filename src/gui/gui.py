@@ -5,10 +5,10 @@ import PySimpleGUI as sg
 from src import constants
 from src.logs import logger
 
-from src.code.devices.AdbClient import AdbClient
+from src.base.devices.AdbClient import AdbClient
 
-from src.code.reports.RLReports import generate_rlt_report
-from src.code.reports.ObjectiveReports import generate_obj_report
+from src.base.reports.RLReports import generate_rlt_report
+from src.base.reports.ObjectiveReports import generate_obj_report
 
 from src.gui.gui_help import gui_help
 from src.gui.gui_camxoverride import gui_camxoverride
@@ -486,20 +486,24 @@ def gui():
                     # This next line fixes an issue that it tries to attach device after fail if you try again
                     window[f"device_attached.{event.split('.')[1]}"].Update(False)
                     continue
-                for num in range(constants.MAX_DEVICES_AT_ONE_RUN):
-                    if values[f'device_serial.{num}'] == diff_device or values[f'device_serial.{num}'] == '':
-                        window[f'device_attached.{num}'].Update(text_color='white', background_color='green')
-                        window[f'device_friendly.{num}'].Update(text_color='white',
-                                                                background_color='green',
-                                                                value=adb_devices[diff_device].friendly_name,
-                                                                disabled=False)
-                        window[f'identify_device_btn.{num}'].Update(disabled=False)
-                        window[f'ctrl_device_btn.{num}'].Update(disabled=False)
-                        break
 
-                logger.info('Added {} to attached devices!'.format(diff_device))
+                try:
+                    for num in range(constants.MAX_DEVICES_AT_ONE_RUN):
+                        if values[f'device_serial.{num}'] == diff_device or values[f'device_serial.{num}'] == '':
+                            window[f'device_attached.{num}'].Update(text_color='white', background_color='green')
+                            window[f'device_friendly.{num}'].Update(text_color='white',
+                                                                    background_color='green',
+                                                                    value=adb_devices[diff_device].friendly_name,
+                                                                    disabled=False)
+                            window[f'identify_device_btn.{num}'].Update(disabled=False)
+                            window[f'ctrl_device_btn.{num}'].Update(disabled=False)
+                            break
 
-                logger.info('Currently opened app: {}'.format(adb_devices[diff_device].get_current_app()))
+                    logger.info('Added {} to attached devices!'.format(diff_device))
+
+                    logger.info('Currently opened app: {}'.format(adb_devices[diff_device].get_current_app()))
+                except KeyError as e:
+                    logger.error(f"adb_devices key error: {e}\nadb_devices: {adb_devices}")
             else:  # Detach
                 logger.info('User wanted to detach device...')
                 adb.detach_device(diff_device)

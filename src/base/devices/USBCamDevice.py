@@ -1,4 +1,4 @@
-from src.code.devices.Device import Device
+from src.base.devices.Device import Device
 
 
 class USBCamDevice(Device):

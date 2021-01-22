@@ -3,7 +3,7 @@ import PySimpleGUI as sg
 
 from src import constants
 from src.logs import logger
-from src.code.utils.utils import pretty_size
+from src.base.utils.utils import pretty_size
 
 
 def gui_android_file_browser(attached_devices, device_obj, pull_button=False, single_select=False):
@@ -82,7 +82,6 @@ def gui_android_file_browser(attached_devices, device_obj, pull_button=False, si
         if event == sg.WIN_CLOSED or event == 'Done':  # if user closes window or clicks cancel
             if event == 'Done':
                 return values['_TREE_']
-
             break
 
         if event == '_TREE_EXPAND_':
@@ -97,7 +96,7 @@ def gui_android_file_browser(attached_devices, device_obj, pull_button=False, si
                         break
                 if iid:
                     files_tree.Widget.see(iid)
-                    tree.Widget.selection_set(iid)
+                    files_tree.Widget.selection_set(iid)
 
             except IndexError as e:
                 pass

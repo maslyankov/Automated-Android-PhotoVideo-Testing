@@ -1,7 +1,7 @@
 import os
 import cv2, PySimpleGUI as sg
 
-from src.code.devices.USBCamClient import list_ports
+from src.base.devices.USBCamClient import list_ports
 from src import constants
 from src.logs import logger
 

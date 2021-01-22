@@ -3,7 +3,7 @@
 from serial import PARITY_EVEN, SEVENBITS, SerialException
 
 from src.logs import logger
-from src.code.devices.konica.utils import cl200a_cmd_dict, cmd_formatter, write_serial_port, serial_port_luxmeter, connect_serial_port
+from src.base.devices.konica.utils import cl200a_cmd_dict, cmd_formatter, write_serial_port, serial_port_luxmeter, connect_serial_port
 
 SKIP_CHECK_LIST = True
 

@@ -2,8 +2,8 @@ import os
 import time
 import PySimpleGUI as sg
 
-from src.code.LightsCtrl import LightsCtrl
-from src.code.devices.Sensor import Sensor
+from src.base.LightsCtrl import LightsCtrl
+from src.base.devices.Sensor import Sensor
 from src import constants
 from src.logs import logger
 

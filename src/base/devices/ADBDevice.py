@@ -7,8 +7,8 @@ from signal import CTRL_C_EVENT, SIGINT
 from datetime import datetime
 from natsort import natsorted
 
-from src.code.devices.Device import Device
-from src.code.utils.xml_tools import generate_sequence, xml_from_sequence
+from src.base.devices.Device import Device
+from src.base.utils.xml_tools import generate_sequence, xml_from_sequence
 
 from src import constants
 from src.logs import logger
@@ -52,9 +52,12 @@ class ADBDevice(Device):
 
         try:
             self.friendly_name = self.get_device_model()
-            self.android_ver = int(self.get_android_version().split('.')[0])
+            android_ver_response = self.get_android_version()
+            self.android_ver = int(android_ver_response.split('.')[0]) if android_ver_response else None
         except RuntimeError:
             logger.error("Device went offline!")
+        except ValueError as e:
+            logger.error(e)
 
         # TODO: Move to parent class
         self.load_settings_file()
@@ -207,29 +210,35 @@ class ADBDevice(Device):
         Get the device model
         :return: String of device model
         """
-        return self.exec_shell("getprop ro.product.model").strip()
+        response = self.exec_shell("getprop ro.product.model")
+        return response.strip() if response else None
 
     def get_device_name(self):
         """
         Get the device name
         :return: String of device name
         """
-        return self.exec_shell("getprop ro.product.name").strip()
+        response = self.exec_shell("getprop ro.product.name")
+        return response.strip() if response else None
 
     def get_manufacturer(self):
         return self.exec_shell("getprop ro.product.manufacturer").strip()
 
     def get_board(self):
-        return self.exec_shell("getprop ro.product.board").strip()
+        response = self.exec_shell("getprop ro.product.board")
+        return response.strip() if response else None
 
     def get_android_version(self):
-        return self.exec_shell("getprop ro.build.version.release").strip()
+        response = self.exec_shell("getprop ro.build.version.release")
+        return response.strip() if response else None
 
     def get_sdk_version(self):
-        return self.exec_shell("getprop ro.build.version.sdk").strip()
+        response = self.exec_shell("getprop ro.build.version.sdk")
+        return response.strip() if response else None
 
     def get_cpu(self):
-        return self.exec_shell("getprop ro.product.cpu.abi").strip()
+        response = self.exec_shell("getprop ro.product.cpu.abi")
+        return response.strip() if response else None
 
     def get_current_app(self):
         """
@@ -432,12 +441,28 @@ class ADBDevice(Device):
         self.exec_shell('input keyevent 26')
 
     def is_sleeping(self):
-        state = self.exec_shell("dumpsys activity | grep -E 'mSleeping'").strip().split(' ')
-        is_sleeping = state[0].split('=')[1]
+        response = self.exec_shell("dumpsys activity | grep -E 'mSleeping'")
+        state = response.strip() if response else None
+
+        if response is None:
+            return
+
+        if "No such file" in state:
+            logger.error(f"Found no such file in state: {state}")
+            return None, None
+
+        try:
+            state = state.split(' ')
+            is_sleeping = state[0].split('=')[1]
+        except IndexError as e:
+            is_sleeping = None
+            logger.error(f"State: {state}\n{e}")
+
         try:
             lock_screen = state[1].split('=')[1]
-        except IndexError:
+        except IndexError as e:
             lock_screen = None
+            logger.error(f"State: {state}\n{e}")
         return is_sleeping, lock_screen
 
     def is_adb_enabled(self):
@@ -518,6 +543,8 @@ class ADBDevice(Device):
 
     def turn_on_and_unlock(self):
         state = self.is_sleeping()
+        if state is None:
+            return
 
         if state[0] == 'true':
             self.exec_shell('input keyevent 26')  # Event Power Button

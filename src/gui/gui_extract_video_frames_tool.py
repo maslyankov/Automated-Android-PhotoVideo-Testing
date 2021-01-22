@@ -2,7 +2,7 @@ import os
 
 import PySimpleGUI as sg
 
-from src.code.utils.utils import extract_video_frame
+from src.base.utils.utils import extract_video_frame
 from src import constants
 from src.logs import logger
 

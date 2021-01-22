@@ -4,7 +4,7 @@ import PySimpleGUI as sg
 
 from src import constants
 from src.logs import logger
-from src.code.AutomatedCase import AutomatedCase
+from src.base.AutomatedCase import AutomatedCase
 
 from src.gui.gui_automated_cases_lights_xml_gui import lights_xml_gui
 from src.gui.utils_gui import place, Tabs

@@ -48,10 +48,10 @@ class _PathInitializer(object):
         # path to the folder that stores Python extensions and shared libraries
         self.bin_dir = ''
 
-        # path to the folder that stores pure Python matlab_pysdk.runtime code (_runtime_dir)
+        # path to the folder that stores pure Python matlab_pysdk.runtime base (_runtime_dir)
         self.runtime_dir = ''
 
-        # path to the folder that stores the pure Python matlab mlarray code used for type conversion
+        # path to the folder that stores the pure Python matlab mlarray base used for type conversion
         self.ml_dir = ''
 
         self.set_interpreter_version()
@@ -190,7 +190,7 @@ class _PathInitializer(object):
             last_path_component = path_components[-2]
 
         if last_path_component != self.arch:
-            output_str = ''.join(('To call deployed MATLAB code on a {0} machine, you must run a {0} version of Python, ',
+            output_str = ''.join(('To call deployed MATLAB base on a {0} machine, you must run a {0} version of Python, ',
                 'and your {1} variable must contain an element pointing to "<MR>{2}runtime{2}{0}", ',
                 'where "<MR>" indicates a MATLAB or MATLAB Runtime root. ',
                 'Instead, the value found was as follows: {3}'))
