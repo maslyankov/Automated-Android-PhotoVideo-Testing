@@ -15,7 +15,7 @@ from src.gui.gui_camxoverride import gui_camxoverride
 from src.gui.gui_manual_cases import gui_manual_cases
 from src.gui.gui_automated_cases import gui_automated_cases
 from src.gui.gui_push_file import gui_push_file
-from src.gui.gui_pull_file import gui_android_file_browser
+from src.gui.gui_android_file_browser import gui_android_file_browser
 from src.gui.gui_reboot_device import gui_reboot_device
 from src.gui.gui_screenrec import gui_screenrec
 from src.gui.gui_setup_device import gui_setup_device
@@ -23,6 +23,7 @@ from src.gui.gui_test_lights import gui_test_lights
 from src.gui.gui_project_req_file import gui_project_req_file
 from src.gui.gui_cam_tool import gui_cam_tool
 from src.gui.gui_extract_video_frames_tool import gui_extract_video_frames_tool
+from src.gui.gui_pull_images import gui_pull_images
 from src.gui.utils_gui import place, Tabs, collapse, explorer_open_file
 
 
@@ -91,6 +92,10 @@ def gui():
             sg.Button('Pull file/s',
                       size=(12, 3),
                       key='pull_file_btn',
+                      disabled=True),
+            sg.Button('Pull\nimages',
+                      size=(12, 3),
+                      key='pull_images_btn',
                       disabled=True),
             sg.Button('Record Screen',
                       size=(12, 3),
@@ -532,6 +537,7 @@ def gui():
             window['reboot_device_btn'].Update(disabled=False)
             window['push_file_btn'].Update(disabled=False)
             window['pull_file_btn'].Update(disabled=not constants.DEBUG_MODE)
+            window['pull_images_btn'].Update(disabled=not bool(adb_devices[attached_devices_list[0]].images_save_loc))
             window['record_screen_btn'].Update(disabled=False)
             window['setup_device_btn'].Update(disabled=False)
             window['capture_manual_btn'].Update(disabled=False)
@@ -553,7 +559,10 @@ def gui():
                 gui_push_file(attached_devices_list, adb_devices)
 
             if event == "pull_file_btn":
-                gui_android_file_browser(attached_devices_list, adb_devices, pull_button=True)
+                gui_android_file_browser(adb_devices, attached_devices=attached_devices_list, pull_button=True)
+
+            if event == 'pull_images_btn':
+                gui_pull_images(attached_devices_list, adb_devices)
 
             if event == "record_screen_btn":
                 gui_screenrec(attached_devices_list, adb_devices)
@@ -583,6 +592,7 @@ def gui():
             window['reboot_device_btn'].Update(disabled=True)
             window['push_file_btn'].Update(disabled=True)
             window['pull_file_btn'].Update(disabled=True)
+            window['pull_images_btn'].Update(disabled=True)
             window['record_screen_btn'].Update(disabled=True)
             window['setup_device_btn'].Update(disabled=True)
             window['capture_manual_btn'].Update(disabled=True)

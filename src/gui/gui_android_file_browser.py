@@ -4,15 +4,23 @@ import PySimpleGUI as sg
 from src import constants
 from src.logs import logger
 from src.base.utils.utils import pretty_size
+from src.gui.utils_gui import collapse
+
+DEPTH_LEVEL = 3
 
 
-def gui_android_file_browser(attached_devices, device_obj, pull_button=False, single_select=False):
+def gui_android_file_browser(device_obj,
+                             attached_devices=None, pull_button=False, specific_device=None,
+                             single_select=False, select_folder=False, read_only=False):
     # STARTING_PATH = sg.PopupGetFolder('Folder to display')
+    if specific_device:
+        current_device = device_obj[specific_device]
+    else:
+        current_device = device_obj[attached_devices[0]]
 
-    current_device = device_obj[attached_devices[0]]
-
-    folder_icon = constants.FOLDER_ICON
-    file_icon = constants.FILE_ICON
+    right_click_menu = ['&File Actions', ['Info', 'Delete']]
+    if read_only:
+        right_click_menu = []
 
     treedata = sg.TreeData()
     listed_dirs = list()
@@ -52,30 +60,47 @@ def gui_android_file_browser(attached_devices, device_obj, pull_button=False, si
                 listed_dirs.append(fullname)
 
     # Initial data
-    add_files_in_folder('', "/", 2)
+    add_files_in_folder('', "/", DEPTH_LEVEL)
+
+    device_select_layout = [[
+        sg.Combo(attached_devices if attached_devices else [], size=(20, 20),
+                 key='selected_device',
+                 default_value=attached_devices[0] if attached_devices else '',
+                 enable_events=True),
+        sg.Text(text=device_obj[attached_devices[0]].friendly_name if attached_devices else '',
+                key='device-friendly',
+                font="Any 18",
+                size=(13, 1))
+    ]]
 
     files_tree = sg.Tree(data=treedata, key='_TREE_', auto_size_columns=False, show_expanded=False,
                          headings=['date', 'size'], justification='center',
                          col0_width=30, col_widths=[12, 5], num_rows=20,
                          select_mode=sg.SELECT_MODE_BROWSE if single_select else sg.SELECT_MODE_EXTENDED,
-                         enable_events=True, )
+                         enable_events=True, right_click_menu=right_click_menu, )
+
+    pull_dest_layout = [
+        [
+            sg.Input(readonly=True, key='save_dir', size=(52, 1)),
+            sg.FolderBrowse(size=(10, 1))
+        ]
+    ]
 
     layout = [
         [
-            sg.Combo(attached_devices, size=(20, 20),
-                     key='selected_device',
-                     default_value=attached_devices[0],
-                     enable_events=True),
-            sg.Text(text=device_obj[attached_devices[0]].friendly_name,
-                    key='device-friendly',
-                    font="Any 18",
-                    size=(13, 1))
+            collapse(device_select_layout,
+                     '-SEC_DEVICE_SELECT-',
+                     visible=not bool(specific_device))
         ],
         [sg.Text('Select file/s to pull:' if pull_button else
                  'Select a single element:' if single_select
                  else 'Select files/folders')],
         [files_tree],
-        [sg.Input(readonly=True, key='save_dir', size=(52, 1)), sg.FolderBrowse(size=(10, 1))],
+        [
+            collapse(pull_dest_layout,
+                     '-SEC_PULL_DEST-',
+                     visible=pull_button)
+        ],
         [
             sg.Button('Pull', size=(57, 1), key='pull_btn') if pull_button
             else sg.Button('Done', size=(57, 1), key='done_btn')
@@ -84,13 +109,11 @@ def gui_android_file_browser(attached_devices, device_obj, pull_button=False, si
     # Create the Window
     window = sg.Window('File and folder browser', layout, finalize=True,
                        icon=os.path.join(constants.ROOT_DIR, 'images', 'automated-video-testing-header-icon.ico'))
-
+    return_val = None
     while True:
         event, values = window.read()
 
-        if event == sg.WIN_CLOSED or event == 'Done':  # if user closes window or clicks cancel
-            if event == 'done_btn':
-                return values['_TREE_']
+        if event == sg.WIN_CLOSED:  # if user closes window or clicks cancel
             break
 
         # window['_TREE_'].bind('<Double-Button-1>', '_double_clicked')
@@ -107,12 +130,10 @@ def gui_android_file_browser(attached_devices, device_obj, pull_button=False, si
             treedata = sg.TreeData()
 
             files_tree.update(values=treedata)
-
-            # add_files_in_folder('', "/", 2)
+            #
+            # add_files_in_folder('', "/", DEPTH_LEVEL)
 
             files_tree.update(values=treedata)
-
-
 
         # if event == '_TREE_EXPAND_':
         #     try:
@@ -137,8 +158,25 @@ def gui_android_file_browser(attached_devices, device_obj, pull_button=False, si
                 else:
                     current_device.pull_files_recurse(values['_TREE_'], values['save_dir'])
 
+        if event == 'done_btn':
+            if single_select and select_folder:
+                if current_device.get_file_type(values['_TREE_'][0]) == 'dir':
+                    return_val = values['_TREE_'][0]
+                    break
+                else:
+                    logger.error(f'User selected a non dir, we have select_folder True')
+                    sg.popup_auto_close("Make sure you are selecting a directory!")
+            elif single_select:
+                return_val = values['_TREE_'][0]
+                break
+            else:
+                return_val = values['_TREE_']
+                break
+
         logger.debug(f'vals: {values}')  # Debugging
         logger.debug(f'event: {event}')  # Debugging
         # print(window['_TREE_'].TreeData)
 
     window.close()
+    if return_val:
+        return return_val

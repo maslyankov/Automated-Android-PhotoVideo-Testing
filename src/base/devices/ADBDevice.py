@@ -7,8 +7,10 @@ from signal import CTRL_C_EVENT, SIGINT
 from datetime import datetime
 from natsort import natsorted
 from pathlib import Path
+from re import compile, match
 
 from src.base.devices.Device import Device
+from src.base.utils.utils import get_file_paths
 from src.base.utils.xml_tools import generate_sequence, xml_from_sequence
 
 from src import constants
@@ -32,6 +34,7 @@ class ADBDevice(Device):
 
         # Settings
         self.camera_app = None
+        self.images_save_loc = None
 
         # States
         self.current_camera_app_mode = 'photo'
@@ -169,11 +172,12 @@ class ADBDevice(Device):
 
     def pull_file(self, src, dst):
         """
-        Pull file to device
-        :param src: Path on device to file to pull
+        Pull file from device
+        :param src: Path file on device to pull
         :param dst: Destination to save the file to
         :return:None
         """
+        dst = path.realpath(dst)
         logger.debug(f'Pulling {src} into {dst}')  # Debugging
         self.d.pull(src, dst)
 
@@ -201,6 +205,9 @@ class ADBDevice(Device):
 
     def set_camera_app_pkg(self, pkg):
         self.camera_app = pkg
+
+    def set_images_save_loc(self, loc):
+        self.images_save_loc = loc
 
     def get_camera_app_pkg(self):
         return self.camera_app
@@ -296,7 +303,18 @@ class ADBDevice(Device):
     def get_recursive_files_list(self, target_dir):
         files_list = self.exec_shell(f"ls -R {target_dir}").splitlines()
 
-        return files_list
+        directory_pattern = compile(r"^\/.*\:$")
+        file_pattern = compile(r"^\w+.*\w+$")
+
+        files = list()
+        while files_list:
+            if match(directory_pattern, files_list[0]):
+                files.append(get_file_paths(files_list, file_pattern))
+            else:
+                files_list.pop(0)
+
+        logger.debug(files)
+        return files
         # for num, f in enumerate(files_list):
         #     files_list[num] = f.split()
 
@@ -519,7 +537,7 @@ class ADBDevice(Device):
         self.exec_shell(f"rm -rf {folder}/*")
         logger.debug(f"Deleting folder {folder} from device!")
 
-    def pull_files(self, files_list:list, save_dest):
+    def pull_files(self, files_list: list, save_dest):
         if not path.isdir(save_dest):
             logger.error("Got a save_dir that is not a dir!")
             return
@@ -528,7 +546,7 @@ class ADBDevice(Device):
             if file != '':
                 self.pull_file(file, path.join(save_dest, path.basename(file)))
 
-    def pull_files_recurse(self, files_list:list, save_dest):
+    def pull_files_recurse(self, files_list: list, save_dest):
         if not path.isdir(save_dest):
             logger.error("Got a save_dir that is not a dir!")
             return
@@ -551,8 +569,7 @@ class ADBDevice(Device):
                 else:
                     self.pull_file(file, path.join(save_dest, filename))
 
-
-    def pull_and_rename(self, dest, file_loc, filename, suffix = None):
+    def pull_and_rename(self, dest, file_loc, filename, suffix=None):
         pulled_files = []
 
         files_list = self.get_files_list(file_loc, get_full_path=True)
@@ -697,6 +714,9 @@ class ADBDevice(Device):
                 if subelem.tag == 'camera_app':
                     self.camera_app = subelem.text
 
+                if subelem.tag == 'images_save_location':
+                    self.images_save_loc = subelem.text
+
                 if subelem.tag == 'logs':
                     for data in subelem:
                         if data.tag == 'enabled':
@@ -754,6 +774,9 @@ class ADBDevice(Device):
 
         cam_app = ET.SubElement(settings, "camera_app")
         cam_app.text = self.camera_app
+
+        images_save_loc = ET.SubElement(settings, "images_save_location")
+        images_save_loc.text = self.images_save_loc
 
         logs = ET.SubElement(settings, "logs")
 
@@ -908,7 +931,8 @@ class ADBDevice(Device):
         logger.debug(f"Friendly Name: {self.friendly_name}")
         logger.debug(f"Serial: {self.device_serial}")
         logger.debug(f"Cam app: {self.camera_app}")
-        logger.debug(f"Logs: enabled ({self.logs_enabled}), filter ({self.logs_filter})")
+        logger.debug(f"images save path: {self.images_save_loc}")
+        logger.debug(f"Logs enabled: ({self.logs_enabled}), filter ({self.logs_filter})")
         logger.debug(f"shoot_photo_seq: {self.shoot_photo_seq}")
         logger.debug(f"start_video_seq: {self.start_video_seq}")
         logger.debug(f"stop_video_seq: {self.stop_video_seq}")

@@ -2,6 +2,7 @@ import json
 import os
 from pathlib import Path
 from hurry.filesize import size
+from re import sub, match
 
 import cv2
 from natsort import natsorted
@@ -78,6 +79,26 @@ def get_list_average(list_in: list, min_index=None, max_index=None):
     return result / divider
 
 
+def get_file_paths(line_list, f_pattern):
+    file_paths = list()
+    path = sub(r"\:", "/", line_list[0])
+
+    while len(line_list) > 1:
+        if match(f_pattern, line_list[1]):
+            file_paths.append(path + line_list[1])
+            line_list.pop(0)
+
+        else:
+            return file_paths
+
+    if match(f_pattern, line_list[0]):
+        file_paths.append(path + line_list[0])
+        line_list.pop(0)
+        return file_paths
+
+    line_list.pop(0)
+
+
 def compare_lists(list1, list2):
     return [str(s) for s in (set(list1) ^ set(list2))]
 
@@ -100,6 +121,7 @@ def convert_to_int_float(s):
 
 def pretty_size(num: int):
     return size(num) if num else "-"
+
 
 # Deeper stuff
 def analyze_images_test_results(template_data):

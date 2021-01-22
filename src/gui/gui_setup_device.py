@@ -4,6 +4,9 @@ import PySimpleGUI as sg
 from src import constants
 from src.logs import logger
 
+from src.gui.utils_gui import place, collapse
+from src.gui.gui_android_file_browser import gui_android_file_browser
+
 
 def list_from_data(values, fltr):
     seq = []
@@ -11,6 +14,9 @@ def list_from_data(values, fltr):
     for item in values.keys():
         if values[item] == 'Empty':
             continue  # Skip empty items
+
+        if isinstance(item, int):
+            continue
 
         if item.split('.')[0] == fltr and values[item] != '':
             if values[item.replace("action", "action_type")] == 'tap':
@@ -32,7 +38,7 @@ def list_from_data(values, fltr):
 
 
 def device_data_to_gui(device, window):
-    logger.info("Parsing device object data and updating GUI accordingly...\n")
+    logger.info("Parsing device object data and updating GUI accordingly...")
 
     device.print_attributes()
 
@@ -43,13 +49,14 @@ def device_data_to_gui(device, window):
 
     window['logs_bool'].Update(value=True if device.logs_enabled else False)
 
-    print(device.logs_filter)
     window['logs_filter'].Update(device.logs_filter)
 
     window['selected_app_package'].Update(
         values=list(device.get_installed_packages()),
         value=device.get_current_app()[0] if device.camera_app is None else device.camera_app
     )
+
+    window['device_images_dir_path'].Update("None" if device.images_save_loc is None else device.images_save_loc)
 
     # List
     for seq_type in list(constants.ACT_SEQUENCES.keys()):
@@ -211,7 +218,9 @@ def place(elem):
     return sg.Column([[elem]], pad=(0, 0))
 
 
-def gui_setup_device(attached_devices, device_obj):
+def gui_setup_device(attached_devices, devices_obj):
+    current_device = devices_obj[attached_devices[0]]
+
     select_device_frame = [[
         sg.Combo(
             attached_devices, size=(20, 20),
@@ -219,28 +228,29 @@ def gui_setup_device(attached_devices, device_obj):
             default_value=attached_devices[0],
             enable_events=True
         ),
-        sg.Text(text=device_obj[attached_devices[0]].friendly_name,
+        sg.Text(text=current_device.friendly_name,
                 key='device-friendly',
                 font="Any 18",
                 size=(15, 1))
     ], ]
 
-    logger.info(f'Device Logs filter:{device_obj[attached_devices[0]].logs_filter}')
+    logger.info(f'Device Logs filter:{current_device.logs_filter}')
 
     logs_frame = [  # TODO Update with element info if available
         [sg.Checkbox('Capture Logs',
-                     default=True if device_obj[attached_devices[0]].logs_enabled else False,
+                     default=True if current_device.logs_enabled else False,
                      size=(10, 1),
                      key='logs_bool',
                      enable_events=True)],
         [sg.Text('Logs Filter:'),
          sg.InputText(size=(42, 1),
                       key='logs_filter',
-                      default_text=device_obj[attached_devices[0]].logs_filter,
-                      disabled=False if device_obj[attached_devices[0]].logs_enabled else True)],
+                      default_text=current_device.logs_filter,
+                      disabled=False if current_device.logs_enabled else True)],
     ]
 
-    current_app = device_obj[attached_devices[0]].get_current_app()
+    current_app = current_device.get_current_app()
+
     if current_app is None:
         current_app = ['...', '...']
 
@@ -254,22 +264,30 @@ def gui_setup_device(attached_devices, device_obj):
                  font='Any 13')],
         [
             sg.Combo(
-                values=device_obj[attached_devices[0]].get_installed_packages(),
+                values=current_device.get_installed_packages(),
                 size=(43, 1),
                 key='selected_app_package',
-                default_value=device_obj[attached_devices[0]].get_camera_app_pkg() if device_obj[attached_devices[
-                    0]].get_camera_app_pkg() is not None else ''
+                default_value=
+                current_device.get_current_app()[0]
+                if current_device.camera_app is None
+                else current_device.camera_app
             ),
             sg.Button('Test!',
                       size=(5, 1),
                       key='test_app_btn', disabled=False)
         ], ]
 
+    select_images_dir_frame = [[
+        sg.I(readonly=True, k='device_images_dir_path', size=(38, 1),
+             default_text="" if current_device.images_save_loc is None else current_device.images_save_loc),
+        sg.B(button_text="Browse Device", k='device_images_dir_button')
+    ]]
+
     actions_seq_settings_frame = [
         [
             sg.Text('Actions Gap Time:'),
             sg.Spin([i for i in range(0, 30)],
-                    initial_value=getattr(device_obj[attached_devices[0]], 'actions_time_gap'),
+                    initial_value=getattr(current_device, 'actions_time_gap'),
                     key='actions_gap_spinner',
                     disabled=False,
                     enable_events=True)
@@ -278,21 +296,61 @@ def gui_setup_device(attached_devices, device_obj):
 
     # - Sequences -
     clickable_elements = constants.CUSTOM_ACTIONS + list(
-        device_obj[attached_devices[0]].get_clickable_window_elements().keys())
+        current_device.get_clickable_window_elements().keys())
+
+    # Collapsables
+    global opened_main_sett, opened_sequences
+    opened_main_sett, opened_sequences = True, False
 
     seq_column = []
 
     for elem in list(constants.ACT_SEQUENCES.keys()):
         frame = [sg.Frame(f'{constants.ACT_SEQUENCES_DESC[elem]} Action Sequence',
-                          build_seq_gui(device_obj[attached_devices[0]], elem, clickable_elements), font='Any 12')]
+                          build_seq_gui(current_device, elem, clickable_elements), font='Any 12')]
         seq_column.append(frame)
+
+    main_settings_layout = [
+        [sg.Frame('Logs', logs_frame, font='Any 12')],
+        [sg.Frame('Select Camera App', select_app_frame, font='Any 12')],
+        [sg.Frame('Select images directory', select_images_dir_frame, font='Any 12')]
+    ]
+
+    act_seq_layout = [
+        [sg.Frame('Actions Sequences Settings', actions_seq_settings_frame, font='Any 12')],
+        [sg.Column(seq_column, size=(370, 230), scrollable=True, vertical_scroll_only=True)]
+    ]
 
     layout = [
         [sg.Frame('Select device', select_device_frame, font='Any 12')],
-        [sg.Frame('Logs', logs_frame, font='Any 12')],
-        [sg.Frame('Select Camera App', select_app_frame, font='Any 12')],
-        [sg.Frame('Actions Sequences Settings', actions_seq_settings_frame, font='Any 12')],
-        [sg.Column(seq_column, size=(370, 230), scrollable=True, vertical_scroll_only=True)],
+
+        [
+            sg.T(constants.SYMBOL_DOWN if opened_main_sett else constants.SYMBOL_UP,
+                 enable_events=True, k='-OPEN MAIN_SETT-',
+                 text_color=constants.PRIMARY_COLOR),
+            sg.T('Main Settings',
+                 enable_events=True,
+                 text_color=constants.PRIMARY_COLOR,
+                 k='-OPEN MAIN_SETT-TEXT-',
+                 pad=((0, 20), 0)),
+        ],
+        [collapse(main_settings_layout,
+                  '-MAIN_SETT-',
+                  visible=opened_main_sett)],
+
+        [
+            sg.T(constants.SYMBOL_DOWN if opened_sequences else constants.SYMBOL_UP,
+                 enable_events=True, k='-OPEN SEC_SEQUENCES-',
+                 text_color=constants.PRIMARY_COLOR),
+            sg.T('Action Sequences',
+                 enable_events=True,
+                 text_color=constants.PRIMARY_COLOR,
+                 k='-OPEN SEC_SEQUENCES-TEXT-',
+                 pad=((0, 20), 0)),
+        ],
+        [collapse(act_seq_layout,
+                  '-SEC_SEQUENCES-',
+                  visible=opened_sequences)],
+
         [sg.Button('Save Settings', size=(10, 2),
                    key='save_btn', disabled=False)]
     ]
@@ -310,7 +368,8 @@ def gui_setup_device(attached_devices, device_obj):
         logger.debug(f'vals: {values}')  # Debugging
         logger.debug(f'event {event}')  # Debugging
 
-        current_app = device_obj[attached_devices[0]].get_current_app()
+        current_device = devices_obj[values['selected_device']]
+        current_app = current_device.get_current_app()
         if current_app is None:
             current_app = ['...', '...']
 
@@ -318,16 +377,16 @@ def gui_setup_device(attached_devices, device_obj):
         window['current_app_activity'].Update(current_app[1])
 
         if event == 'selected_device':
-            device_data_to_gui(device_obj[values['selected_device']], window)
+            device_data_to_gui(current_device, window)
 
         if event == "logs_bool":
             window['logs_filter'].Update(disabled=not values['logs_bool'])
 
         if event == 'test_app_btn':
-            device_obj[values['selected_device']].open_app(values['selected_app_package'])
+            current_device.open_app(values['selected_app_package'])
 
             new_ui_elements = constants.CUSTOM_ACTIONS + list(
-                device_obj[values['selected_device']].get_clickable_window_elements().keys())
+                current_device.get_clickable_window_elements().keys())
 
             for seq_type in list(constants.ACT_SEQUENCES.keys()):
                 for element in range(constants.MAX_ACTIONS_DISPLAY):
@@ -335,7 +394,7 @@ def gui_setup_device(attached_devices, device_obj):
                     window[f'{seq_type}_selected_action.{str(element)}'].Update(values=new_ui_elements)
 
         if event == 'actions_gap_spinner':
-            setattr(device_obj[values['selected_device']], 'actions_time_gap', values['actions_gap_spinner'])
+            setattr(current_device, 'actions_time_gap', values['actions_gap_spinner'])
 
         for seq_type in list(constants.ACT_SEQUENCES.keys()):
             if event.split('.')[0] == f'{seq_type}_selected_action':
@@ -349,13 +408,16 @@ def gui_setup_device(attached_devices, device_obj):
                     pass
                 else:
                     try:
-                        data = device_obj[values['selected_device']].get_clickable_window_elements()[
-                        values[f'{seq_type}_selected_action.' + event.split('.')[1]]
+                        data = current_device.get_clickable_window_elements()[
+                            values[f'{seq_type}_selected_action.' + event.split('.')[1]]
                         ]
                         window[f"{seq_type}_selected_action_type.{event.split('.')[1]}"].Update('tap')
-                        window[f"{seq_type}_selected_action_desc.{event.split('.')[1]}"].Update(data[0])  # save for later
-                        window[f"{seq_type}_selected_action_x.{event.split('.')[1]}"].Update(data[1][0])  # save for later
-                        window[f"{seq_type}_selected_action_y.{event.split('.')[1]}"].Update(data[1][1])  # save for later
+                        window[f"{seq_type}_selected_action_desc.{event.split('.')[1]}"].Update(
+                            data[0])  # save for later
+                        window[f"{seq_type}_selected_action_x.{event.split('.')[1]}"].Update(
+                            data[1][0])  # save for later
+                        window[f"{seq_type}_selected_action_y.{event.split('.')[1]}"].Update(
+                            data[1][1])  # save for later
                     except KeyError as e:
                         logger.error(e)
 
@@ -370,36 +432,55 @@ def gui_setup_device(attached_devices, device_obj):
             if event.split('.')[
                 0] == f"{seq_type}_selected_action_test_btn":  # TODO - Make this use the GUI values not obj values
                 try:
-                    data = device_obj[values['selected_device']].get_clickable_window_elements()[
+                    data = current_device.get_clickable_window_elements()[
                         values[f"{seq_type}_selected_action.{event.split('.')[1]}"]
                     ]
-                    device_obj[values['selected_device']].input_tap(data[1])
+                    current_device.input_tap(data[1])
                 except KeyError:
                     logger.error("Element not found! :(")
 
                 new_ui_elements = constants.CUSTOM_ACTIONS + list(
-                    device_obj[values['selected_device']].get_clickable_window_elements(force_dump=True).keys())
+                    current_device.get_clickable_window_elements(force_dump=True).keys())
 
                 for element in range(constants.MAX_ACTIONS_DISPLAY):
                     if values[f"{seq_type}_selected_action.{str(element)}"] == 'Empty':
                         window[f"{seq_type}_selected_action.{str(element)}"].Update(values=new_ui_elements)
 
             if event == f"{seq_type}_selected_action_sequence_test_btn":
-                device_obj[values['selected_device']].do(getattr(device_obj[values['selected_device']], constants.ACT_SEQUENCES[seq_type]))
+                current_device.do(
+                    getattr(current_device, constants.ACT_SEQUENCES[seq_type]))
 
         if event == 'save_btn':
-            device = device_obj[values['selected_device']]
+            device = current_device
             # Save to object
             device.set_logs(values['logs_bool'], values['logs_filter'])
             device.set_camera_app_pkg(values['selected_app_package'])
+            device.set_images_save_loc(values['device_images_dir_path'])
             for seq_type in list(constants.ACT_SEQUENCES.keys()):
                 val = list_from_data(values, f'{seq_type}_selected_action')
                 setattr(device, constants.ACT_SEQUENCES[seq_type], val)
 
             # Save to file
             device.save_settings()
-            logger.debug(f"Device logs settings: {device_obj[values['selected_device']].logs_enabled} {device_obj[values['selected_device']].logs_filter}"
-                  )
-            logger.debug(f"Device photo seq: {device_obj[values['selected_device']].shoot_photo_seq}")
+            logger.debug(
+                f"Device logs settings: {current_device.logs_enabled} {current_device.logs_filter}"
+            )
+            logger.debug(f"Device photo seq: {current_device.shoot_photo_seq}")
+
+        if event.startswith('-OPEN SEC_SEQUENCES'):
+            opened_main_sett, opened_sequences = False, not opened_sequences
+        elif event.startswith('-OPEN MAIN_SETT'):
+            opened_main_sett, opened_sequences = not opened_main_sett, False
+
+        window['-OPEN SEC_SEQUENCES-'].update(constants.SYMBOL_DOWN if opened_sequences else constants.SYMBOL_UP)
+        window['-SEC_SEQUENCES-'].update(visible=opened_sequences)
+
+        window['-OPEN MAIN_SETT-'].update(constants.SYMBOL_DOWN if opened_main_sett else constants.SYMBOL_UP)
+        window['-MAIN_SETT-'].update(visible=opened_main_sett)
+
+        if event == 'device_images_dir_button':
+            got_folder = gui_android_file_browser(devices_obj, specific_device=values['selected_device'],
+                                                  single_select=True, select_folder=True, read_only=True)
+            window['device_images_dir_path'].Update(got_folder)
 
     window.close()
