@@ -88,6 +88,11 @@ def gui_android_file_browser(attached_devices, device_obj, pull_button=False, si
     while True:
         event, values = window.read()
 
+        if event == sg.WIN_CLOSED or event == 'Done':  # if user closes window or clicks cancel
+            if event == 'done_btn':
+                return values['_TREE_']
+            break
+
         # window['_TREE_'].bind('<Double-Button-1>', '_double_clicked')
         # window['_TREE_'].bind('<ButtonRelease-1>', '_released')
         # window['_TREE_'].bind('<ButtonPress-1>', '_pressed')
@@ -95,12 +100,7 @@ def gui_android_file_browser(attached_devices, device_obj, pull_button=False, si
             files_tree.bind("<<TreeviewOpen>>", "EXPAND_")
             files_tree.bind("<<TreeviewClose>>", "COLLAPSE_")
         except Exception as e:
-            logger.exception(e)
-
-        if event == sg.WIN_CLOSED or event == 'Done':  # if user closes window or clicks cancel
-            if event == 'done_btn':
-                return values['_TREE_']
-            break
+            logger.warn(e)
 
         if event == 'selected_device':
             window['device-friendly'].Update(device_obj[values['selected_device']].friendly_name)
