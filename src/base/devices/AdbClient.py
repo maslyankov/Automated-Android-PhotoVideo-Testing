@@ -50,7 +50,7 @@ class AdbClient:
 
     # ----- Main Stuff -----
     def _watchdog(self):
-        sleep(1)  # Let's give the GUI time to load
+        sleep(4)  # Let's give the GUI time to load
         while True:
             if self.anticipate_root:
                 sleep(2)
@@ -141,7 +141,6 @@ class AdbClient:
         :param device_obj: Device object
         :return: None
         """
-
 
         # Finally detach device
         try:
