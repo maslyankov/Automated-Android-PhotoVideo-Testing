@@ -52,7 +52,7 @@ def gui_android_file_browser(attached_devices, device_obj, pull_button=False, si
                 listed_dirs.append(fullname)
 
     # Initial data
-    add_files_in_folder('', "/", 1)
+    add_files_in_folder('', "/", 2)
 
     files_tree = sg.Tree(data=treedata, key='_TREE_', auto_size_columns=False, show_expanded=False,
                          headings=['date', 'size'], justification='center',
@@ -60,12 +60,27 @@ def gui_android_file_browser(attached_devices, device_obj, pull_button=False, si
                          select_mode=sg.SELECT_MODE_BROWSE if single_select else sg.SELECT_MODE_EXTENDED,
                          enable_events=True, )
 
-    layout = [[sg.Text('Select file/s to pull:' if pull_button else
-                       'Select a single element:' if single_select
-                       else 'Select files/folders')],
-              [files_tree],
-              [sg.Input(readonly=True, key='save_dir', size=(52, 1)), sg.FolderBrowse(size=(10, 1))],
-              [sg.Button('Pull', size=(57, 1)) if pull_button else sg.Button('Done', size=(57, 1))]]
+    layout = [
+        [
+            sg.Combo(attached_devices, size=(20, 20),
+                     key='selected_device',
+                     default_value=attached_devices[0],
+                     enable_events=True),
+            sg.Text(text=device_obj[attached_devices[0]].friendly_name,
+                    key='device-friendly',
+                    font="Any 18",
+                    size=(13, 1))
+        ],
+        [sg.Text('Select file/s to pull:' if pull_button else
+                 'Select a single element:' if single_select
+                 else 'Select files/folders')],
+        [files_tree],
+        [sg.Input(readonly=True, key='save_dir', size=(52, 1)), sg.FolderBrowse(size=(10, 1))],
+        [
+            sg.Button('Pull', size=(57, 1), key='pull_btn') if pull_button
+            else sg.Button('Done', size=(57, 1), key='done_btn')
+        ]
+    ]
     # Create the Window
     window = sg.Window('File and folder browser', layout, finalize=True,
                        icon=os.path.join(constants.ROOT_DIR, 'images', 'automated-video-testing-header-icon.ico'))
@@ -76,30 +91,51 @@ def gui_android_file_browser(attached_devices, device_obj, pull_button=False, si
         # window['_TREE_'].bind('<Double-Button-1>', '_double_clicked')
         # window['_TREE_'].bind('<ButtonRelease-1>', '_released')
         # window['_TREE_'].bind('<ButtonPress-1>', '_pressed')
-        window['_TREE_'].bind("<<TreeviewOpen>>", "EXPAND_")
-        window['_TREE_'].bind("<<TreeviewClose>>", "COLLAPSE_")
+        try:
+            files_tree.bind("<<TreeviewOpen>>", "EXPAND_")
+            files_tree.bind("<<TreeviewClose>>", "COLLAPSE_")
+        except Exception as e:
+            logger.exception(e)
 
         if event == sg.WIN_CLOSED or event == 'Done':  # if user closes window or clicks cancel
-            if event == 'Done':
+            if event == 'done_btn':
                 return values['_TREE_']
             break
 
-        if event == '_TREE_EXPAND_':
-            try:
-                add_files_in_folder(values['_TREE_'][0], values['_TREE_'][0], 1)
-                files_tree.update(values=treedata)
+        if event == 'selected_device':
+            window['device-friendly'].Update(device_obj[values['selected_device']].friendly_name)
+            treedata = sg.TreeData()
 
-                iid = None
-                for k, v in files_tree.IdToKey.items():
-                    if v == 'Blah':
-                        iid = k
-                        break
-                if iid:
-                    files_tree.Widget.see(iid)
-                    files_tree.Widget.selection_set(iid)
+            files_tree.update(values=treedata)
 
-            except IndexError as e:
-                pass
+            # add_files_in_folder('', "/", 2)
+
+            files_tree.update(values=treedata)
+
+
+
+        # if event == '_TREE_EXPAND_':
+        #     try:
+        #         add_files_in_folder(values['_TREE_'][0], values['_TREE_'][0], 1)
+        #         files_tree.update(values=treedata)
+        #
+        #         iid = None
+        #         for k, v in files_tree.IdToKey.items():
+        #             if v == 'Blah':
+        #                 iid = k
+        #                 break
+        #         if iid:
+        #             files_tree.Widget.see(iid)
+        #             files_tree.Widget.selection_set(iid)
+        #
+        #     except IndexError as e:
+        #         pass
+        if event == 'pull_btn':
+            if values['_TREE_'][0] != '':
+                if values['save_dir'] == '':
+                    sg.popup_auto_close("No save destination entered!")
+                else:
+                    current_device.pull_files_recurse(values['_TREE_'], values['save_dir'])
 
         logger.debug(f'vals: {values}')  # Debugging
         logger.debug(f'event: {event}')  # Debugging

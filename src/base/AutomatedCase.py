@@ -166,7 +166,7 @@ class AutomatedCase(Thread):
     def pull_new_images(self, folders: list, filename, specific_device=None):
         if self.pull_files_location is None:
             return
-
+        images_location = 'sdcard/DCIM/Camera/'
         pulled_files = {}
 
         if specific_device is None:
@@ -177,13 +177,14 @@ class AutomatedCase(Thread):
                     *folders)
                 Path(dest).mkdir(parents=True, exist_ok=True)
 
-                logger.debug(f"current list of files: {self.devices_obj[device].get_camera_files_list()}")
+                logger.debug(f"current list of files: {self.devices_obj[device].get_files_list(images_location, get_full_path=True)}")
                 self.output_gui(f'Now pulling from device {device} ({self.devices_obj[device].friendly_name})')
                 pulled_files[device] = self.devices_obj[device].pull_and_rename(
                     dest,
+                    images_location,
                     filename
                 )
-                self.devices_obj[device].clear_folder('sdcard/DCIM/Camera/')
+                self.devices_obj[device].clear_folder(images_location)
         else:
             logger.debug(f'Now pulling from {specific_device} ({self.devices_obj[specific_device].friendly_name})')
             self.output_gui(
@@ -195,9 +196,10 @@ class AutomatedCase(Thread):
                     self.devices_obj[specific_device].friendly_name,
                     *folders
                 ),
+                images_location,
                 filename
             )
-            self.devices_obj[specific_device].clear_folder('sdcard/DCIM/Camera/')
+            self.devices_obj[specific_device].clear_folder(images_location)
 
         return pulled_files
 

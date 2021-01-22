@@ -6,6 +6,7 @@ from os import path, kill
 from signal import CTRL_C_EVENT, SIGINT
 from datetime import datetime
 from natsort import natsorted
+from pathlib import Path
 
 from src.base.devices.Device import Device
 from src.base.utils.xml_tools import generate_sequence, xml_from_sequence
@@ -375,10 +376,18 @@ class ADBDevice(Device):
 
         return ret_list
 
+    def get_file_type(self, target_file):
+        logger.debug(f"Checking '{target_file}'...")
+        files_in_dir = self.get_files_and_folders(path.dirname(target_file))
+        file_info = next((item for item in files_in_dir if item["name"] == path.basename(target_file)), False)
+        logger.debug(file_info)
+
+        return file_info['file_type']
+
     def get_files_list(self, target_dir, get_full_path=False):
         """
-        Get a list of files in sdcard/DCIM/Camera on the device
-        :return: List of strings, each being a file located in sdcard/DCIM/Camera
+        Get a list of files in target_dir on the device
+        :return: List of strings, each being a file located in target_dir
         """
 
         files_list = self.exec_shell(f"ls {'-d' if get_full_path else ''} {target_dir.rstrip('/')}/*").splitlines()
@@ -393,9 +402,6 @@ class ADBDevice(Device):
             return None
         else:
             return files_list
-
-    def get_camera_files_list(self):
-        self.get_files_list("sdcard/DCIM/Camera", get_full_path=True)
 
     def get_screen_resolution(self):
         """
@@ -513,17 +519,51 @@ class ADBDevice(Device):
         self.exec_shell(f"rm -rf {folder}/*")
         logger.debug(f"Deleting folder {folder} from device!")
 
-    def pull_and_rename(self, dest, filename):
+    def pull_files(self, files_list:list, save_dest):
+        if not path.isdir(save_dest):
+            logger.error("Got a save_dir that is not a dir!")
+            return
+
+        for file in files_list:
+            if file != '':
+                self.pull_file(file, path.join(save_dest, path.basename(file)))
+
+    def pull_files_recurse(self, files_list:list, save_dest):
+        if not path.isdir(save_dest):
+            logger.error("Got a save_dir that is not a dir!")
+            return
+
+        for file in files_list:
+            if file != '':
+                # logger.debug("file is: ", file)
+                filename = path.basename(file).strip("/\\")
+                if self.get_file_type(file) == 'dir':
+                    subdir_files = self.get_files_list(file, get_full_path=True)
+                    subdir_save_dest = path.join(save_dest, filename)
+
+                    # Create new folder for the new subdir
+                    logger.debug(f"Creating dir: {filename} in {save_dest}")
+                    Path(subdir_save_dest).mkdir(parents=True, exist_ok=True)
+
+                    if subdir_files:
+                        # Pull into new dir
+                        self.pull_files_recurse(subdir_files, subdir_save_dest)
+                else:
+                    self.pull_file(file, path.join(save_dest, filename))
+
+
+    def pull_and_rename(self, dest, file_loc, filename, suffix = None):
         pulled_files = []
-        suffix = None
-        files_list = self.get_camera_files_list()
+
+        files_list = self.get_files_list(file_loc, get_full_path=True)
+
         if not files_list:
             return []
         for num, file in enumerate(files_list):
             if num > 0:
                 suffix = f"_{str(num)}"
             new_filename = path.join(dest, f"{filename}{suffix if suffix else ''}.{file.split('.')[1]}")
-            self.pull_file(f"sdcard/DCIM/Camera/{file}", new_filename)
+            self.pull_file(f"{file_loc}{file}", new_filename)
             pulled_files.append(new_filename)
         return pulled_files
 
