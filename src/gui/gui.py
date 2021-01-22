@@ -406,6 +406,10 @@ def gui():
     progress_bar_percent = window['progressbar_percent']
     progress_bar_status = window['progressbar_status']
 
+    # Tell device clients (adbclient) that gui is ready
+    adb.gui_is_ready = True
+    logger.info("Setting adbclient gui_is_ready to True")
+
     # Event Loop to process "events" and get the "values" of the inputs
     while True:
         event, values = window.read()

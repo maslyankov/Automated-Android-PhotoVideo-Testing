@@ -19,6 +19,7 @@ class AdbClient:
     def __init__(self, gui_window, gui_event):
         self.gui_window = gui_window
         self.gui_event = gui_event
+        self.gui_is_ready = False
 
         logger.info("Starting the ADB Server...")
         try:
@@ -50,8 +51,12 @@ class AdbClient:
 
     # ----- Main Stuff -----
     def _watchdog(self):
-        sleep(4)  # Let's give the GUI time to load
         while True:
+            if not self.gui_is_ready:
+                continue
+
+            sleep(1)
+
             if self.anticipate_root:
                 sleep(2)
                 self.anticipate_root = False
