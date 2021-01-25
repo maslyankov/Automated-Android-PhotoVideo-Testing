@@ -36,6 +36,9 @@ def gui():
     for num in range(constants.MAX_DEVICES_AT_ONE_RUN):
         logger.debug(f"Building row {num}")  # Debugging
         devices_frame += [
+                             place(sg.Radio("", "ACTIVE_DEVICE",
+                                            k=f'device_active_radio.{num}',  # default=True if num == 0 else False,
+                                            visible=False, enable_events=True)),
                              place(sg.Image(filename='', key=f'device_icon.{num}', visible=False)),
                              place(sg.Checkbox('', key=f'device_attached.{num}',
                                                disabled=True,
@@ -399,6 +402,9 @@ def gui():
     adb.watchdog()
     adb_devices = adb.devices_obj  # List to store devices objects
 
+    global active_device
+    active_device = None
+
     # usbcam_client = USBCamClient(gui_window=window, gui_event=devices_watchdog_event)
     # usbcam_client.watchdog()
     # usbcam_devices = usbcam_client.devices_obj
@@ -422,13 +428,15 @@ def gui():
         if event == sg.WIN_CLOSED or event == 'Exit':  # if user closes window or clicks cancel
             break
 
-        # print('Data: ', values)  # Debugging
         logger.debug(f'Event: {event}')  # Debugging
+        logger.debug(f'Values: {values}')  # Debugging
         logger.debug(f"Selected tab: {values['main_tabs_group']}")
         # print('ADB List Devices', devices_list)  # Debugging
         # print('Devices objects: ', device)
 
         # ---- Devices Listing
+        attached_devices_list = adb.get_attached_devices()
+
         if event == devices_watchdog_event:
             watchdog_received = values[devices_watchdog_event]
 
@@ -450,6 +458,7 @@ def gui():
                                                                     visible=True)
                             window[f'device_attached.{num}'].metadata = device_data
                             window[f'device_serial.{num}'].Update(watchdog_received['serial'])  # TODO: Deprecate this
+                            window[f'device_active_radio.{num}'].Update(visible=True)
                             window[f'device_icon.{num}'].Update(
                                 filename=constants.DEVICE_ICONS[watchdog_received['type']],
                                 visible=True)
@@ -471,16 +480,19 @@ def gui():
                         window[f'device_friendly.{num}'].Update(disabled=True, visible=False)
                         window[f'identify_device_btn.{num}'].Update(visible=False)
                         window[f'ctrl_device_btn.{num}'].Update(visible=False)
+                        window[f'device_active_radio.{num}'].Update(visible=False)
                         window[f'device_icon.{num}'].Update(visible=False)
                         break
                 try:
+                    if values[f'device_active_radio.{num}']:
+                        window[f'device_active_radio.{num}'].Update(value=False)
+                        active_device = None
+
                     logger.info('device disconnected, detaching')
                     adb.detach_device(watchdog_received['serial'])
                     del adb_devices[watchdog_received['serial']]
                 except KeyError:
                     logger.info("Wasn't attached anyway..")
-
-        attached_devices_list = adb.get_attached_devices()
 
         if event.split('.')[0] == 'device_attached':
             diff_device = values[f"device_serial.{event.split('.')[1]}"]
@@ -508,6 +520,10 @@ def gui():
                             window[f'ctrl_device_btn.{num}'].Update(disabled=False)
                             break
 
+                    if len(attached_devices_list) == 1:
+                        window[f'device_active_radio.{num}'].Update(value=True)
+                        active_device = diff_device
+
                     logger.info('Added {} to attached devices!'.format(diff_device))
 
                     logger.info('Currently opened app: {}'.format(adb_devices[diff_device].get_current_app()))
@@ -524,6 +540,10 @@ def gui():
                         window[f'identify_device_btn.{num}'].Update(disabled=True)
                         window[f'ctrl_device_btn.{num}'].Update(disabled=True)
                         break
+
+                if values[f'device_active_radio.{num}']:
+                    window[f'device_active_radio.{num}'].Update(value=False)
+                    active_device = None
 
                 logger.info('{} was detached!'.format(diff_device))
 

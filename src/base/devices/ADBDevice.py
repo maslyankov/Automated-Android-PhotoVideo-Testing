@@ -158,7 +158,7 @@ class ADBDevice(Device):
             quit(1)
         except RuntimeError as e:
             logger.error('Device Disconnected unexpectedly! Detaching...')
-            self.detach_device()
+            self.detach_device(True)
 
     def push_file(self, src, dst):
         """
@@ -167,8 +167,11 @@ class ADBDevice(Device):
         :param dst: Destination on device of file
         :return:None
         """
+        src = path.realpath(src)  # .replace(" ", "^ ")
+        # dst = dst.replace(" ", "^ ")
+
         logger.debug(f'Pushing {src} to {dst}')
-        self.d.push(src, dst)
+        self.d.push(src, dst, progress=print)
 
     def pull_file(self, src, dst):
         """
@@ -181,8 +184,8 @@ class ADBDevice(Device):
         logger.debug(f'Pulling {src} into {dst}')  # Debugging
         self.d.pull(src, dst)
 
-    def detach_device(self):
-        self.adb.detach_device(self.device_serial)
+    def detach_device(self, spurious_bool=False):
+        self.adb.detach_device(self.device_serial, spurious_bool)
 
     # ----- Getters/Setters -----
     def set_shoot_photo_seq(self, seq):
@@ -318,9 +321,11 @@ class ADBDevice(Device):
         # for num, f in enumerate(files_list):
         #     files_list[num] = f.split()
 
-    def get_files_and_folders(self, target_dir):
-        global item_size, item_link_endpoint, total_size
-
+    def get_files_list(self, target_dir, extra_args=None, get_full_path=False):
+        """
+        Get a list of files in target_dir on the device
+        :return: List of strings, each being a file located in target_dir
+        """
         if not target_dir.startswith("/"):
             logger.debug(f"Prepending / to path {target_dir}")
             target_dir = f"/{target_dir}"
@@ -328,8 +333,46 @@ class ADBDevice(Device):
             logger.debug(f"Appending / to path {target_dir}")
             target_dir = f"{target_dir}/"
 
+        # Command arguments
+        args = ''
+        if get_full_path:
+            logger.debug("get_full_path is True")
+            if extra_args is None:
+                extra_args = list()
+            extra_args.append('-d')
+            target_dir += '*'
+
+        if extra_args:
+            for arg in extra_args:
+                if isinstance(arg, tuple):
+                    args += f"{arg[0]} {arg[1]} "
+                elif isinstance(arg, str):
+                    args += f"{arg} "
+                else:
+                    logger.error(f"Unexpected argument: {str(arg)}")
+
+        # Executing command
+        files_list = self.exec_shell(
+            f"ls {args.rstrip(' ')} {target_dir}"
+        ).splitlines()
+
+        logger.debug(f"Files List: {files_list}")
+        try:
+            check_for_missing_dir = files_list[0]
+        except IndexError:
+            return []
+
+        if 'No such file or directory' in check_for_missing_dir \
+                or "Not a directory" in check_for_missing_dir:
+            return None
+        else:
+            return files_list
+
+    def get_files_and_folders(self, target_dir):
+        global item_size, item_link_endpoint, total_size
+
         total_size = None
-        files_list = self.exec_shell(f"ls -l {target_dir}").splitlines()
+        files_list = self.get_files_list(target_dir, extra_args=['-l'])
         # links: lrwxrwxrwx root     root              1970-01-01 02:00 fg_algo_cos -> /sbin/fg_algo_cos
         # folders: drwxrwx--- system   cache             2020-09-04 15:20 cache
         # files: -rwxr-x--- root     root       526472 1970-01-01 02:00 init
@@ -337,6 +380,10 @@ class ADBDevice(Device):
         try:
             check_for_missing_dir = files_list[0]
         except IndexError:
+            logger.error(f"files_list: {files_list}")
+            return []
+        except TypeError:
+            logger.error(f"files_list: {files_list}")
             return []
 
         if 'No such file or directory' in check_for_missing_dir \
@@ -409,7 +456,10 @@ class ADBDevice(Device):
 
                 # print(f"{file_type} '{item_name}' owned by {item_owner}:{item_owner_group} from {item_date} {item_time} \t {item_flags}")
                 if file_type == 'file':
-                    ret_list[-1]['file_size'] = item_size
+                    try:
+                        ret_list[-1]['file_size'] = item_size
+                    except NameError as e:
+                        logger.error(e)
                 elif file_type == 'link':
                     ret_list[-1]['link_endpoint'] = item_link_endpoint
 
@@ -444,25 +494,6 @@ class ADBDevice(Device):
             logger.debug(f"File basename: {path.basename(target_file)}")
 
         return file_info['file_type'] if file_info else None
-
-    def get_files_list(self, target_dir, get_full_path=False):
-        """
-        Get a list of files in target_dir on the device
-        :return: List of strings, each being a file located in target_dir
-        """
-
-        files_list = self.exec_shell(f"ls {'-d' if get_full_path else ''} {target_dir.rstrip('/')}/*").splitlines()
-        logger.debug(f"Files List: {files_list}")
-        try:
-            check_for_missing_dir = files_list[0]
-        except IndexError:
-            return []
-
-        if 'No such file or directory' in check_for_missing_dir \
-                or "Not a directory" in check_for_missing_dir:
-            return None
-        else:
-            return files_list
 
     def get_screen_resolution(self):
         """
@@ -595,9 +626,9 @@ class ADBDevice(Device):
             return
 
         for file in files_list:
-            if file != '':
+            if isinstance(file, str) and file != '':
                 # logger.debug("file is: ", file)
-                filename = path.basename(file).strip("/\\")
+                filename = file.replace("\\", "/").rstrip("/").split('/')[-1]
                 filetype = self.get_file_type(file)
                 if filetype:
                     if filetype == 'dir':
@@ -617,6 +648,8 @@ class ADBDevice(Device):
                         logger.warn(f"File {file} is {filetype}. Idk what to do with it...")
                 else:
                     logger.error(f"Couldn't get filetype for '{file}' :(")
+            else:
+                logger.error(f"Unexpected type {type(file)} of: {str(file)}")
 
     def pull_and_rename(self, dest, file_loc, filename, suffix=None):
         pulled_files = []
@@ -642,7 +675,7 @@ class ADBDevice(Device):
     def push_files(self, files_list, files_dest):
         logger.debug(f'Files list: {files_list}')
 
-        for file in files_list.split(';'):
+        for file in files_list:
             logger.debug(f'Pushing: {file}')
             filename = path.basename(file)
             self.push_file(path.normpath(file), files_dest + filename)

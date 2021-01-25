@@ -36,8 +36,8 @@ def gui_pull_images(attached_devices, device_obj):
         if event == sg.WIN_CLOSED or event == 'Close':  # if user closes window or clicks cancel
             break
 
-        print('vals', values)  # Debugging
-        print('event', event)  # Debugging
+        logger.debug(f"Event: {event}")  # Debugging
+        logger.debug(f"Values: {values}")  # Debugging
 
         if event == 'selected_device':
             window['device-friendly'].Update(device_obj[values['selected_device']].friendly_name)
@@ -54,6 +54,9 @@ def gui_pull_images(attached_devices, device_obj):
                 # files_to_pull = adb_devices[attached_devices_list[0]].get_recursive_files_list(device_images_dir)
                 # print(files_to_pull)
 
-                curr_device.pull_files_recurse([device_images_dir], save_dir)
+                curr_device.pull_files_recurse(
+                    curr_device.get_files_list(device_images_dir, get_full_path=True),
+                    save_dir
+                )
 
     window.close()

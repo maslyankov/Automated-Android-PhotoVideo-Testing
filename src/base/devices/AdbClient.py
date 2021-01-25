@@ -139,7 +139,7 @@ class AdbClient:
 
         self.devices_obj[device_serial].set_led_color('0FFF00', 'RGB1', 'global_rgb')  # Poly
 
-    def detach_device(self, device_serial):
+    def detach_device(self, device_serial, spurious_bool = False):
         """
         Remove device from attached devices
         :param device_serial: Device serial
@@ -152,12 +152,16 @@ class AdbClient:
             logger.info(f'Detaching device {device_serial}')
             self.devices_obj[device_serial].kill_scrcpy()
 
-            self.devices_obj[device_serial].set_led_color('FFFFFF', 'RGB1', 'global_rgb')  # Poly
+            if not spurious_bool:
+                self.devices_obj[device_serial].set_led_color('FFFFFF', 'RGB1', 'global_rgb')  # Poly
+
             self.attached_devices.remove(device_serial)
             del self.devices_obj[device_serial]
         except ValueError as e:
-            logger.warn(f"Not found in attached devices list {e}")
+            logger.warn(f"Not found in attached devices list")
+            logger.exception(e)
             logger.debug(self.attached_devices)
         except KeyError as e:
-            logger.warn(f"Not found in attached devices list {e}")
+            logger.warn(f"Not found in attached devices list")
+            logger.exception(e)
             logger.debug(self.attached_devices)

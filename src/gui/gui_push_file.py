@@ -78,7 +78,7 @@ def gui_push_file(attached_devices, device_obj):
             curr_device.remount()
             logger.info("Pushing new file to device...")
 
-            curr_device.push_files(values['source_file'], files_dest)
+            curr_device.push_files(values['source_file'].split(';'), files_dest)
 
             logger.info('Files pushed!')
             sg.popup_ok('Files pushed!')

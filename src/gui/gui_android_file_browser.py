@@ -116,6 +116,9 @@ def gui_android_file_browser(device_obj,
         if event == sg.WIN_CLOSED:  # if user closes window or clicks cancel
             break
 
+        logger.debug(f'vals: {values}')  # Debugging
+        logger.debug(f'event: {event}')  # Debugging
+
         # window['_TREE_'].bind('<Double-Button-1>', '_double_clicked')
         # window['_TREE_'].bind('<ButtonRelease-1>', '_released')
         # window['_TREE_'].bind('<ButtonPress-1>', '_pressed')
@@ -152,31 +155,33 @@ def gui_android_file_browser(device_obj,
         #     except IndexError as e:
         #         pass
         if event == 'pull_btn':
-            if values['_TREE_'][0] != '':
-                if values['save_dir'] == '':
-                    sg.popup_auto_close("No save destination entered!")
-                else:
-                    current_device.pull_files_recurse(values['_TREE_'], values['save_dir'])
+            if values['_TREE_']:
+                if values['_TREE_'][0] != '':
+                    if values['save_dir'] == '':
+                        sg.popup_auto_close("No save destination entered!")
+                    else:
+                        current_device.pull_files_recurse(values['_TREE_'], values['save_dir'])
+            else:
+                pass
 
         if event == 'done_btn':
-            if single_select and select_folder:
-                filetype = current_device.get_file_type(values['_TREE_'][0])
-                if filetype and filetype == 'dir':
+            if values['_TREE_']:
+                if single_select and select_folder:
+                    filetype = current_device.get_file_type(values['_TREE_'][0])
+                    if filetype and filetype == 'dir':
+                        return_val = values['_TREE_'][0]
+                        break
+                    else:
+                        logger.error(f'User selected a non dir, we have select_folder True')
+                        sg.popup_auto_close("Make sure you are selecting a directory!")
+                elif single_select:
                     return_val = values['_TREE_'][0]
                     break
                 else:
-                    logger.error(f'User selected a non dir, we have select_folder True')
-                    sg.popup_auto_close("Make sure you are selecting a directory!")
-            elif single_select:
-                return_val = values['_TREE_'][0]
-                break
+                    return_val = values['_TREE_']
+                    break
             else:
-                return_val = values['_TREE_']
                 break
-
-        logger.debug(f'vals: {values}')  # Debugging
-        logger.debug(f'event: {event}')  # Debugging
-        # print(window['_TREE_'].TreeData)
 
     window.close()
     if return_val:
