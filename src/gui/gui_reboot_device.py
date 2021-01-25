@@ -42,5 +42,6 @@ def gui_reboot_device(attached_devices, device_obj):
 
             logger.info(f"Rebooting Device {values['selected_device']}")
             curr_device.reboot()
+            sg.popup_auto_close("Reboot successful! Detaching device...")
 
     window.close()

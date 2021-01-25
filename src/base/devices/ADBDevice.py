@@ -319,6 +319,16 @@ class ADBDevice(Device):
         #     files_list[num] = f.split()
 
     def get_files_and_folders(self, target_dir):
+        global item_size, item_link_endpoint, total_size
+
+        if not target_dir.startswith("/"):
+            logger.debug(f"Prepending / to path {target_dir}")
+            target_dir = f"/{target_dir}"
+        if not target_dir.endswith("/"):
+            logger.debug(f"Appending / to path {target_dir}")
+            target_dir = f"{target_dir}/"
+
+        total_size = None
         files_list = self.exec_shell(f"ls -l {target_dir}").splitlines()
         # links: lrwxrwxrwx root     root              1970-01-01 02:00 fg_algo_cos -> /sbin/fg_algo_cos
         # folders: drwxrwx--- system   cache             2020-09-04 15:20 cache
@@ -342,6 +352,9 @@ class ADBDevice(Device):
                 if listed_item != '':
                     item_split.append(listed_item)
 
+            if item[0] == 'total':
+                total_size = item[1]
+
             item_flags = item_split[0]
 
             if 'd' in item_flags:
@@ -354,53 +367,83 @@ class ADBDevice(Device):
                 # It's a file
                 file_type = 'file'
 
-            item_owner = item_split[1]
-            item_owner_group = item_split[2]
+            try:
+                index_count = 1
+                if item_split[index_count].isdigit():
+                    # logger.debug("Item has subelements count column")
+                    index_count += 1
 
-            if file_type != 'link':
-                item_date = item_split[-3]
-                item_time = item_split[-2]
-                item_name = item_split[-1]
-                if file_type == 'file':
+                item_owner = item_split[index_count]
+                item_owner_group = item_split[index_count+1]
+
+                if file_type != 'link':
+                    item_date = item_split[-3]
+                    item_time = item_split[-2]
+                    item_name = item_split[-1]
+                    #if file_type == 'file':
                     try:
-                        item_size = int(item_split[-4])
+                        if item_split[-4].isdigit():
+                            item_size = int(item_split[-4])
                     except ValueError:
                         item_size = None
-            else:
-                item_date = item_split[3]
-                item_time = item_split[4]
-                item_name = item_split[5]
-                item_link_endpoint = item_split[7]
+                else:
+                    item_date = item_split[-5]
+                    item_time = item_split[-4]
+                    item_name = item_split[-3]
+                    item_link_endpoint = item_split[-1]
 
-            ret_list.append(
-                {
-                    'file_type': file_type,
-                    'owner': item_owner,
-                    'owner_group': item_owner_group,
-                    'date': item_date,
-                    'time': item_time,
-                    'name': item_name
-                }
-            )
+                ret_list.append(
+                    {
+                        'file_type': file_type,
+                        'flags': item_flags,
+                        'owner': item_owner,
+                        'owner_group': item_owner_group,
+                        'date': item_date,
+                        'time': item_time,
+                        'name': item_name
+                    }
+                )
 
-            # print(f"{file_type} '{item_name}' owned by {item_owner}:{item_owner_group} from {item_date} {item_time} \t {item_flags}")
-            if file_type == 'file':
-                ret_list[-1]['file_size'] = item_size
-            elif file_type == 'link':
-                ret_list[-1]['link_endpoint'] = item_link_endpoint
+                if index_count == 2:
+                    logger.debug(f"Item {item_name} has {item_split[index_count-1]} subelements.")
+
+                # print(f"{file_type} '{item_name}' owned by {item_owner}:{item_owner_group} from {item_date} {item_time} \t {item_flags}")
+                if file_type == 'file':
+                    ret_list[-1]['file_size'] = item_size
+                elif file_type == 'link':
+                    ret_list[-1]['link_endpoint'] = item_link_endpoint
+
+            except IndexError as e:
+                logger.exception(e)
+                logger.debug(f"files_list: {files_list}")
+                logger.debug(f"item: {item}")
+                logger.debug(f"item_split: {item_split}")
 
         ret_list.sort(key=lambda x: x['file_type'])
         logger.debug(f"Returning list: {ret_list}")
+
+        if total_size:
+            logger.info(f"Total size of {target_dir} is '{total_size}'")
 
         return ret_list
 
     def get_file_type(self, target_file):
         logger.debug(f"Checking '{target_file}'...")
-        files_in_dir = self.get_files_and_folders(path.dirname(target_file))
-        file_info = next((item for item in files_in_dir if item["name"] == path.basename(target_file)), False)
-        logger.debug(file_info)
 
-        return file_info['file_type']
+        target_file = target_file.rstrip('/')
+        parent_folder = path.dirname(target_file)
+        files_in_dir = self.get_files_and_folders(parent_folder)
+
+        filename = target_file.split('/')[-1]
+
+        file_info = next((item for item in files_in_dir if item["name"] == filename), False)
+        logger.debug(f"Returning filetype for file '{target_file}' (Searching for '{filename}'): {file_info}")
+
+        if not file_info:
+            logger.debug(f"Files in dir: {files_in_dir}")
+            logger.debug(f"File basename: {path.basename(target_file)}")
+
+        return file_info['file_type'] if file_info else None
 
     def get_files_list(self, target_dir, get_full_path=False):
         """
@@ -555,19 +598,25 @@ class ADBDevice(Device):
             if file != '':
                 # logger.debug("file is: ", file)
                 filename = path.basename(file).strip("/\\")
-                if self.get_file_type(file) == 'dir':
-                    subdir_files = self.get_files_list(file, get_full_path=True)
-                    subdir_save_dest = path.join(save_dest, filename)
+                filetype = self.get_file_type(file)
+                if filetype:
+                    if filetype == 'dir':
+                        subdir_files = self.get_files_list(file, get_full_path=True)
+                        subdir_save_dest = path.join(save_dest, filename)
 
-                    # Create new folder for the new subdir
-                    logger.debug(f"Creating dir: {filename} in {save_dest}")
-                    Path(subdir_save_dest).mkdir(parents=True, exist_ok=True)
+                        # Create new folder for the new subdir
+                        logger.debug(f"Creating dir: {filename} in {save_dest}")
+                        Path(subdir_save_dest).mkdir(parents=True, exist_ok=True)
 
-                    if subdir_files:
-                        # Pull into new dir
-                        self.pull_files_recurse(subdir_files, subdir_save_dest)
+                        if subdir_files:
+                            # Pull into new dir
+                            self.pull_files_recurse(subdir_files, subdir_save_dest)
+                    elif filetype == 'file':
+                        self.pull_file(file, path.join(save_dest, filename))
+                    else:
+                        logger.warn(f"File {file} is {filetype}. Idk what to do with it...")
                 else:
-                    self.pull_file(file, path.join(save_dest, filename))
+                    logger.error(f"Couldn't get filetype for '{file}' :(")
 
     def pull_and_rename(self, dest, file_loc, filename, suffix=None):
         pulled_files = []

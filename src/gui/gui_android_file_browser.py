@@ -6,7 +6,7 @@ from src.logs import logger
 from src.base.utils.utils import pretty_size
 from src.gui.utils_gui import collapse
 
-DEPTH_LEVEL = 3
+DEPTH_LEVEL = 1
 
 
 def gui_android_file_browser(device_obj,
@@ -160,7 +160,8 @@ def gui_android_file_browser(device_obj,
 
         if event == 'done_btn':
             if single_select and select_folder:
-                if current_device.get_file_type(values['_TREE_'][0]) == 'dir':
+                filetype = current_device.get_file_type(values['_TREE_'][0])
+                if filetype and filetype == 'dir':
                     return_val = values['_TREE_'][0]
                     break
                 else:

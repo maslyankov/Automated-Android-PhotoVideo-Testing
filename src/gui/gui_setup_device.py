@@ -278,7 +278,7 @@ def gui_setup_device(attached_devices, devices_obj):
         ], ]
 
     select_images_dir_frame = [[
-        sg.I(readonly=True, k='device_images_dir_path', size=(38, 1),
+        sg.I(readonly=False, k='device_images_dir_path', size=(38, 1),
              default_text="" if current_device.images_save_loc is None else current_device.images_save_loc),
         sg.B(button_text="Browse Device", k='device_images_dir_button')
     ]]
