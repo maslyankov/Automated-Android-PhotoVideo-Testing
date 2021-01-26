@@ -130,7 +130,7 @@ def gui():
         ),
         sg.Button(
             'Test Lights',
-            size=(11, 3),
+            size=(15, 2),
             key='test_lights_btn',
             disabled=False
         ),
@@ -142,12 +142,12 @@ def gui():
     objective_frame_layout = [
         [
             sg.T('Project Requirements: ', size=(18, 1)),
-            sg.Input(key='obj_report_projreq_field', readonly=True, size=(36, 1)),
+            sg.Input(key='obj_report_projreq_field', readonly=True, size=(40, 1)),
             sg.Button(button_text='Open', key='obj_report_projreq_btn', size=(8, 1))
         ],
         [
             sg.T('Images dir:', size=(18, 1)),
-            sg.Input(key='obj_report_output', readonly=True, size=(36, 1), enable_events=True),
+            sg.Input(key='obj_report_output', readonly=True, size=(40, 1), enable_events=True),
             sg.FolderBrowse(size=(8, 1), key='obj_report_output_browse')
         ],
         [sg.Button("Generate", key='obj_report_build_btn', size=(20, 1), disabled=True)]
@@ -262,11 +262,11 @@ def gui():
     reallife_frame_layout = [
         [
             sg.T('Images dir:', size=(18, 1)),
-            sg.Input(key='rlt_report_input_files', readonly=True, size=(36, 1), enable_events=True),
+            sg.Input(key='rlt_report_input_files', readonly=True, size=(40, 1), enable_events=True),
             sg.FolderBrowse(size=(8, 1), key='rlt_report_output_browse', target='rlt_report_input_files')
         ], [
             sg.T('Presentation Name:', size=(18, 1)),
-            sg.Input(key='rlt_report_name', size=(36, 1)),
+            sg.Input(key='rlt_report_name', size=(40, 1)),
         ],
         # First Collapsable
         [
@@ -340,7 +340,7 @@ def gui():
         [sg.Frame('Device Tools', device_tools_layout, font='Any 12')],
         [sg.Frame('Lights', lights_frame_layout, font='Any 12')],
         [
-            sg.Button('Capture Cases (Manual)', size=(25, 2), key='capture_manual_btn', disabled=True),
+            sg.Button('Capture Cases (Manual)', size=(28, 2), key='capture_manual_btn', disabled=True),
             sg.Button('Capture Cases (Automated)', size=(30, 2), key='capture_auto_btn', disabled=True),
             sg.Button('?', size=(4, 2), key='help_btn', disabled=False)
         ]
