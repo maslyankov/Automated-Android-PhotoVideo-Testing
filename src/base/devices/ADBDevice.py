@@ -1,9 +1,8 @@
 import xml.etree.cElementTree as ET
-from subprocess import Popen, PIPE
+from subprocess import Popen, PIPE, CREATE_NEW_CONSOLE
 from time import sleep
 from re import findall
-from os import path, kill
-from signal import CTRL_C_EVENT, SIGINT
+from os import path
 from datetime import datetime
 from natsort import natsorted
 from pathlib import Path
@@ -35,6 +34,7 @@ class ADBDevice(Device):
 
         # Object Parameters #
         self.scrcpy = []
+
 
         # Settings
         self.camera_app = None
@@ -83,12 +83,12 @@ class ADBDevice(Device):
         """
         logger.info(f"Rooting device {self.device_serial}")
         self.adb.anticipate_root = True
-        CREATE_NO_WINDOW = 0x08000000
+        # CREATE_NO_WINDOW = 0x08000000
         root = Popen([constants.ADB, '-s', self.device_serial, 'root'],
                      stdin=PIPE,
                      stdout=PIPE,
                      stderr=PIPE,
-                     creationflags=CREATE_NO_WINDOW)
+                     creationflags=constants.CREATE_NO_WINDOW)
         root.stdin.close()
         stdout, stderr = root.communicate()
         if stderr:
@@ -110,12 +110,12 @@ class ADBDevice(Device):
         :return:None
         """
         logger.info(f"Remount device serial: {self.device_serial}")
-        CREATE_NO_WINDOW = 0x08000000
+        # CREATE_NO_WINDOW = 0x08000000
         remount = Popen([constants.ADB, '-s', self.device_serial, 'remount'],
                         stdin=PIPE,
                         stdout=PIPE,
                         stderr=PIPE,
-                        creationflags=CREATE_NO_WINDOW)
+                        creationflags=constants.CREATE_NO_WINDOW)
         remount.stdin.close()
         stdout, stderr = remount.communicate()
         if stderr:
@@ -129,14 +129,14 @@ class ADBDevice(Device):
         Disabled verity of device
         :return:None
         """
-        print("Dis verity device serial: " + self.device_serial)
-        CREATE_NO_WINDOW = 0x08000000
+        logger.info("Disabling verity device serial: " + self.device_serial)
+        # CREATE_NO_WINDOW = 0x08000000
         self.adb.anticipate_root = True
         disver = Popen([constants.ADB, '-s', self.device_serial, 'disable-verity'],
                        stdin=PIPE,
                        stdout=PIPE,
                        stderr=PIPE,
-                       creationflags=CREATE_NO_WINDOW)
+                       creationflags=constants.CREATE_NO_WINDOW)
         disver.stdin.close()
         stdout, stderr = disver.communicate()
         if stderr:
@@ -147,6 +147,18 @@ class ADBDevice(Device):
 
         logger.info('Rebooting device after disabling verity!')
         self.reboot()
+
+    def open_shell(self):
+        """
+        Open shell terminal of device
+        :return:None
+        """
+        logger.info(f"Opening shell terminal of: {self.device_serial}")
+
+        new_shell = Popen([constants.ADB, "-s", self.device_serial, "shell"],
+                          creationflags=CREATE_NEW_CONSOLE)
+
+
 
     def exec_shell(self, cmd):
         """
@@ -437,13 +449,13 @@ class ADBDevice(Device):
                     index_count += 1
 
                 item_owner = item_split[index_count]
-                item_owner_group = item_split[index_count+1]
+                item_owner_group = item_split[index_count + 1]
 
                 if file_type != 'link':
                     item_date = item_split[-3]
                     item_time = item_split[-2]
                     item_name = item_split[-1]
-                    #if file_type == 'file':
+                    # if file_type == 'file':
                     try:
                         if item_split[-4].isdigit():
                             item_size = int(item_split[-4])
@@ -468,7 +480,7 @@ class ADBDevice(Device):
                 )
 
                 if index_count == 2:
-                    logger.debug(f"Item {item_name} has {item_split[index_count-1]} subelements.")
+                    logger.debug(f"Item {item_name} has {item_split[index_count - 1]} subelements.")
 
                 # print(f"{file_type} '{item_name}' owned by {item_owner}:{item_owner_group} from {item_date} {item_time} \t {item_flags}")
                 if file_type == 'file':
@@ -629,7 +641,6 @@ class ADBDevice(Device):
         if file_type == 'dir' or file_type == 'link':
             target += "/*"
             args += "-rf "
-
 
         logger.debug(f"Deleting {file_type} {target} from device!")
         self.exec_shell(f"rm {args}{target}")

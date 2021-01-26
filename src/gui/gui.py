@@ -39,7 +39,7 @@ def gui():
                              place(sg.Radio("", "ACTIVE_DEVICE",
                                             k=f'device_active_radio.{num}',  # default=True if num == 0 else False,
                                             visible=False, enable_events=True)),
-                             place(sg.Image(filename='', key=f'device_icon.{num}', visible=False)),
+                             place(sg.Image(filename='', key=f'device_icon.{num}', visible=False, pad=(0, 0))),
                              place(sg.Checkbox('', key=f'device_attached.{num}',
                                                disabled=True,
                                                enable_events=True,
@@ -50,7 +50,7 @@ def gui():
                                                 readonly=True,
                                                 default_text='',
                                                 visible=False)),
-                             place(sg.InputText(key=f'device_friendly.{num}', enable_events=True, size=(23, 1),
+                             place(sg.InputText(key=f'device_friendly.{num}', enable_events=True, size=(19, 1),
                                                 disabled=True,
                                                 visible=False)),
                              place(sg.Button('Identify',
@@ -60,6 +60,12 @@ def gui():
                                              visible=False)),
                              place(sg.Button('Control',
                                              key=f'ctrl_device_btn.{num}',
+                                             disabled=True,
+                                             enable_events=True,
+                                             visible=False
+                                             )),
+                             place(sg.Button('Shell',
+                                             key=f'device_shell_btn.{num}',
                                              disabled=True,
                                              enable_events=True,
                                              visible=False
@@ -376,7 +382,7 @@ def gui():
     ]
 
     layout = [
-        [sg.Image(os.path.join(constants.ROOT_DIR, 'images', 'automated-video-testing-header.png'))],
+        [sg.Image(os.path.join(constants.ROOT_DIR, 'images', 'automated-video-testing-header@0.75x.png'))],
         [
             Tabs([
                 [
@@ -475,6 +481,7 @@ def gui():
                             window[f'device_friendly.{num}'].Update(visible=True)
                             window[f'identify_device_btn.{num}'].Update(visible=True)
                             window[f'ctrl_device_btn.{num}'].Update(visible=True)
+                            window[f'device_shell_btn.{num}'].Update(visible=True)
 
                             logger.debug(f"metadata: {window[f'device_attached.{num}'].metadata}")
                             break
@@ -489,6 +496,7 @@ def gui():
                         window[f'device_friendly.{num}'].Update(disabled=True, visible=False)
                         window[f'identify_device_btn.{num}'].Update(visible=False)
                         window[f'ctrl_device_btn.{num}'].Update(visible=False)
+                        window[f'device_shell_btn.{num}'].Update(visible=False)
                         window[f'device_active_radio.{num}'].Update(visible=False)
                         window[f'device_icon.{num}'].Update(visible=False)
                         break
@@ -527,6 +535,7 @@ def gui():
                                                                     disabled=False)
                             window[f'identify_device_btn.{num}'].Update(disabled=False)
                             window[f'ctrl_device_btn.{num}'].Update(disabled=False)
+                            window[f'device_shell_btn.{num}'].Update(disabled=False)
                             break
 
                     if len(attached_devices_list) == 1:
@@ -548,6 +557,7 @@ def gui():
                         window[f'device_friendly.{num}'].Update(text_color='black', background_color='yellow')
                         window[f'identify_device_btn.{num}'].Update(disabled=True)
                         window[f'ctrl_device_btn.{num}'].Update(disabled=True)
+                        window[f'device_shell_btn.{num}'].Update(disabled=True)
                         break
 
                 if values[f'device_active_radio.{num}']:
@@ -579,6 +589,10 @@ def gui():
                 logger.info('Opening device control for ' + event.split('.')[1])
                 device000 = values[f"device_serial.{event.split('.')[1]}"]
                 adb_devices[device000].open_device_ctrl()
+            if event.split('.')[0] == 'device_shell_btn':  # Device Control
+                logger.info('Opening shell for ' + event.split('.')[1])
+                device000 = values[f"device_serial.{event.split('.')[1]}"]
+                adb_devices[device000].open_shell()
 
             # Buttons callbacks
             if event == "camxoverride_btn":
