@@ -18,6 +18,10 @@ from src.logs import logger
 
 
 # ---------- CLASS ADBDevice ----------
+def push_file_send_progress(src, total_size, sent_size):
+    logger.debug(f"{src} > {sent_size}/{total_size}")
+
+
 class ADBDevice(Device):
     """
     Class for interacting with devices using adb (ppadb) and AdbClient class
@@ -172,7 +176,7 @@ class ADBDevice(Device):
 
         logger.debug(f'Pushing {src} to {dst}')
         try:
-            self.d.push(src, dst, progress=print)
+            self.d.push(src, dst, progress=push_file_send_progress)
         except RuntimeError as e:
             logger.error(e)
 
@@ -359,7 +363,15 @@ class ADBDevice(Device):
             f"ls {args.rstrip(' ')} {target_dir}"
         ).splitlines()
 
-        logger.debug(f"Files List: {files_list}")
+        logger.debug(f"Files List Got: {files_list}")
+
+        # Clear whitespaces from filenames
+        #       Turns out some devices add a trailing whitespace to each filename, we don't want that
+        for i, f in enumerate(files_list):
+            files_list[i] = f.strip()
+
+        logger.debug(f"Files List After strip: {files_list}")
+
         try:
             check_for_missing_dir = files_list[0]
         except IndexError:
@@ -379,6 +391,7 @@ class ADBDevice(Device):
         # links: lrwxrwxrwx root     root              1970-01-01 02:00 fg_algo_cos -> /sbin/fg_algo_cos
         # folders: drwxrwx--- system   cache             2020-09-04 15:20 cache
         # files: -rwxr-x--- root     root       526472 1970-01-01 02:00 init
+        # Some devices return size for folders as well
 
         try:
             check_for_missing_dir = files_list[0]
@@ -606,13 +619,20 @@ class ADBDevice(Device):
         else:
             logger.debug("{} was already opened! Continuing...".format(package))
 
-    def clear_folder(self, folder):
+    def delete_file(self, target):
         """
-        Deletes a folder's contents
-        :return:None
+         Deletes a file if a folder -> the folder's contents
+         :return:None
         """
-        self.exec_shell(f"rm -rf {folder}/*")
-        logger.debug(f"Deleting folder {folder} from device!")
+        file_type = self.get_file_type(target)
+        args = ""
+        if file_type == 'dir' or file_type == 'link':
+            target += "/*"
+            args += "-rf "
+
+
+        logger.debug(f"Deleting {file_type} {target} from device!")
+        self.exec_shell(f"rm {args}{target}")
 
     def pull_files(self, files_list: list, save_dest):
         if not path.isdir(save_dest):
@@ -626,6 +646,10 @@ class ADBDevice(Device):
     def pull_files_recurse(self, files_list: list, save_dest):
         if not path.isdir(save_dest):
             logger.error("Got a save_dir that is not a dir!")
+            return
+
+        if not files_list:
+            logger.info("No files to pull.")
             return
 
         for file in files_list:

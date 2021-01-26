@@ -35,8 +35,10 @@ def gui_pull_images(device_obj, attached_devices=None, specific_device=None):
                  default_text=persist_setting if persist_setting else ""),
             sg.FolderBrowse()
         ],
-        [sg.Button('Pull', size=(10, 2),
-                   key='pull_btn', disabled=False)]
+        [
+            sg.Button('Pull', size=(10, 2), key='pull_btn', disabled=False),
+            sg.Button('Clear', size=(10, 2), key='clear_btn', disabled=False)
+         ]
     ]
 
     # Create the Window
@@ -53,6 +55,7 @@ def gui_pull_images(device_obj, attached_devices=None, specific_device=None):
         logger.debug(f"Values: {values}")  # Debugging
 
         curr_device = device_obj[values['selected_device']] if not specific_device else device_obj[specific_device]
+        device_images_dir = curr_device.images_save_loc
 
         if attached_devices and event == 'selected_device':
             window['device-friendly'].Update(curr_device.friendly_name)
@@ -60,13 +63,16 @@ def gui_pull_images(device_obj, attached_devices=None, specific_device=None):
             persist_setting = curr_device.get_persist_setting('last_pull_images_save_dest')
             window['dest_folder'].Update(persist_setting)
 
+        if event == 'clear_btn':
+            if sg.popup_yes_no(f"You are about to delete all images\nfrom '{device_images_dir}'"):
+                curr_device.delete_file(device_images_dir)
+
         if event == 'pull_btn':
             logger.info(f"Pulling from device {values['selected_device']}")
 
             save_dir = values['save_dest']
 
             if save_dir and os.path.isdir(save_dir):
-                device_images_dir = curr_device.images_save_loc
                 # files_to_pull = adb_devices[attached_devices_list[0]].get_recursive_files_list(device_images_dir)
                 # print(files_to_pull)
 
@@ -77,5 +83,7 @@ def gui_pull_images(device_obj, attached_devices=None, specific_device=None):
                     curr_device.get_files_list(device_images_dir, get_full_path=True),
                     save_dir
                 )
+
+                sg.popup_auto_close("Files pulled successfully!")
 
     window.close()

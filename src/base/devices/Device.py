@@ -22,6 +22,8 @@ class Device:
         self.device_xml = os.path.join(constants.DEVICES_SETTINGS_DIR, f'{serial}.xml')
 
     def load_settings_file(self):
+        logger.info("Loading device settings...\n")
+
         logger.info(f'Checking for Device settings file at "{self.device_xml}" and possibly loading it..')
 
         try:

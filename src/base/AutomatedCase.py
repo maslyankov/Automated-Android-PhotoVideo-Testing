@@ -184,7 +184,7 @@ class AutomatedCase(Thread):
                     images_location,
                     filename
                 )
-                self.devices_obj[device].clear_folder(images_location)
+                self.devices_obj[device].delete_file(images_location)
         else:
             logger.debug(f'Now pulling from {specific_device} ({self.devices_obj[specific_device].friendly_name})')
             self.output_gui(
@@ -199,7 +199,7 @@ class AutomatedCase(Thread):
                 images_location,
                 filename
             )
-            self.devices_obj[specific_device].clear_folder(images_location)
+            self.devices_obj[specific_device].delete_file(images_location)
 
         return pulled_files
 
