@@ -68,42 +68,50 @@ def gui():
 
     # noinspection PyTypeChecker
     device_settings_frame_layout = [[
-        sg.Button('Edit camxoverridesettings',
-                  size=(19, 2),
+        sg.Button('Edit\ncamxoverridesettings',
+                  size=(16, 2),
                   key='camxoverride_btn',
                   disabled=True,
                   tooltip='Edit or view camxoverridesettings of any attached device'),
-        sg.Button('Reboot Device',
-                  size=(19, 2),
-                  key='reboot_device_btn',
-                  disabled=True,
-                  tooltip='Reboot devices immediately'),
         sg.Button('Setup',
-                  size=(19, 2),
+                  size=(10, 2),
                   key='setup_device_btn',
                   disabled=True,
                   tooltip='Setup device settings, calibrate touch events etc.'),
     ],
     ]
 
-    device_tools_layout = [
+    device_single_frame = [
         [
-            sg.Button('Push file/s',
-                      size=(12, 3),
-                      key='push_file_btn',
-                      disabled=True),
-            sg.Button('Pull file/s',
-                      size=(12, 3),
-                      key='pull_file_btn',
-                      disabled=True),
-            sg.Button('Pull\nimages',
-                      size=(12, 3),
+            sg.Button('Pull images',
+                      size=(11, 1),
                       key='pull_images_btn',
                       disabled=True),
+            sg.Button('Reboot Device',
+                      size=(11, 1),
+                      key='reboot_device_btn',
+                      disabled=True,
+                      tooltip='Reboot devices immediately'),
+        ], [
             sg.Button('Record Screen',
-                      size=(12, 3),
+                      size=(11, 1),
                       key='record_screen_btn',
                       disabled=True)
+        ]
+    ]
+
+    device_tools_layout = [
+        [
+            sg.Button('Push\nfile/s',
+                      size=(7, 3),
+                      key='push_file_btn',
+                      disabled=True),
+            sg.Button('Pull\nfile/s',
+                      size=(7, 3),
+                      key='pull_file_btn',
+                      disabled=True),
+            collapse(device_single_frame, "device_single_frame", True)
+
         ]
     ]
 
@@ -359,7 +367,8 @@ def gui():
             sg.Button('Extract Frames From Video', size=(30, 2), key='extract_video_frames_tool_btn', pad=(15, 15))
         ],
         [
-            sg.Button('Test USB Camera', size=(30, 2), key='usb_cam_tool_btn', pad=(15, 15), visible=constants.DEBUG_MODE)
+            sg.Button('Test USB Camera', size=(30, 2), key='usb_cam_tool_btn', pad=(15, 15),
+                      visible=constants.DEBUG_MODE)
         ],
 
         # [sg.T('RAW Converter')],
@@ -576,16 +585,25 @@ def gui():
                 gui_camxoverride(attached_devices_list, adb_devices)
 
             if event == "push_file_btn":
-                gui_push_file(attached_devices_list, adb_devices)
+                gui_push_file(adb_devices,
+                              attached_devices=attached_devices_list if not active_device else None,
+                              specific_device=active_device if active_device else None)
 
             if event == "pull_file_btn":
-                gui_android_file_browser(adb_devices, attached_devices=attached_devices_list, pull_button=True)
+                gui_android_file_browser(adb_devices,
+                                         attached_devices=attached_devices_list if not active_device else None,
+                                         specific_device=active_device if active_device else None,
+                                         pull_button=True)
 
             if event == 'pull_images_btn':
-                gui_pull_images(attached_devices_list, adb_devices)
+                gui_pull_images(adb_devices,
+                                attached_devices=attached_devices_list if not active_device else None,
+                                specific_device=active_device if active_device else None)
 
             if event == "record_screen_btn":
-                gui_screenrec(attached_devices_list, adb_devices)
+                gui_screenrec(adb_devices,
+                              attached_devices=attached_devices_list if not active_device else None,
+                              specific_device=active_device if active_device else None)
 
             if event == "setup_device_btn":
                 gui_setup_device(attached_devices_list, adb_devices)
@@ -596,7 +614,11 @@ def gui():
                 logger.debug(f'for {device000} fr name is {adb_devices[device000].friendly_name}')
 
             if event == 'reboot_device_btn':
-                gui_reboot_device(attached_devices_list, adb_devices)
+                if active_device:
+                    adb_devices[active_device].reboot()
+                    sg.popup_auto_close('Device rebooted!')
+                else:
+                    gui_reboot_device(attached_devices_list, adb_devices)
 
             if event == 'capture_manual_btn':
                 gui_manual_cases(attached_devices_list, adb_devices)

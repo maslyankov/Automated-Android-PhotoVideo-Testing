@@ -171,7 +171,10 @@ class ADBDevice(Device):
         # dst = dst.replace(" ", "^ ")
 
         logger.debug(f'Pushing {src} to {dst}')
-        self.d.push(src, dst, progress=print)
+        try:
+            self.d.push(src, dst, progress=print)
+        except RuntimeError as e:
+            logger.error(e)
 
     def pull_file(self, src, dst):
         """
@@ -817,6 +820,22 @@ class ADBDevice(Device):
                 if subelem.tag == 'actions_time_gap':
                     self.actions_time_gap = int(subelem.text)
 
+                # Device settings persistance
+                if elem.tag == 'device_settings_persistence':
+                    self.device_settings_persistence[subelem.tag] = subelem.text
+                    logger.debug(f"Loading persistent setting {subelem.tag} -> {subelem.text}")
+
+    def get_persist_setting(self, key):
+        try:
+            resp = self.device_settings_persistence[key]
+        except KeyError:
+            resp = None
+
+        return resp
+
+    def set_persist_setting(self, key, value):
+        self.device_settings_persistence[key] = value
+
     def save_settings(self):
         root = ET.Element('device')
 
@@ -874,6 +893,13 @@ class ADBDevice(Device):
 
         actions_time_gap = ET.SubElement(settings, "actions_time_gap")
         actions_time_gap.text = str(self.actions_time_gap)
+
+        # Device settings persistance
+        settings_device_settings_persistence = ET.SubElement(root, 'device_settings_persistence')
+
+        for key, value in self.device_settings_persistence.items():
+            cam_app = ET.SubElement(settings_device_settings_persistence, key)
+            cam_app.text = value
 
         tree = ET.ElementTree(root)
         logger.info(f'Writing settings to file {self.device_xml}')

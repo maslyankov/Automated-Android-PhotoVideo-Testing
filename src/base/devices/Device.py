@@ -14,6 +14,11 @@ class Device:
 
         self.is_recording_video = False
 
+        self.device_settings_persistence = {
+            "test1": "asd",
+            "test2": "dsa"
+        }
+
         self.device_xml = os.path.join(constants.DEVICES_SETTINGS_DIR, f'{serial}.xml')
 
     def load_settings_file(self):
