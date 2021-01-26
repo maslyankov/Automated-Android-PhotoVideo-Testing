@@ -49,26 +49,32 @@ def gui():
                                                 size=(15, 1),
                                                 readonly=True,
                                                 default_text='',
-                                                visible=False)),
-                             place(sg.InputText(key=f'device_friendly.{num}', enable_events=True, size=(19, 1),
+                                                visible=False,
+                                                pad=(0, 0))),
+                             place(sg.InputText(key=f'device_friendly.{num}', enable_events=True, size=(21, 1),
                                                 disabled=True,
-                                                visible=False)),
+                                                visible=False,
+                                                pad=(0, 0))),
                              place(sg.Button('Identify',
                                              key=f'identify_device_btn.{num}',
                                              disabled=True,
                                              enable_events=True,
-                                             visible=False)),
+                                             visible=False,
+                                             pad=((5,1), 0)
+                                             )),
                              place(sg.Button('Control',
                                              key=f'ctrl_device_btn.{num}',
                                              disabled=True,
                                              enable_events=True,
-                                             visible=False
+                                             visible=False,
+                                             pad=(1, 0)
                                              )),
                              place(sg.Button('Shell',
                                              key=f'device_shell_btn.{num}',
                                              disabled=True,
                                              enable_events=True,
-                                             visible=False
+                                             visible=False,
+                                             pad=((1,5), 0)
                                              ))
                          ],
 
