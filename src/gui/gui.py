@@ -24,6 +24,7 @@ from src.gui.gui_project_req_file import gui_project_req_file
 from src.gui.gui_cam_tool import gui_cam_tool
 from src.gui.gui_extract_video_frames_tool import gui_extract_video_frames_tool
 from src.gui.gui_pull_images import gui_pull_images
+from src.gui.gui_install_uninstall_apk import gui_install_uninstall_apk
 from src.gui.utils_gui import place, Tabs, collapse, explorer_open_file
 
 
@@ -121,6 +122,10 @@ def gui():
             sg.Button('Pull\nfile/s',
                       size=(7, 3),
                       key='pull_file_btn',
+                      disabled=True),
+            sg.Button('Install\nUninstall\nAPK',
+                      size=(7, 3),
+                      key='install_uninstall_btn',
                       disabled=True),
             collapse(device_single_frame, "device_single_frame", True)
 
@@ -441,6 +446,7 @@ def gui():
     # Tell device clients (adbclient) that gui is ready
     adb.gui_is_ready = True
     logger.info("Setting adbclient gui_is_ready to True")
+    sg.SystemTray.notify(f"App started!", f"Welcome!", )
 
     # Event Loop to process "events" and get the "values" of the inputs
     while True:
@@ -463,6 +469,8 @@ def gui():
 
             if watchdog_received['action'] == 'connected':
                 # Connected
+
+
                 for num in range(constants.MAX_DEVICES_AT_ONE_RUN):
                     try:
                         if values[f'device_serial.{num}'] == '' or \
@@ -490,6 +498,11 @@ def gui():
                             window[f'device_shell_btn.{num}'].Update(visible=True)
 
                             logger.debug(f"metadata: {window[f'device_attached.{num}'].metadata}")
+                            # Notification
+                            sg.SystemTray.notify(f"{watchdog_received['type']} device connected!",
+                                                 f"{watchdog_received['serial']} was connected!",
+                                                 constants.DEVICE_ICONS[watchdog_received['type']])
+
                             break
                     except KeyError:
                         logger.critical('Devices limit exceeded! \nnum: {num}, max: {constants.MAX_DEVICES_AT_ONE_RUN}')
@@ -512,6 +525,10 @@ def gui():
                         active_device = None
 
                     logger.info('device disconnected, detaching')
+                    sg.SystemTray.notify(f"{watchdog_received['type']} device disconnected!",
+                                         f"{watchdog_received['serial']} was disconnected!",
+                                         constants.DEVICE_ICONS[watchdog_received['type']])
+
                     adb.detach_device(watchdog_received['serial'])
                     del adb_devices[watchdog_received['serial']]
                 except KeyError:
@@ -582,6 +599,7 @@ def gui():
             window['reboot_device_btn'].Update(disabled=False)
             window['push_file_btn'].Update(disabled=False)
             window['pull_file_btn'].Update(disabled=not constants.DEBUG_MODE)
+            window['install_uninstall_btn'].Update(disabled=not constants.DEBUG_MODE)
             window['pull_images_btn'].Update(disabled=not bool(adb_devices[attached_devices_list[0]].images_save_loc))
             window['record_screen_btn'].Update(disabled=False)
             window['setup_device_btn'].Update(disabled=False)
@@ -614,6 +632,11 @@ def gui():
                                          attached_devices=attached_devices_list if not active_device else None,
                                          specific_device=active_device if active_device else None,
                                          pull_button=True)
+
+            if event == "install_uninstall_btn":
+                gui_install_uninstall_apk(adb_devices,
+                                         attached_devices=attached_devices_list if not active_device else None,
+                                         specific_device=active_device if active_device else None)
 
             if event == 'pull_images_btn':
                 gui_pull_images(adb_devices,
@@ -654,6 +677,7 @@ def gui():
             window['reboot_device_btn'].Update(disabled=True)
             window['push_file_btn'].Update(disabled=True)
             window['pull_file_btn'].Update(disabled=True)
+            window['install_uninstall_btn'].Update(disabled=True)
             window['pull_images_btn'].Update(disabled=True)
             window['record_screen_btn'].Update(disabled=True)
             window['setup_device_btn'].Update(disabled=True)

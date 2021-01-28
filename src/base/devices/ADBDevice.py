@@ -206,6 +206,26 @@ class ADBDevice(Device):
     def detach_device(self, spurious_bool=False):
         self.adb.detach_device(self.device_serial, spurious_bool)
 
+    def is_installed(self, apk):
+        return self.d.is_installed(apk)
+
+    def install_apk(self, apk):
+        if self.is_installed(apk):
+            logger.info(f"Updating {apk}")
+        else:
+            logger.info(f"Installing {apk}")
+
+        self.d.install(apk)
+
+    def uninstall_apk(self, apk):
+        if self.is_installed(apk):
+            logger.info(f"Uninstalling {apk}")
+            self.d.uninstall(apk)
+            return True
+        else:
+            logger.info(f"Can't uninstall. {apk} not installed.")
+            return False
+
     # ----- Getters/Setters -----
     def set_shoot_photo_seq(self, seq):
         self.shoot_photo_seq = seq

@@ -42,7 +42,7 @@ def gui_pull_images(device_obj, attached_devices=None, specific_device=None):
     ]
 
     # Create the Window
-    window = sg.Window('Reboot Device', layout,
+    window = sg.Window('Pull Images', layout,
                        icon=os.path.join(constants.ROOT_DIR, 'images', 'automated-video-testing-header-icon.ico'))
 
     while True:
