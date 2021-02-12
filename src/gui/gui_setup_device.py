@@ -253,6 +253,7 @@ def gui_setup_device(attached_devices, devices_obj):
 
     if current_app is None:
         current_app = ['...', '...']
+    curr_app = current_device.get_current_app()
 
     select_app_frame = [
         [sg.Text('Currently:')],
@@ -268,7 +269,7 @@ def gui_setup_device(attached_devices, devices_obj):
                 size=(43, 1),
                 key='selected_app_package',
                 default_value=
-                current_device.get_current_app()[0]
+                curr_app[0] if curr_app else ""
                 if current_device.camera_app is None
                 else current_device.camera_app
             ),
