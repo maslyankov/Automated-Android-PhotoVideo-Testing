@@ -73,10 +73,12 @@ def gui_install_uninstall_apk(device_obj, attached_devices=None, specific_device
         if event == 'install_apk_btn':
             if os.path.isfile(values['install_selected_apk']):
                 curr_device.install_apk(values['install_selected_apk'])
+                sg.popup_ok(f"{values['install_selected_apk']} installed!")
 
         if event == 'uninstall_apk_btn':
-            if os.path.isfile(values['uninstall_apk_selected']) and \
-                    sg.popup_yes_no(f"Are you sure you want to uninstall {values['uninstall_apk_selected']}"):
-                curr_device.uninstall_apk(values['uninstall_apk_selected'])
+            if values['uninstall_apk_selected'] and \
+                    sg.popup_yes_no(f"Are you sure you want to uninstall {values['uninstall_apk_selected'][0]}"):
+                curr_device.uninstall_apk(values['uninstall_apk_selected'][0])
+                sg.popup_ok(f"{values['uninstall_apk_selected'][0]} uninstalled!")
 
     window.close()

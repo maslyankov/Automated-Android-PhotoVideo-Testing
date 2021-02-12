@@ -443,13 +443,17 @@ def gui():
     progress_bar_percent = window['progressbar_percent']
     progress_bar_status = window['progressbar_status']
 
-    # Tell device clients (adbclient) that gui is ready
-    adb.gui_is_ready = True
-    logger.info("Setting adbclient gui_is_ready to True")
-    sg.SystemTray.notify(f"App started!", f"Welcome!", )
+    if not adb.gui_is_ready:
+        adb.gui_is_ready = True
+        logger.info("Setting adbclient gui_is_ready to True")
+        # sg.SystemTray.notify(f"App started!", f"Welcome!", )  # This is a blocking call, until it fades
+
+
 
     # Event Loop to process "events" and get the "values" of the inputs
     while True:
+        # Tell device clients (adbclient) that gui is ready
+
         event, values = window.read()
 
         if event == sg.WIN_CLOSED or event == 'Exit':  # if user closes window or clicks cancel
@@ -499,9 +503,10 @@ def gui():
 
                             logger.debug(f"metadata: {window[f'device_attached.{num}'].metadata}")
                             # Notification
-                            sg.SystemTray.notify(f"{watchdog_received['type']} device connected!",
-                                                 f"{watchdog_received['serial']} was connected!",
-                                                 constants.DEVICE_ICONS[watchdog_received['type']])
+                            # sg.SystemTray.notify(f"{watchdog_received['type']} device connected!",
+                            #                      f"{watchdog_received['serial']} was connected!",
+                            #                      constants.DEVICE_ICONS[watchdog_received['type']])
+                            # print('After notify')
 
                             break
                     except KeyError:
@@ -525,9 +530,11 @@ def gui():
                         active_device = None
 
                     logger.info('device disconnected, detaching')
-                    sg.SystemTray.notify(f"{watchdog_received['type']} device disconnected!",
-                                         f"{watchdog_received['serial']} was disconnected!",
-                                         constants.DEVICE_ICONS[watchdog_received['type']])
+                    # Notification
+                    # sg.SystemTray.notify(f"{watchdog_received['type']} device disconnected!",
+                    #                      f"{watchdog_received['serial']} was disconnected!",
+                    #                      constants.DEVICE_ICONS[watchdog_received['type']])
+                    # print('After notify')
 
                     adb.detach_device(watchdog_received['serial'])
                     del adb_devices[watchdog_received['serial']]
