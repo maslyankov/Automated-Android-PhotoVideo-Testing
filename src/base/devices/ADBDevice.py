@@ -526,6 +526,7 @@ class ADBDevice(Device):
         return ret_list
 
     def get_file_type(self, target_file):
+        # TODO Optimize get_file_type
         logger.debug(f"Checking '{target_file}'...")
 
         target_file = target_file.rstrip('/')
