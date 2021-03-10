@@ -1,5 +1,5 @@
 import json
-import os
+from os import path
 from pathlib import Path
 from hurry.filesize import size
 from re import sub, match
@@ -131,10 +131,10 @@ def analyze_images_test_results(template_data):
         for light_temp in template_data[test_type].keys():
             for lux in template_data[test_type][light_temp].keys():
                 img_file_path = template_data[test_type][light_temp][lux]['filename']
-                img_file_name = os.path.basename(img_file_path)
-                img_results_path = os.path.join(os.path.dirname(img_file_path), 'Results')
+                img_file_name = path.basename(img_file_path)
+                img_results_path = path.join(path.dirname(img_file_path), 'Results')
 
-                if not os.path.isdir(img_results_path):
+                if not path.isdir(img_results_path):
                     skipped_cases.append({
                         'test_type': test_type,
                         'light_temp': light_temp,
@@ -150,8 +150,8 @@ def analyze_images_test_results(template_data):
                 if len(img_json_filename) < 1:
                     continue
 
-                img_json_file = os.path.join(img_results_path, img_json_filename[0])
-                if not os.path.isfile(img_json_file):
+                img_json_file = path.join(img_results_path, img_json_filename[0])
+                if not path.isfile(img_json_file):
                     skipped_cases.append({
                         'test_type': test_type,
                         'light_temp': light_temp,
@@ -245,8 +245,8 @@ def add_filenames_to_data(template_data, img_dir):
         'png', 'jpg', 'mp4'
     ]
 
-    if os.path.isdir(img_dir):
-        img_dir = os.path.normpath(img_dir)
+    if path.isdir(img_dir):
+        img_dir = path.normpath(img_dir)
 
         for test_type in list(template_data.keys()):
             for light_temp in list(template_data[test_type].keys()):
@@ -256,9 +256,9 @@ def add_filenames_to_data(template_data, img_dir):
                     except KeyError:
                         filepath = None
                         for ext in file_exts:
-                            filepath = os.path.join(img_dir, test_type, light_temp,
+                            filepath = path.join(img_dir, test_type, light_temp,
                                                     f'{test_type}_{light_temp}_{lux}.{ext}')
-                            if os.path.exists(filepath):
+                            if path.exists(filepath):
                                 break
                         if filepath is not None:
                             template_data[test_type][light_temp][lux]['filename'] = filepath
@@ -275,11 +275,11 @@ def extract_video_frame(videofile, start_frame, number_of_frames=None, end_frame
         "PNG": "png"
     }
 
-    file_name = os.path.basename(videofile)
-    file_path = os.path.dirname(videofile)
+    file_name = path.basename(videofile)
+    file_path = path.dirname(videofile)
 
     if subfolder:
-        file_path = os.path.join(file_path, subfolder)
+        file_path = path.join(file_path, subfolder)
         # Create dirs if not exist
         Path(file_path).mkdir(parents=True, exist_ok=True)
 
@@ -304,13 +304,13 @@ def extract_video_frame(videofile, start_frame, number_of_frames=None, end_frame
         if start_frame <= current_frame <= end_frame:
             if skip_frames:
                 if current_frame == next_frame:
-                    img_out = os.path.join(file_path, f"{file_name}_frame{current_frame}.{formats[out_format]}")
+                    img_out = path.join(file_path, f"{file_name}_frame{current_frame}.{formats[out_format]}")
                     output.append(img_out)
                     cv2.imwrite(img_out, image)  # save frame as JPEG file
 
                     next_frame += skip_frames
             else:
-                img_out = os.path.join(file_path, f"{file_name}_frame{current_frame}.{formats[out_format]}")
+                img_out = path.join(file_path, f"{file_name}_frame{current_frame}.{formats[out_format]}")
                 output.append(img_out)
                 cv2.imwrite(img_out, image)  # save frame as JPEG file
         elif start_frame <= current_frame:
@@ -328,3 +328,107 @@ def extract_video_frame(videofile, start_frame, number_of_frames=None, end_frame
         current_frame += 1
 
     return output
+
+
+def get_video_info(video_in):
+    cap = cv2.VideoCapture(video_in)
+
+    w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fps = int(cap.get(cv2.CAP_PROP_FPS))
+    n_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+
+    print(f"Width: {w}, height: {h}, fps: {fps}, nframes: {n_frames}")
+    return w, h, fps, n_frames
+
+
+# Splits video in half
+def split_video(video_in):
+    w, h, fps, n_frames = get_video_info(video_in)
+
+    x, y = 0, 0
+    height = int(h/2)
+    width = w
+
+    logger.debug(f"split video got file: {video_in}")
+    logger.debug(f"height: {height}, width: {width}, fps: {fps}, n_frames: {n_frames}")
+
+    # (x, y, w, h) = cv2.boundingRect(c)
+    # cv2.rectangle(frame, (x,y), (x+w, y+h), (0, 255, 0), 20)
+    # roi = frame[y:y+h, x:x+w]
+    cap = cv2.VideoCapture(video_in)
+    # get fps info from file CV_CAP_PROP_FPS, if possible
+    fps = int(round(cap.get(5)))
+    # check if we got a value, otherwise use any number - you might need to change this
+    if fps == 0:
+        fps = 30  # so change this number if cropped video has stange steed, higher number gives slower speed
+
+    vid_name = path.basename(video_in)
+    vid_name_no_ext = vid_name.split(".")[0]
+
+    out_cropped = f"{vid_name_no_ext}_cropped"
+    logger.info(f"cropping {vid_name} to {out_cropped}")
+
+    out_path = f'{path.dirname(video_in)}/{out_cropped}.mp4'
+    print(f"Is file: {path.isfile(out_path)}")
+
+    suff = 1
+
+    check_path = out_path
+
+    while path.isfile(check_path):
+        print(f"Checking {check_path}")
+
+        check_path = f"{out_path.split('.')[0]}_{suff}.mp4"
+        suff += 1
+
+    out_path0 = f"{check_path.split('.')[0]}_top.mp4"
+    out_path1 = f"{check_path.split('.')[0]}_bottom.mp4"
+    logger.debug(f'Saving to {out_path0}')
+    logger.debug(f'Saving to {out_path1}')
+
+    # output_movie = cv2.VideoWriter(out_path, cv2.VideoWriter_fourcc('M','J','P','G'), fps, (width,height))
+    output_movie0 = cv2.VideoWriter(out_path0, cv2.VideoWriter_fourcc(*'MP4V'), fps, (width, height))
+    output_movie1 = cv2.VideoWriter(out_path1, cv2.VideoWriter_fourcc(*'MP4V'), fps, (width, height))
+
+    while cap.isOpened():
+        ret, frame = cap.read()
+        # (height, width) = frame.shape[:2]
+        if frame is not None:
+            curr_frame = int(cap.get(cv2.CAP_PROP_POS_FRAMES))
+
+            # Crop frame
+            cropped0 = frame[x:x + height, y:y + width]
+            cropped1 = frame[x+height:x + height * 2, y:y + width]
+
+            # Save to file
+            output_movie0.write(cropped0)
+            output_movie1.write(cropped1)
+
+            # Display the resulting frame - trying to move window, but does not always work
+            cv2.namedWindow('producing video', cv2.WINDOW_NORMAL)
+            cv2.resizeWindow('producing video', cropped0.shape[1], cropped0.shape[0])
+            x_pos = round(width / 2) - round(cropped0.shape[1] / 2)
+            y_pos = round(height / 2) - round(cropped0.shape[0] / 2)
+            cv2.moveWindow("producing video", x_pos, y_pos)
+            cv2.imshow('producing video', cropped0)
+
+
+            logger.info(f"Exporting videos... [frame {curr_frame}/{n_frames}]")
+
+            # Press Q on keyboard to stop recording early
+            if cv2.waitKey(1) & 0xFF == ord('q'):
+                break
+        else:
+            break
+
+    # Close video capture
+    cap.release()
+    # Closes the video writer.
+    output_movie0.release()
+    output_movie1.release()
+
+    # Make sure all windows are closed
+    cv2.destroyAllWindows()
+
+    logger.info('Video split!')
