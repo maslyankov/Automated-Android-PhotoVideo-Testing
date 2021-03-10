@@ -10,6 +10,8 @@ from src.base.devices.AdbClient import AdbClient
 from src.base.reports.RLReports import generate_rlt_report
 from src.base.reports.ObjectiveReports import generate_obj_report
 
+from src.base.utils.utils import split_video
+
 from src.gui.gui_help import gui_help
 from src.gui.gui_camxoverride import gui_camxoverride
 from src.gui.gui_manual_cases import gui_manual_cases
@@ -381,7 +383,8 @@ def gui():
             sg.Button('Generate Project Requirements File', size=(30, 2), key='project_req_tool_btn', pad=(15, 15)),
         ],
         [
-            sg.Button('Extract Frames From Video', size=(30, 2), key='extract_video_frames_tool_btn', pad=(15, 15))
+            sg.Button('Extract Frames From Video', size=(30, 2), key='extract_video_frames_tool_btn', pad=(15, 15)),
+            sg.Button('Split Video/s in half', size=(30, 2), key='split_videos_tool_btn', pad=(15, 15)),
         ],
         [
             sg.Button('Test USB Camera', size=(30, 2), key='usb_cam_tool_btn', pad=(15, 15),
@@ -705,6 +708,17 @@ def gui():
 
         if event == 'extract_video_frames_tool_btn':
             gui_extract_video_frames_tool()
+
+        if event == 'split_videos_tool_btn':
+            selected_files = sg.popup_get_file(multiple_files=True, file_types=(('Videofiles','*.mp4 *.avi'),))
+
+            if selected_files:
+                selected_files = selected_files.split(";")
+
+                for file in selected_files:
+                    split_video(file)
+
+
 
         if event == 'usb_cam_tool_btn':
             gui_cam_tool()
