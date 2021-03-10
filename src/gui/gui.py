@@ -710,19 +710,15 @@ def gui():
             gui_extract_video_frames_tool()
 
         if event == 'split_videos_tool_btn':
-            selected_files = sg.popup_get_file(multiple_files=True, file_types=(('Videofiles','*.mp4 *.avi'),), message="Select video file/s to be split")
+            selected_files = sg.popup_get_file(multiple_files=True, file_types=(('Videofiles','*.mp4 *.avi'),))
 
             if selected_files:
                 selected_files = selected_files.split(";")
 
                 for file in selected_files:
-                    sg.popup_no_titlebar(f"Splitting video\n{file}", auto_close=True,
-                                         button_type=sg.POPUP_BUTTONS_NO_BUTTONS)
-
                     split_video(file)
 
-                    sg.popup_no_titlebar(f"Splitting {file}\nDone!", auto_close=True,
-                                         button_type=sg.POPUP_BUTTONS_NO_BUTTONS)
+
 
         if event == 'usb_cam_tool_btn':
             gui_cam_tool()
