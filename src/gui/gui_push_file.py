@@ -19,6 +19,7 @@ def gui_push_file(device_obj, attached_devices=None, specific_device=None):
         'vendor/lib/camera/',
         'vendor/lib64/',
         'vendor/lib64/camera/',
+        'vendor/etc/chicamera/',
         'sdcard/DCIM/'
     ]
 
