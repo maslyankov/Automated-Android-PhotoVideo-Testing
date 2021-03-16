@@ -55,6 +55,13 @@ def only_chars(val: str) -> int:
 
 # Other utils
 def get_list_average(list_in: list, min_index=None, max_index=None):
+    """
+    Returns an average of all the items in passed list or of those between index min and max
+    :param list_in:
+    :param min_index:
+    :param max_index:
+    :return:
+    """
     if not isinstance(list_in, list) and len(list_in) == 0:
         return
 
@@ -187,7 +194,7 @@ def analyze_images_test_results(template_data):
                             # Full name of param: param,
                             # last part of param: param_piece,
                             # param value: param_val
-                            if keyerr:
+                            if keyerr and param != 'y_shading_corners_mean_percent':
                                 skipped_cases.append({
                                     'test_type': test_type,
                                     'light_temp': light_temp,
@@ -213,17 +220,27 @@ def analyze_images_test_results(template_data):
                             except KeyError:
                                 restrict_end = None
 
-                            param_val_calc = get_list_average(
-                                param_val,
-                                restrict_start,
-                                restrict_end
-                            )
+                            if param != 'y_shading_corners_mean_percent':
+                                param_val_calc = get_list_average(
+                                    param_val,
+                                    restrict_start,
+                                    restrict_end
+                                )
 
-                            try:
-                                if curr_param_dict['absolute_value_bool']:
-                                    param_val_calc = abs(param_val_calc)
-                            except KeyError:
-                                pass
+                                try:
+                                    if curr_param_dict['absolute_value_bool']:
+                                        param_val_calc = abs(param_val_calc)
+                                except KeyError:
+                                    pass
+                            else:
+                                keyerr = False
+
+                                shading_max = image_analysis_readable['max_norml_pxl_level'][0]
+                                logger.debug(f"Max = {shading_max}")
+                                shading_mean = image_analysis_readable['resTable_Y_Luminance'][-3]
+                                logger.debug(f"Mean = {shading_mean}")
+                                param_val_calc = (shading_mean/shading_max * 100).__round__(2)
+                                logger.debug(f"Calculated percentage: {param_val_calc}%")
 
                             try:
                                 curr_param_dict['or_equal_bool']
