@@ -131,8 +131,12 @@ class Tree(sg.Tree):
         """
         Delete node 'key' from tree. After delete, selection will move up.
         : Parameters
-          key - str, node key tp remove
+          key - str, node key to remove
         """
+        logger.debug(f"Deleting {key} ({type(key)}) ...")
+        if not isinstance(key, str):
+            key = str(key)
+
         self._all_nodes()
         if key and key in self.list:
             pre_key = self._previous_key(key)
@@ -214,7 +218,6 @@ class Tree(sg.Tree):
                             logger.info(f'not creating empty dict for {node.text}')
                         self.dfs(child, curr)
             except IndexError:
-                # No children to look for
                 pass
         else:
             logger.debug(f'ndict: {str(ndict)}')
@@ -661,10 +664,13 @@ class Tree(sg.Tree):
             return None
         # length = len(self.list)
 
-        for key in self.treedata.tree_dict[self.list[index]].children:
-            # key = self.list[key]
-            if self.text in key.text.lower():
-                return key.children[0].key
+        try:
+            for key in self.treedata.tree_dict[self.list[index]].children:
+                # key = self.list[key]
+                if self.text in key.text.lower():
+                    return key.children[0].key
+        except IndexError as e:
+            logger.error(e)
         return None
 
     def _search_next_node(self, index):

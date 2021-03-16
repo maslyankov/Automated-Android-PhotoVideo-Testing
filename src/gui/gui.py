@@ -719,7 +719,6 @@ def gui():
                     split_video(file)
 
 
-
         if event == 'usb_cam_tool_btn':
             gui_cam_tool()
 
