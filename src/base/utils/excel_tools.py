@@ -374,24 +374,30 @@ def xls_draw_results_table(template_data: dict, sheet, start_col: int, start_row
                     current_col += 1
 
                     # Add param min
-                    sheet.cell(current_row, columns['param_min'][1], param_templ_data['min']).style = cells_style
-                    data_len = len(str(param_templ_data['min']))
                     try:
-                        if columns['param_min'][2] < data_len:
-                            columns['param_min'][2] = data_len
-                    except IndexError:
-                        columns['param_min'].append(data_len)
-                    current_col += 1
+                        sheet.cell(current_row, columns['param_min'][1], param_templ_data['min']).style = cells_style
+                        data_len = len(str(param_templ_data['min']))
+                        try:
+                            if columns['param_min'][2] < data_len:
+                                columns['param_min'][2] = data_len
+                        except IndexError:
+                            columns['param_min'].append(data_len)
+                        current_col += 1
+                    except KeyError:
+                        logger.debug("Skipping min here because we got a KeyError")
 
                     # Add param max
-                    sheet.cell(current_row, columns['param_max'][1], param_templ_data['max']).style = cells_style
-                    data_len = len(str(param_templ_data['max']))
                     try:
-                        if columns['param_max'][2] < data_len:
-                            columns['param_max'][2] = data_len
-                    except IndexError:
-                        columns['param_max'].append(data_len)
-                    current_col += 1
+                        sheet.cell(current_row, columns['param_max'][1], param_templ_data['max']).style = cells_style
+                        data_len = len(str(param_templ_data['max']))
+                        try:
+                            if columns['param_max'][2] < data_len:
+                                columns['param_max'][2] = data_len
+                        except IndexError:
+                            columns['param_max'].append(data_len)
+                        current_col += 1
+                    except KeyError:
+                        logger.debug("Skipping max here because we got a KeyError")
 
                     # Add param result value
                     try:
@@ -439,13 +445,13 @@ def xls_draw_results_table(template_data: dict, sheet, start_col: int, start_row
                     img_file = template_data[test_type][light_color][lux]['filename']
                     logger.debug(f'img: {img_file}')
                     xls_import_image(img_file, sheet, img_cell)
-                    set_row_height = 70
+                    set_row_height = 86
                     # Merge image rows
                     if lux_start_row < current_row - 1:
                         logger.debug(f'start row: {lux_start_row} /current_row: {current_row}')
                         merged_row_height = set_row_height / (current_row - lux_start_row)
-                        if merged_row_height < 15:
-                            merged_row_height = 15
+                        if merged_row_height < 23:
+                            merged_row_height = 23
                         for rrow in range(lux_start_row, current_row):
                             # if sheet.row_dimensions[rrow].height is None:
                             #     sheet.row_dimensions[rrow].height = merged_row_height

@@ -53,7 +53,7 @@ def find_all_serial_ports():
 
 
 def find_all_luxmeters():
-    """ Get all lux meters connect into PC."""
+    """ Get all lux meters connected into PC."""
     logger.info("Looking for luxmeters...")
     list = [p.device for p in find_all_serial_ports() if 'FTDI' in p.manufacturer]
     logger.debug(f"Found luxmeters: {list}")

@@ -32,7 +32,8 @@ def gui_project_req_file(proj_req=None, proj_req_file=None, return_val=False):
 
     # Lists Data
     test_modules_list = list(constants.IMATEST_PARALLEL_TEST_TYPES.keys())
-    light_types_list = list(constants.KELVINS_TABLE.keys()) # constants.AVAILABLE_LIGHTS[1]  # TODO: pass light num so that we show relevant stuff
+    light_types_list = list(
+        constants.KELVINS_TABLE.keys())  # constants.AVAILABLE_LIGHTS[1]  # TODO: pass light num so that we show relevant stuff
     # TODO: Add more lights
 
     # Parameters
@@ -138,7 +139,7 @@ def gui_project_req_file(proj_req=None, proj_req_file=None, return_val=False):
         [sg.B('Add\nRestrictors', size=(8, 2), key='add_restrictors_to_param_btn')]
     ]
     restrict_layout = [[
-            sg.Column(restrict_left), sg.Column(restrict_right)
+        sg.Column(restrict_left), sg.Column(restrict_right)
     ]]
 
     params_restrict_bool = False
@@ -162,12 +163,14 @@ def gui_project_req_file(proj_req=None, proj_req_file=None, return_val=False):
         [
             sg.Checkbox(text='Use absolute value',
                         default=False, key='params_absolute_bool',
-                        enable_events=True, disabled=True)
+                        enable_events=True, disabled=True),
+            sg.Checkbox(text='or equal',
+                        default=False, key='params_or_equal_bool',
+                        enable_events=True, disabled=True),
         ],
         [
             collapse(restrict_layout, '-SUBSEC_RESTRICTS-', visible=params_restrict_bool)
         ]
-
 
     ]
 
@@ -176,7 +179,8 @@ def gui_project_req_file(proj_req=None, proj_req_file=None, return_val=False):
         [sg.T('New requirements file', key='current_filename_label', size=(30, 1))],
         [sg.HorizontalSeparator()],
 
-        [sg.T(constants.SYMBOL_DOWN if opened_impexp else constants.SYMBOL_UP, enable_events=True, k='-OPEN SEC_IMPEXP-',
+        [sg.T(constants.SYMBOL_DOWN if opened_impexp else constants.SYMBOL_UP, enable_events=True,
+              k='-OPEN SEC_IMPEXP-',
               text_color=constants.PRIMARY_COLOR),
          sg.T('Import / Export', enable_events=True, text_color=constants.PRIMARY_COLOR, k='-OPEN SEC_IMPEXP-TEXT')],
         [collapse(expimp_section, '-SEC_IMPEXP-', visible=opened_temp)],
@@ -198,7 +202,8 @@ def gui_project_req_file(proj_req=None, proj_req_file=None, return_val=False):
          sg.T('Lux', enable_events=True, text_color=constants.PRIMARY_COLOR, k='-OPEN SEC_LUX-TEXT')],
         [collapse(lux_section, '-SEC_LUX-', visible=opened_lux)],
 
-        [sg.T(constants.SYMBOL_DOWN if opened_params else constants.SYMBOL_UP, enable_events=True, k='-OPEN SEC_PARAMS-',
+        [sg.T(constants.SYMBOL_DOWN if opened_params else constants.SYMBOL_UP, enable_events=True,
+              k='-OPEN SEC_PARAMS-',
               text_color=constants.PRIMARY_COLOR),
          sg.T('Parameters', enable_events=True, text_color=constants.PRIMARY_COLOR, k='-OPEN SEC_PARAMS-TEXT')],
         [collapse(params_section, '-SEC_PARAMS-', visible=opened_params)],
@@ -235,7 +240,7 @@ def gui_project_req_file(proj_req=None, proj_req_file=None, return_val=False):
     curr_parent_val = None
 
     while True:
-        event, values = window.read() #timeout=100)
+        event, values = window.read()  # timeout=100)
 
         if event == sg.WIN_CLOSED or event == 'Close' or event == 'go_templ_btn':
             # if user closes window or clicks cancel
@@ -301,7 +306,8 @@ def gui_project_req_file(proj_req=None, proj_req_file=None, return_val=False):
         window['-SEC_PARAMS-'].update(visible=opened_params)
 
         if event == 'add_light_temp_value':
-            window['add_light_temp_kelvins_label'].Update(f"{constants.KELVINS_TABLE[values['add_light_temp_value']][0]}K")
+            window['add_light_temp_kelvins_label'].Update(
+                f"{constants.KELVINS_TABLE[values['add_light_temp_value']][0]}K")
             window['add_light_temp_desc_label'].Update(f"{constants.KELVINS_TABLE[values['add_light_temp_value']][1]}")
 
         if event == '-TREE-':
@@ -344,9 +350,17 @@ def gui_project_req_file(proj_req=None, proj_req_file=None, return_val=False):
                             window['params_absolute_bool'].Update(disabled=False, value=tree.get_text(has_abs_val))
                         else:
                             window['params_absolute_bool'].Update(disabled=False, value=False)
+
+                        has_or_equal_bool = tree.search(text='or_equal_bool', mode='Current')
+                        if has_or_equal_bool is not None:
+                            window['params_or_equal_bool'].Update(disabled=False,
+                                                                  value=tree.get_text(has_or_equal_bool))
+                        else:
+                            window['params_or_equal_bool'].Update(disabled=False, value=False)
                         break
                     else:
                         window['params_absolute_bool'].Update(disabled=True)
+                        window['params_or_equal_bool'].Update(disabled=True)
                         window['-SUBSEC_RESTRICTS-'].Update(visible=False)
 
         if event == 'params_absolute_bool':
@@ -357,6 +371,21 @@ def gui_project_req_file(proj_req=None, proj_req_file=None, return_val=False):
                     tree.insert_node(absolute_node, values['params_absolute_bool'], values['params_absolute_bool'])
                 else:
                     tree.set_text(has_abs_val, values['params_absolute_bool'])
+            else:
+                sg.popup_ok("You can only add absolute bool to the parameter.")
+
+        if event == 'params_or_equal_bool':
+            if curr_parent_val == 'params':
+                has_or_equal_val = tree.search(text='or_equal_bool', mode='Current')  # Returns child id
+                if has_or_equal_val is None:
+                    or_equal_node = tree.insert_node(current, 'or_equal_bool', 'param-val')
+                    tree.insert_node(or_equal_node, values['params_or_equal_bool'], values['params_or_equal_bool'])
+                    tree.select(current)
+                else:
+                    # tree.set_text(has_or_equal_val, values['params_or_equal_bool'])
+                    tree.delete_node(int(has_or_equal_val)-1)  # -1 for parent
+                    tree.select(current)
+
             else:
                 sg.popup_ok("You can only add absolute bool to the parameter.")
 
@@ -440,24 +469,27 @@ def gui_project_req_file(proj_req=None, proj_req_file=None, return_val=False):
         if event == 'add_min_max_btn':
             if curr_parent_val == 'params':
                 parent_id = tree.where()
-                has_min = tree.search(text='min', mode='Current')
-                if has_min is None:
-                    min_node = tree.insert_node(current, 'min', 'param-val')
-                    tree.insert_node(min_node, values['param_min_value'], values['param_min_value'])
-                else:
-                    tree.set_text(has_min, values['param_min_value'])
 
-                has_max = tree.search(text='max', mode='Current')
-                if has_max is None:
-                    max_node = tree.insert_node(current, 'max', 'param-val')
-                    tree.insert_node(max_node, values['param_max_value'], values['param_max_value'])
-                else:
-                    tree.set_text(has_max, values['param_max_value'])
+                if values['param_min_value'] != '':
+                    has_min = tree.search(text='min', mode='Current')
+                    if has_min is None:
+                        min_node = tree.insert_node(current, 'min', 'param-val')
+                        tree.insert_node(min_node, values['param_min_value'], values['param_min_value'])
+                    else:
+                        tree.set_text(has_min, values['param_min_value'])
+
+                if values['param_max_value'] != '':
+                    has_max = tree.search(text='max', mode='Current')
+                    if has_max is None:
+                        max_node = tree.insert_node(current, 'max', 'param-val')
+                        tree.insert_node(max_node, values['param_max_value'], values['param_max_value'])
+                    else:
+                        tree.set_text(has_max, values['param_max_value'])
 
                 tree.select(parent_id)
             else:
-                logger.warn(f"Trying to add min,max to invalid place. \nparent val: {curr_parent_val}")
-                sg.popup_ok("Trying to add min,max to invalid place. \nparent val: ", curr_parent_val)
+                logger.warn(f"Trying to add min/max to invalid place. \nparent val: {curr_parent_val}")
+                sg.popup_ok("Trying to add min/max to invalid place. \nparent val: ", curr_parent_val)
 
         if event == 'mv_up_btn':
             logger.info(f'Move up {values["-TREE-"]}')
@@ -530,7 +562,7 @@ def gui_project_req_file(proj_req=None, proj_req_file=None, return_val=False):
                 current_file = None
             else:
                 current_file = os.path.normpath(values['export_btn']) + '.projreq'
-                #sg.popup_error('Wrong file format!')
+                # sg.popup_error('Wrong file format!')
 
             if current_file is not None:
                 dump_dict = tree.dump_tree_dict()

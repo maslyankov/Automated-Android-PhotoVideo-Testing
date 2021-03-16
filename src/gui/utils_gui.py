@@ -131,8 +131,12 @@ class Tree(sg.Tree):
         """
         Delete node 'key' from tree. After delete, selection will move up.
         : Parameters
-          key - str, node key tp remove
+          key - str, node key to remove
         """
+        logger.debug(f"Deleting {key} ({type(key)}) ...")
+        if not isinstance(key, str):
+            key = str(key)
+
         self._all_nodes()
         if key and key in self.list:
             pre_key = self._previous_key(key)
@@ -196,22 +200,25 @@ class Tree(sg.Tree):
                 curr = ndict[node.text]
 
         if values != 'param-val':
-            if len(node.children[0].children) < 1:
-                try:
-                    ndict[node.text] = convert_to_int_float(node.children[0].text)
-                except IndexError:
-                    ndict[node.text] = ''
-            else:
-                for idx, child in enumerate(node.children):
+            try:
+                if len(node.children[0].children) < 1:
                     try:
-                        curr[child.text]
-                    except KeyError:
-                        curr[child.text] = {}
-                    except TypeError as e:
-                        logger.error(f"Exception: {e}\nchild.text: {child.text}")
-                    else:
-                        logger.info(f'not creating empty dict for {node.text}')
-                    self.dfs(child, curr)
+                        ndict[node.text] = convert_to_int_float(node.children[0].text)
+                    except IndexError:
+                        ndict[node.text] = ''
+                else:
+                    for idx, child in enumerate(node.children):
+                        try:
+                            curr[child.text]
+                        except KeyError:
+                            curr[child.text] = {}
+                        except TypeError as e:
+                            logger.error(f"Exception: {e}\nchild.text: {child.text}")
+                        else:
+                            logger.info(f'not creating empty dict for {node.text}')
+                        self.dfs(child, curr)
+            except IndexError:
+                pass
         else:
             logger.debug(f'ndict: {str(ndict)}')
             logger.debug(f'key: {str(node.text)}')
@@ -657,10 +664,13 @@ class Tree(sg.Tree):
             return None
         # length = len(self.list)
 
-        for key in self.treedata.tree_dict[self.list[index]].children:
-            # key = self.list[key]
-            if self.text in key.text.lower():
-                return key.children[0].key
+        try:
+            for key in self.treedata.tree_dict[self.list[index]].children:
+                # key = self.list[key]
+                if self.text in key.text.lower():
+                    return key.children[0].key
+        except IndexError as e:
+            logger.error(e)
         return None
 
     def _search_next_node(self, index):
