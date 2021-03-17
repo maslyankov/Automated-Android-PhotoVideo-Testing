@@ -197,24 +197,73 @@ def parse_excel_template(excel_file) -> dict:
     return tests_seq
 
 
-def export_to_excel_file(template_data, dest_file, add_images_bool: bool):
+def export_to_excel_file(template_data, dest_file, add_images_bool: bool, summary: dict, add_summary_bool: bool = True):
+    print("Templ data:\n", template_data)
+
     # Pass template data with analysis results and requirements
     logger.debug('Exporting to excel...')
     workbook = Workbook()
-    sheet = workbook.active
-    current_row = 1
-    # Add title,, date, header etc
 
+    # Sheets
+    sheet = workbook.active
+    sheet.title = "Objective Report"
+    sheet_summary = workbook.create_sheet("Report Summary", 0)
+    current_row = 1
+
+    # Styles ---
+    xls_styles = dict()
+
+    primary_bg_color = 'ddebf7'
+    primary_font_color = '000000'
+    secondary_bg_color = '729fcf'
+    secondary_font_color = '000000'
+
+    primary_fill = PatternFill(fgColor=f"FF{primary_bg_color}", fill_type="solid")
+    secondary_fill = PatternFill(fgColor=f"FF{secondary_bg_color}", fill_type="solid")
+    xls_styles["primary_fill"] = primary_fill
+    xls_styles["secondary_fill"] = secondary_fill
+
+    center = Alignment(horizontal='center', vertical='center')
+    bd = Side(style='thin', color="000000")
+    xls_styles["center"] = center
+    xls_styles["bd"] = bd
+
+    header_cell_style = NamedStyle(name="header_cell")
+    header_cell_style.font = Font(bold=True, color=f'FF{secondary_font_color}')
+    header_cell_style.fill = secondary_fill
+    header_cell_style.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+    header_cell_style.alignment = center
+    xls_styles["header_cell"] = header_cell_style
+
+    cells_style = NamedStyle(name="data_cell")
+    cells_style.font = Font(bold=True, color=f'FF{primary_font_color}')
+    cells_style.fill = primary_fill
+    cells_style.border = Border(left=bd, top=bd, right=bd, bottom=bd)
+    cells_style.alignment = center
+    xls_styles["cells"] = cells_style
+
+    # Styles ---
+
+    # Add test summary
+    current_row += 1
+    # Add summary
+    if add_summary_bool:
+        xls_draw_summary(
+            summary,
+            sheet_summary,
+            1,
+            current_row,
+            xls_styles,
+        )
+
+    # Add title,, date, header etc
     current_row += 1
     current_row = xls_draw_results_table(
         template_data,
         sheet,
         1,
         current_row,
-        primary_bg_color='ddebf7',
-        primary_font_color='000000',
-        secondary_bg_color='729fcf',
-        secondary_font_color='000000',
+        xls_styles,
         add_images_bool=add_images_bool
     )[1][0]
 
@@ -222,10 +271,7 @@ def export_to_excel_file(template_data, dest_file, add_images_bool: bool):
 
 
 def xls_draw_results_table(template_data: dict, sheet, start_col: int, start_row: int,
-                           primary_bg_color=constants.MID_COLOR.strip('#'),
-                           secondary_bg_color=constants.ALTERNATE_COLOR.strip('#'),
-                           primary_font_color='000000',
-                           secondary_font_color=constants.BUTTON_TEXT_COLOR.strip('#'),
+                           xls_styles: dict,
                            add_images_bool=True, add_border_bool=True):
     """
 
@@ -241,7 +287,6 @@ def xls_draw_results_table(template_data: dict, sheet, start_col: int, start_row
     :param add_border_bool:
     :return: (start_col, start_row), (end_col, end_row)
     """
-    center = Alignment(horizontal='center', vertical='center')
 
     logger.debug(f"Template data: \n{template_data}")
 
@@ -263,27 +308,6 @@ def xls_draw_results_table(template_data: dict, sheet, start_col: int, start_row
     current_row = start_row
     end_col = len(columns) - 1 + start_col
 
-    primary_fill = PatternFill(fgColor=f"FF{primary_bg_color}", fill_type="solid")
-    secondary_fill = PatternFill(fgColor=f"FF{secondary_bg_color}", fill_type="solid")
-
-    # Styles ---
-
-    bd = Side(style='thin', color="000000")
-
-    header_cell_style = NamedStyle(name="header_cell")
-    header_cell_style.font = Font(bold=True, color=f'FF{secondary_font_color}')
-    header_cell_style.fill = secondary_fill
-    header_cell_style.border = Border(left=bd, top=bd, right=bd, bottom=bd)
-    header_cell_style.alignment = center
-
-    cells_style = NamedStyle(name="data_cell")
-    cells_style.font = Font(bold=True, color=f'FF{primary_font_color}')
-    cells_style.fill = primary_fill
-    cells_style.border = Border(left=bd, top=bd, right=bd, bottom=bd)
-    cells_style.alignment = center
-
-    # Styles ---
-
     current_col = start_col
     # Add table header
     for val in columns.values():
@@ -294,7 +318,7 @@ def xls_draw_results_table(template_data: dict, sheet, start_col: int, start_row
 
         cell = sheet.cell(current_row, val[1])
         cell.value = val[0]
-        cell.style = header_cell_style
+        cell.style = xls_styles["header_cell"]
 
         data_len = len(str(val[0]))
         try:
@@ -330,7 +354,7 @@ def xls_draw_results_table(template_data: dict, sheet, start_col: int, start_row
 
                     # Add test type name
                     test_type_pretty = constants.IMATEST_TEST_TYPES_FRIENDLY[test_type]
-                    sheet.cell(current_row, columns['test_type'][1], test_type_pretty).style = cells_style
+                    sheet.cell(current_row, columns['test_type'][1], test_type_pretty).style = xls_styles["cells"]
                     data_len = len(test_type_pretty)
                     try:
                         if columns['test_type'][2] < data_len:
@@ -344,7 +368,7 @@ def xls_draw_results_table(template_data: dict, sheet, start_col: int, start_row
                         current_col += 1
 
                     # Add light color
-                    sheet.cell(current_row, columns['light_temp'][1], light_color).style = cells_style
+                    sheet.cell(current_row, columns['light_temp'][1], light_color).style = xls_styles["cells"]
                     data_len = len(str(light_color))
                     try:
                         if columns['light_temp'][2] < data_len:
@@ -354,7 +378,7 @@ def xls_draw_results_table(template_data: dict, sheet, start_col: int, start_row
                     current_col += 1
 
                     # Add lux
-                    sheet.cell(current_row, columns['lux'][1], lux).style = cells_style
+                    sheet.cell(current_row, columns['lux'][1], lux).style = xls_styles["cells"]
                     data_len = len(str(lux))
                     try:
                         if columns['lux'][2] < data_len:
@@ -364,7 +388,7 @@ def xls_draw_results_table(template_data: dict, sheet, start_col: int, start_row
                     current_col += 1
 
                     # Add param
-                    sheet.cell(current_row, columns['param'][1], param).style = cells_style
+                    sheet.cell(current_row, columns['param'][1], param).style = xls_styles["cells"]
                     data_len = len(str(param))
                     try:
                         if columns['param'][2] < data_len:
@@ -375,7 +399,7 @@ def xls_draw_results_table(template_data: dict, sheet, start_col: int, start_row
 
                     # Add param min
                     try:
-                        sheet.cell(current_row, columns['param_min'][1], param_templ_data['min']).style = cells_style
+                        sheet.cell(current_row, columns['param_min'][1], param_templ_data['min']).style = xls_styles["cells"]
                         data_len = len(str(param_templ_data['min']))
                         try:
                             if columns['param_min'][2] < data_len:
@@ -388,7 +412,7 @@ def xls_draw_results_table(template_data: dict, sheet, start_col: int, start_row
 
                     # Add param max
                     try:
-                        sheet.cell(current_row, columns['param_max'][1], param_templ_data['max']).style = cells_style
+                        sheet.cell(current_row, columns['param_max'][1], param_templ_data['max']).style = xls_styles["cells"]
                         data_len = len(str(param_templ_data['max']))
                         try:
                             if columns['param_max'][2] < data_len:
@@ -402,7 +426,7 @@ def xls_draw_results_table(template_data: dict, sheet, start_col: int, start_row
                     # Add param result value
                     try:
                         sheet.cell(current_row, columns['param_calc'][1],
-                                   format(param_templ_data['result_calculated'], '.3f')).style = cells_style
+                                   format(param_templ_data['result_calculated'], '.3f')).style = xls_styles["cells"]
                         data_len = len(str(param_templ_data['result_calculated']))
                         try:
                             if columns['param_calc'][2] < data_len:
@@ -416,7 +440,7 @@ def xls_draw_results_table(template_data: dict, sheet, start_col: int, start_row
 
                     # Add param Pass/Fail
                     pass_fail_cell = sheet.cell(current_row, columns['param_passfail'][1])
-                    pass_fail_cell.alignment = center
+                    pass_fail_cell.alignment = xls_styles["center"]
                     if param_templ_data['result_pass_bool']:
                         # Passed
                         logger.debug('pass')
@@ -441,7 +465,7 @@ def xls_draw_results_table(template_data: dict, sheet, start_col: int, start_row
                 if add_images_bool:
                     # Add image
                     img_cell = sheet.cell(lux_start_row, columns['image'][1])
-                    img_cell.style = cells_style
+                    img_cell.style = xls_styles["cells"]
                     img_file = template_data[test_type][light_color][lux]['filename']
                     logger.debug(f'img: {img_file}')
                     xls_import_image(img_file, sheet, img_cell)
@@ -507,7 +531,7 @@ def xls_draw_results_table(template_data: dict, sheet, start_col: int, start_row
             pass
         else:
             # Add filled space
-            xls_fill_cells(sheet, start_col, current_row, end_col, current_row, secondary_fill)
+            xls_fill_cells(sheet, start_col, current_row, end_col, current_row, xls_styles["secondary_fill"])
             current_row += 1
 
     logger.debug(f'columns after: {columns}')
@@ -520,6 +544,114 @@ def xls_draw_results_table(template_data: dict, sheet, start_col: int, start_row
 
     return (start_col, start_row), (end_col, current_row)
 
+
+def xls_draw_summary(summary_data: dict, sheet, start_col: int, start_row: int,
+                     xls_styles: dict,
+                     add_images_bool=True, add_border_bool=True):
+
+    columns = {
+        "test_type": ["Test type"],
+        "light_color": ["Light Color"],
+        "pass": ["Pass"],
+        "fail": ["Fail"]}
+
+    current_row = start_row
+    current_col = start_col
+
+    end_col = len(columns) - 1 + start_col
+
+    # Add table header
+    for val in columns.values():
+        try:
+            val[1] = current_col
+        except IndexError:
+            val.append(current_col)
+
+        cell = sheet.cell(current_row, val[1])
+        cell.value = val[0]
+        cell.style = xls_styles["header_cell"]
+
+        data_len = len(str(val[0]))
+        try:
+            if val[2] < data_len:
+                val[2] = data_len
+        except IndexError:
+            val.append(data_len)
+
+        current_col += 1
+    sheet.row_dimensions[current_row].height = 25
+
+    current_row += 1
+
+    logger.debug(f'Columns are: {columns}')
+
+    test_types_list = list(summary_data.keys())
+    for test_num, test_type in enumerate(test_types_list):
+        type_start_row = current_row
+        light_colors_list = list(summary_data[test_type].keys())
+
+        for light_color_num, light_color in enumerate(light_colors_list):
+            color_start_row = current_row
+
+            try:
+                color_pass = summary_data[test_type][light_color]['pass']
+            except KeyError:
+                color_pass = 0
+
+            try:
+                color_fail = summary_data[test_type][light_color]['fail']
+            except KeyError:
+                color_fail = 0
+
+            test_type_pretty = constants.IMATEST_TEST_TYPES_FRIENDLY[test_type]
+
+            # Add test type name
+            sheet.cell(current_row, columns['test_type'][1], test_type_pretty).style = xls_styles["cells"]
+            data_len = len(test_type_pretty)
+            try:
+                if columns['test_type'][2] < data_len:
+                    columns['test_type'][2] = data_len
+            except IndexError:
+                columns['test_type'].append(data_len)
+            current_col += 1
+
+            # Add light color
+            sheet.cell(current_row, columns['light_color'][1], light_color).style = xls_styles["cells"]
+            data_len = len(str(light_color))
+            try:
+                if columns['light_color'][2] < data_len:
+                    columns['light_color'][2] = data_len + 2
+            except IndexError:
+                columns['light_color'].append(data_len + 2)
+            current_col += 1
+
+            # Add fail and pass
+            new_cell = sheet.cell(current_row, columns['fail'][1], color_fail)
+            new_cell.fill = PatternFill(fgColor="FF0000", fill_type="solid")
+            # new_cell.style = xls_styles["cells"]
+            data_len = len(str(color_fail))
+            try:
+                if columns['fail'][2] < data_len:
+                    columns['fail'][2] = data_len + 2
+            except IndexError:
+                columns['fail'].append(data_len + 2)
+            current_col += 1
+
+            new_cell = sheet.cell(current_row, columns['pass'][1], color_pass)
+            new_cell.fill = PatternFill(fgColor="00FF00", fill_type="solid")
+            # new_cell.style = xls_styles["cells"]
+            data_len = len(str(color_pass))
+            try:
+                if columns['pass'][2] < data_len:
+                    columns['pass'][2] = data_len + 2
+            except IndexError:
+                columns['pass'].append(data_len + 2)
+            current_col += 1
+
+            # After each color
+            current_row += 1
+
+    return (start_col, start_row), (end_col, current_row)
 
 def xls_fill_cells(ws, start_col, start_row, end_col, end_row, fill):
     for row in ws.iter_rows(start_row, end_row, start_col, end_col):

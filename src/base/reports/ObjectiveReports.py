@@ -81,8 +81,10 @@ class ObjectiveReports:
         self.progress += 10  # 20%
         send_progress_to_gui(self.gui_window, self.gui_event, self.progress, 'Getting images analysis data...')
 
-        # Use images analysis data and insert it into templ_data
-        skipped_cases = analyze_images_test_results(self.templ_data)[1]
+        # Use images analysis data and insert it into templ_data, skipped_cases, summary_dict
+        templ_data, skipped_cases, summary_dict = analyze_images_test_results(self.templ_data)
+
+        print(summary_dict)
 
         logger.debug(f'With analysis: \n{self.templ_data}')
 
@@ -94,7 +96,9 @@ class ObjectiveReports:
         self.progress += 70  # 90%
         send_progress_to_gui(self.gui_window, self.gui_event, self.progress, 'Generating report...')
 
-        export_to_excel_file(self.templ_data, excel_file_path, add_images_bool=True)
+        export_to_excel_file(self.templ_data, excel_file_path,
+                             summary=summary_dict, add_summary_bool=True,
+                             add_images_bool=True)
 
         self.progress += 5  # 95%
         send_progress_to_gui(self.gui_window, self.gui_event, self.progress, 'Finishing...')
