@@ -133,11 +133,19 @@ def pretty_size(num: int):
 
 
 # Deeper stuff
-def analyze_images_test_results(template_data):
-    skipped_cases = []
+def analyze_images_test_results(template_data, gen_summary = True):
+    skipped_cases = list()
+    if gen_summary:
+        summary = dict()
 
     for test_type in template_data.keys():
+        if gen_summary:
+            summary[test_type] = dict()
+
         for light_temp in template_data[test_type].keys():
+            if gen_summary:
+                summary[test_type][light_temp] = dict()
+
             for lux in template_data[test_type][light_temp].keys():
                 img_file_path = template_data[test_type][light_temp][lux]['filename']
                 img_file_name = path.basename(img_file_path)
@@ -281,11 +289,27 @@ def analyze_images_test_results(template_data):
                             if curr_param_check is True:
                                 curr_param_dict['result_pass_bool'] = True
                                 logger.debug(f"{test_type}/{light_temp}/{lux}/{param} -> PASS!\n")
+
+                                if gen_summary:
+                                    try:
+                                        summary[test_type][light_temp]["pass"]
+                                    except KeyError:
+                                        summary[test_type][light_temp]["pass"] = 1
+                                    else:
+                                        summary[test_type][light_temp]["pass"] += 1
                             else:
                                 curr_param_dict['result_pass_bool'] = False
                                 logger.debug(f" -> FAIL!\n")
 
-    return template_data, skipped_cases
+                                if gen_summary:
+                                    try:
+                                        summary[test_type][light_temp]["fail"]
+                                    except KeyError:
+                                        summary[test_type][light_temp]["fail"] = 1
+                                    else:
+                                        summary[test_type][light_temp]["fail"] += 1
+
+    return template_data, skipped_cases, summary
 
 
 def add_filenames_to_data(template_data, img_dir):
@@ -386,7 +410,7 @@ def get_video_info(video_in):
     fps = int(cap.get(cv2.CAP_PROP_FPS))
     n_frames = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
 
-    print(f"Width: {w}, height: {h}, fps: {fps}, nframes: {n_frames}")
+    logger.debug(f"Width: {w}, height: {h}, fps: {fps}, nframes: {n_frames}")
     return w, h, fps, n_frames
 
 
@@ -418,14 +442,14 @@ def split_video(video_in):
     logger.info(f"cropping {vid_name} to {out_cropped}")
 
     out_path = f'{path.dirname(video_in)}/{out_cropped}.mp4'
-    print(f"Is file: {path.isfile(out_path)}")
+    logger.debug(f"Is file: {path.isfile(out_path)}")
 
     suff = 1
 
     check_path = out_path
 
     while path.isfile(check_path):
-        print(f"Checking {check_path}")
+        logger.debug(f"Checking {check_path}")
 
         check_path = f"{out_path.split('.')[0]}_{suff}.mp4"
         suff += 1
