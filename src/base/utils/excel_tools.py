@@ -425,22 +425,34 @@ def xls_draw_results_table(template_data: dict, sheet, start_col: int, start_row
 
                     # Add param result value
                     try:
-                        sheet.cell(current_row, columns['param_calc'][1],
-                                   format(param_templ_data['result_calculated'], '.3f')).style = xls_styles["cells"]
-                        data_len = len(str(param_templ_data['result_calculated']))
+                        if param_templ_data['result_calculated'] is None:
+                            param_templ_data['result_calculated'] = str(param_templ_data['result_calculated'])
+                        else:
+                            result_cell = format(param_templ_data['result_calculated'], '.3f')
+
+                        sheet.cell(current_row, columns['param_calc'][1], result_cell).style = xls_styles["cells"]
+                        data_len = len(str(result_cell))
                         try:
                             if columns['param_calc'][2] < data_len:
                                 columns['param_calc'][2] = data_len
                         except IndexError:
                             columns['param_calc'].append(data_len)
+                        except TypeError as e:
+                            logger.exception(e)
                     except KeyError:
                         logger.warn(f'Missing result at {test_type}>{light_color}>{lux}>{param} -> {param_templ_data}')
                         continue
+
                     current_col += 1
 
                     # Add param Pass/Fail
                     pass_fail_cell = sheet.cell(current_row, columns['param_passfail'][1])
                     pass_fail_cell.alignment = xls_styles["center"]
+                    try:
+                        param_templ_data['result_pass_bool']
+                    except KeyError:
+                        param_templ_data['result_pass_bool'] = False
+
                     if param_templ_data['result_pass_bool']:
                         # Passed
                         logger.debug('pass')
