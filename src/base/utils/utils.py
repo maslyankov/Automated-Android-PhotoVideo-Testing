@@ -71,19 +71,19 @@ def get_list_average(list_in: list, min_index=None, max_index=None):
         else:
             list_in = list_in[min_index:max_index]
 
-    result = 0
+    result = 0.0
     divider = 0
 
     for item in list_in:
         if isinstance(item, float) or isinstance(item, int) or (isinstance(item, str) and item.isdigit()):
             if isinstance(item, str) and item.isdigit():
-                result += int(item)
+                result += float(item)
                 divider += 1
                 continue
             result += item
             divider += 1
     if result == 0 or divider == 0:
-        return
+        return 0.0
 
     return result / divider
 
@@ -191,7 +191,16 @@ def analyze_images_test_results(template_data, gen_summary = True):
                             try:
                                 param_val = image_analysis_readable[param_piece]
                             except KeyError:
-                                keyerr = True
+                                if param != 'y_shading_corners_mean_percent':
+                                    skipped_cases.append({
+                                        'test_type': test_type,
+                                        'light_temp': light_temp,
+                                        'lux': lux,
+                                        'param': param,
+                                        'results_file': img_json_file,
+                                        'reason': f'{param} parameter missing in Results file!'
+                                    })
+                                    keyerr = True
 
                         elif num != len(params_depth) - 1 and not keyerr:
                             # If not at end yet and not at beginning
@@ -202,15 +211,7 @@ def analyze_images_test_results(template_data, gen_summary = True):
                             # Full name of param: param,
                             # last part of param: param_piece,
                             # param value: param_val
-                            if keyerr and param != 'y_shading_corners_mean_percent':
-                                skipped_cases.append({
-                                    'test_type': test_type,
-                                    'light_temp': light_temp,
-                                    'lux': lux,
-                                    'param': param,
-                                    'results_file': img_json_file,
-                                    'reason': f'{param} parameter missing in Results file!'
-                                })
+                            if keyerr:
                                 continue
 
                             if len(params_depth) > 1:
@@ -268,23 +269,34 @@ def analyze_images_test_results(template_data, gen_summary = True):
                             except KeyError:
                                 curr_param_dict["max"] = None
 
-                            if curr_param_dict["min"] and curr_param_dict["max"]:
-                                if curr_param_dict['or_equal_bool']:
-                                    curr_param_check = curr_param_dict["min"] <= param_val_calc <= curr_param_dict["max"]
+                            try:
+                                if curr_param_dict["min"] and curr_param_dict["max"]:
+                                    if curr_param_dict['or_equal_bool']:
+                                        curr_param_check = curr_param_dict["min"] <= param_val_calc <= curr_param_dict["max"]
+                                    else:
+                                        curr_param_check = curr_param_dict["min"] < param_val_calc < curr_param_dict["max"]
+                                elif curr_param_dict["min"]:
+                                    if curr_param_dict['or_equal_bool']:
+                                        curr_param_check = curr_param_dict["min"] <= param_val_calc
+                                    else:
+                                        curr_param_check = curr_param_dict["min"] < param_val_calc
+                                elif curr_param_dict["max"]:
+                                    if curr_param_dict['or_equal_bool']:
+                                        curr_param_check = param_val_calc <= curr_param_dict["max"]
+                                    else:
+                                        curr_param_check = param_val_calc < curr_param_dict["max"]
                                 else:
-                                    curr_param_check = curr_param_dict["min"] < param_val_calc < curr_param_dict["max"]
-                            elif curr_param_dict["min"]:
-                                if curr_param_dict['or_equal_bool']:
-                                    curr_param_check = curr_param_dict["min"] <= param_val_calc
-                                else:
-                                    curr_param_check = curr_param_dict["min"] < param_val_calc
-                            elif curr_param_dict["max"]:
-                                if curr_param_dict['or_equal_bool']:
-                                    curr_param_check = param_val_calc <= curr_param_dict["max"]
-                                else:
-                                    curr_param_check = param_val_calc < curr_param_dict["max"]
-                            else:
-                                curr_param_check = True
+                                    curr_param_check = True
+                            except TypeError as e:
+                                skipped_cases.append({
+                                    'test_type': test_type,
+                                    'light_temp': light_temp,
+                                    'lux': lux,
+                                    'param': param,
+                                    'results_file': img_json_file,
+                                    'reason': f'{e}'
+                                })
+                                continue
 
                             if curr_param_check is True:
                                 curr_param_dict['result_pass_bool'] = True
