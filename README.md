@@ -1,6 +1,6 @@
 # A(utomated)Capture
 
-![Logo](https://github.com/ttodorov9/acapture/blob/master/images/automated-video-testing-header.png?raw=true "Logo Header")
+![Logo](https://github.com/maslyankov/Automated-Android-PhotoVideo-Testing/raw/master/images/automated-video-testing-header.png?raw=true "Logo Header")
 
 This project automates the process of testing photo/video capture (Android / USB webcam) devices, generation of reports and more. 
 
@@ -60,15 +60,15 @@ for automated/semi-automated testing:
 
 #### App GUI Preview
 
-<img src="https://github.com/ttodorov9/acapture/blob/master/README/Beta/app-screenshot.jpg?raw=true" width="300">
+<img src="https://github.com/maslyankov/Automated-Android-PhotoVideo-Testing/blob/master/README/Beta/app-screenshot.jpg?raw=true" width="300">
 
 #### Lights Control GUI Preview
 
-<img src="https://github.com/ttodorov9/acapture/blob/master/README/Beta/lights-test-screenshot.jpg?raw=true" width="300">
+<img src="https://github.com/maslyankov/Automated-Android-PhotoVideo-Testing/blob/master/README/Beta/lights-test-screenshot.jpg?raw=true" width="300">
 
 #### Automated Cases GUI Preview
 
-<img src="https://github.com/ttodorov9/acapture/blob/master/README/Beta/Automated-cases-gui.jpg?raw=true" width="300">
+<img src="https://github.com/maslyankov/Automated-Android-PhotoVideo-Testing/blob/master/README/Beta/Automated-cases-gui.jpg?raw=true" width="300">
 
 ## Prerequisites
 
