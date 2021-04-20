@@ -14,7 +14,7 @@ if getattr(sys, 'frozen', False):
 else:
     DEBUG_MODE = True
 
-    ROOT_DIR = os.path.abspath(os.curdir + "/../")  # This is Project Root
+    ROOT_DIR = os.path.dirname(sys.modules['__main__'].__file__) # os.path.abspath(os.curdir + "/../")  # This is Project Root
     SETTINGS_DIR = os.path.join(ROOT_DIR, 'settings')
 
 DEVICES_SETTINGS_DIR = os.path.join(SETTINGS_DIR, 'devices')

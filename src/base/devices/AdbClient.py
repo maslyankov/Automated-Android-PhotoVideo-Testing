@@ -37,7 +37,8 @@ class AdbClient:
             self.adb.wait()
         except FileNotFoundError:
             logger.critical("Fatal error: adb not found!")
-            return
+            logger.info(f"Adb is set to: {constants.ADB}")
+            exit(1)
 
         self.client = AdbPy(host="127.0.0.1", port=5037)
 
