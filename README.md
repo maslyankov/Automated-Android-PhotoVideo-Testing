@@ -83,10 +83,7 @@ Most code is written OS-independent, but more work is needed for proper support 
 
 To setup the project, follow these steps:
 
-1. Clone the project:
-    ```
-    git clone https://github.com/ttodorov9/acapture.git
-    ```
+1. Clone the project
 
 2. Open the cloned project folder in cmd
 
