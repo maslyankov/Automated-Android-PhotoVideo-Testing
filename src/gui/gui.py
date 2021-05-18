@@ -901,6 +901,8 @@ def gui():
                     logger.info(done_msg)
                     sg.popup_ok(done_msg)
 
+                    pass_file = pass_dict = None
+
                     if new_file:
                         explorer_open_file(new_file)
 

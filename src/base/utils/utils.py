@@ -250,6 +250,7 @@ def analyze_images_test_results(template_data, gen_summary = True):
                                 logger.debug(f"Mean = {shading_mean}")
                                 param_val_calc = (shading_mean/shading_max * 100).__round__(2)
                                 logger.debug(f"Calculated percentage: {param_val_calc}%")
+                                param_val = [shading_max, shading_mean]
 
                             try:
                                 curr_param_dict['or_equal_bool']
