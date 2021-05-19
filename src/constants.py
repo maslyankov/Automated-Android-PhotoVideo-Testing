@@ -14,7 +14,7 @@ if getattr(sys, 'frozen', False):
 else:
     DEBUG_MODE = True
 
-    ROOT_DIR = os.path.dirname(sys.modules['__main__'].__file__) # os.path.abspath(os.curdir + "/../")  # This is Project Root
+    ROOT_DIR = os.path.dirname(sys.modules['__main__'].__file__)  # os.path.abspath(os.curdir + "/../")  # This is Project Root
     SETTINGS_DIR = os.path.join(ROOT_DIR, 'settings')
 
 DEVICES_SETTINGS_DIR = os.path.join(SETTINGS_DIR, 'devices')
@@ -27,7 +27,7 @@ Path(DEVICES_SETTINGS_DIR).mkdir(parents=True, exist_ok=True)
 Path(DATA_DIR).mkdir(parents=True, exist_ok=True)
 Path(XML_DIR).mkdir(parents=True, exist_ok=True)
 
-ADB = os.path.join(VENDOR_DIR, 'scrcpy-win64-v1.17', 'adb.exe')
+ADB = os.path.join(VENDOR_DIR, 'platform-tools', 'adb.exe')
 SCRCPY = os.path.join(VENDOR_DIR, 'scrcpy-win64-v1.17', 'scrcpy.exe')
 
 
