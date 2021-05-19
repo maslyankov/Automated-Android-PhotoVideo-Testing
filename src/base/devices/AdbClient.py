@@ -1,6 +1,6 @@
 # Uses https://github.com/Swind/pure-python-adb
 from subprocess import PIPE, STDOUT, Popen
-from time import sleep
+from time import sleep, time
 from threading import Thread
 
 from ppadb.client import Client as AdbPy
@@ -52,70 +52,96 @@ class AdbClient:
 
     # ----- Main Stuff -----
     def _watchdog(self):
+        counter = 0
+        timing_dict = dict()
+
         while True:
             if self.gui_is_ready:  # Give time for the GUI to load
                 sleep(1)
                 break
 
         try:
-            self.watchdog_p = Popen([r"C:\Users\mms00519\Documents\tools\platform-tools\adb.exe", "track-devices"], stdin=PIPE,
+            self.watchdog_p = Popen([constants.ADB, "track-devices"], stdin=PIPE,
                       stdout=PIPE, stderr=STDOUT)
         except ConnectionResetError:
             logger.error('ADB Server connection lost.')
 
         for line in self.watchdog_p.stdout:
-            if self.anticipate_root:
-                sleep(2)
-                self.anticipate_root = False
+            logger.debug(f"ADB Watchdog got: {line}")
 
             data = line.decode("utf-8").split('\t')
 
+            # if self.anticipate_root:
+            #     counter = 2
+            #     self.anticipate_root = False
+
             if (int(data[0][2]) == 1):
                 status = int(data[0][:4], 2)
-                data[0] = data[0][4:]
+                serial = data[0][4:]
             elif (int(data[0][6]) == 1):
                 status = int(data[0][:8], 2)
-                data[0] = data[0][8:]
+                serial = data[0][8:]
             else:
                 logger.error("Status code for device could not be detected!")
                 logger.debug(f"We got line: {line}; data: {data}")
+                continue
 
-            if status == 2:  # If a device has connected
-                try:
-                    logger.debug(f"Device {data[0]} connected")
-                    self.gui_window.write_event_value(
-                        self.gui_event,
-                        {
-                            'action': 'connected',
-                            'serial': data[0],
-                            'type': 'android',
-                            'error': False,
-                        }
-                    )
+            time_now = time()
+            if serial in timing_dict:
+                timing_dict[serial]['last_time'] = timing_dict[serial]['time']
+                timing_dict[serial]['last_action'] = timing_dict[serial]['action']
+                timing_dict[serial]['time_diff'] = time_now - timing_dict[serial]['last_time']
+            else:
+                timing_dict[serial] = dict()
+
+            timing_dict[serial]['time'] = time_now
+            timing_dict[serial]['action'] = status
+
+            if "last_action" in timing_dict[serial] and timing_dict[serial]['action'] == timing_dict[serial]['last_action']:
+                # print("\nSkipping this action as it seems duplicated!")
+                continue
+            else:
+                if self.anticipate_root:
+                    logger.debug(f"Not minding the device updates as we are anticipating root!")
+                    # counter -= 1
+                elif status == 2:  # If a device has connected
                     try:
-                        self.connected_devices.append(data[1])
-                    except ValueError:
-                        logger.error("Tried to add device from conn devices, but it seems to be already listed there!")
-                except RuntimeError:
-                    logger.warn('Device not ready!')
-            elif status == 3:  # If a device has disconnected
-                try:
-                    logger.debug(f"Device {data[0]} disconnected")
-                    self.gui_window.write_event_value(
-                        self.gui_event,
-                        {
-                            'action': 'disconnected',
-                            'serial': data[0],
-                            'type': 'android',
-                            'error': False,
-                        }
-                    )
+                        logger.debug(f"Device {data[0]} connected")
+                        self.gui_window.write_event_value(
+                            self.gui_event,
+                            {
+                                'action': 'connected',
+                                'serial': serial,
+                                'type': 'android',
+                                'error': False,
+                            }
+                        )
+                        try:
+                            self.connected_devices.append(serial)
+                        except ValueError:
+                            logger.error("Tried to add device from conn devices, but it seems to be already listed there!")
+                    except RuntimeError:
+                        logger.warn('Device not ready!')
+                elif status == 3:  # If a device has disconnected
                     try:
-                        self.connected_devices.remove(data[1])
-                    except ValueError:
-                        logger.error("Tried to remove device from conn devices, but it does not seem to be listed there!")
-                except RuntimeError:
-                    logger.warn('Device not ready!')
+                        logger.debug(f"Device {data[0]} disconnected")
+                        self.gui_window.write_event_value(
+                            self.gui_event,
+                            {
+                                'action': 'disconnected',
+                                'serial': serial,
+                                'type': 'android',
+                                'error': False,
+                            }
+                        )
+                        try:
+                            self.connected_devices.remove(serial)
+                        except ValueError:
+                            logger.error("Tried to remove device from conn devices, but it does not seem to be listed there!")
+                    except RuntimeError:
+                        logger.warn('Device not ready!')
+
+        logger.debug("ADB Watchdog exiting...")
 
     def watchdog(self):
         self.watchdog_thread = Thread(target=self._watchdog, args=(), daemon=True)

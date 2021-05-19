@@ -82,7 +82,10 @@ class ADBDevice(Device):
         :return:None
         """
         logger.info(f"Rooting device {self.device_serial}")
+
+        logger.debug("set ant root on")
         self.adb.anticipate_root = True
+
         # CREATE_NO_WINDOW = 0x08000000
         root = Popen([constants.ADB, '-s', self.device_serial, 'root'],
                      stdin=PIPE,
@@ -102,6 +105,9 @@ class ADBDevice(Device):
                 logger.critical(e)
         if stdout:
             logger.info("Rooting Output: {}".format(stdout.decode()))
+
+        logger.debug("set ant root off")
+        self.adb.anticipate_root = False
         root.terminate()
 
     def remount(self):
