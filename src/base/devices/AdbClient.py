@@ -1,5 +1,5 @@
 # Uses https://github.com/Swind/pure-python-adb
-from subprocess import PIPE, Popen
+from subprocess import PIPE, STDOUT, Popen
 from time import sleep
 from threading import Thread
 
@@ -53,49 +53,69 @@ class AdbClient:
     # ----- Main Stuff -----
     def _watchdog(self):
         while True:
-            if not self.gui_is_ready:
-                continue
+            if self.gui_is_ready:  # Give time for the GUI to load
+                sleep(1)
+                break
 
-            sleep(1)
+        try:
+            self.watchdog_p = Popen([r"C:\Users\mms00519\Documents\tools\platform-tools\adb.exe", "track-devices"], stdin=PIPE,
+                      stdout=PIPE, stderr=STDOUT)
+        except ConnectionResetError:
+            logger.error('ADB Server connection lost.')
 
+        for line in self.watchdog_p.stdout:
             if self.anticipate_root:
                 sleep(2)
                 self.anticipate_root = False
-            try:
-                devices_list = self.list_devices()
-            except ConnectionResetError:
-                logger.error('ADB Server connection lost.')
 
-            if len(devices_list) > len(self.connected_devices):  # If New devices found
-                for count, diff_device in enumerate(compare_lists(self.connected_devices, devices_list)):
-                    try:
-                        self.gui_window.write_event_value(
-                            self.gui_event,
-                            {
-                                'action': 'connected',
-                                'serial': diff_device,
-                                'type': 'android',
-                                'error': False,
-                            }
-                        )
-                    except RuntimeError:
-                        logger.warn('Device not ready!')
-            elif len(devices_list) < len(self.connected_devices):  # If a device has disconnected
-                for count, diff_device in enumerate(compare_lists(self.connected_devices, devices_list)):
-                    try:
-                        self.gui_window.write_event_value(
-                            self.gui_event,
-                            {
-                                'action': 'disconnected',
-                                'serial': diff_device,
-                                'type': 'android',
-                                'error': False,
-                            }
-                        )
-                    except RuntimeError:
-                        logger.warn('Device not ready!')
+            data = line.decode("utf-8").split('\t')
 
-            self.connected_devices = devices_list
+            if (int(data[0][2]) == 1):
+                status = int(data[0][:4], 2)
+                data[0] = data[0][4:]
+            elif (int(data[0][6]) == 1):
+                status = int(data[0][:8], 2)
+                data[0] = data[0][8:]
+            else:
+                logger.error("Status code for device could not be detected!")
+                logger.debug(f"We got line: {line}; data: {data}")
+
+            if status == 2:  # If a device has connected
+                try:
+                    logger.debug(f"Device {data[0]} connected")
+                    self.gui_window.write_event_value(
+                        self.gui_event,
+                        {
+                            'action': 'connected',
+                            'serial': data[0],
+                            'type': 'android',
+                            'error': False,
+                        }
+                    )
+                    try:
+                        self.connected_devices.append(data[1])
+                    except ValueError:
+                        logger.error("Tried to add device from conn devices, but it seems to be already listed there!")
+                except RuntimeError:
+                    logger.warn('Device not ready!')
+            elif status == 3:  # If a device has disconnected
+                try:
+                    logger.debug(f"Device {data[0]} disconnected")
+                    self.gui_window.write_event_value(
+                        self.gui_event,
+                        {
+                            'action': 'disconnected',
+                            'serial': data[0],
+                            'type': 'android',
+                            'error': False,
+                        }
+                    )
+                    try:
+                        self.connected_devices.remove(data[1])
+                    except ValueError:
+                        logger.error("Tried to remove device from conn devices, but it does not seem to be listed there!")
+                except RuntimeError:
+                    logger.warn('Device not ready!')
 
     def watchdog(self):
         self.watchdog_thread = Thread(target=self._watchdog, args=(), daemon=True)
@@ -167,3 +187,6 @@ class AdbClient:
                 logger.warn(f"Not found in attached devices list")
                 logger.exception(e)
                 logger.debug(self.attached_devices)
+
+    def __del__(self):
+        self.watchdog_p.kill()
