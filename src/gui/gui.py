@@ -20,6 +20,7 @@ from src.gui.gui_push_file import gui_push_file
 from src.gui.gui_android_file_browser import gui_android_file_browser
 from src.gui.gui_reboot_device import gui_reboot_device
 from src.gui.gui_screenrec import gui_screenrec
+from src.gui.gui_adb_camera_tool import gui_adb_camera_tool
 from src.gui.gui_setup_device import gui_setup_device
 from src.gui.gui_test_lights import gui_test_lights
 from src.gui.gui_project_req_file import gui_project_req_file
@@ -111,6 +112,11 @@ def gui():
             sg.Button('Record Screen',
                       size=(11, 1),
                       key='record_screen_btn',
+                      disabled=True)
+        ], [
+            sg.Button('camera_tool',
+                      size=(11, 1),
+                      key='adb_camera_tool_btn',
                       disabled=True)
         ]
     ]
@@ -612,6 +618,7 @@ def gui():
             window['install_uninstall_btn'].Update(disabled=not constants.DEBUG_MODE)
             window['pull_images_btn'].Update(disabled=not bool(adb_devices[attached_devices_list[0]].images_save_loc))
             window['record_screen_btn'].Update(disabled=False)
+            window['adb_camera_tool_btn'].Update(disabled=False)
             window['setup_device_btn'].Update(disabled=False)
             window['capture_manual_btn'].Update(disabled=False)
             window['capture_auto_btn'].Update(disabled=False)
@@ -658,6 +665,12 @@ def gui():
                               attached_devices=attached_devices_list if not active_device else None,
                               specific_device=active_device if active_device else None)
 
+            if event == "adb_camera_tool_btn":
+                logger.info("opening adb_camera_tool gui")
+                gui_adb_camera_tool(adb_devices,
+                                    attached_devices=attached_devices_list if not active_device else None,
+                                    specific_device=active_device if active_device else None)
+
             if event == "setup_device_btn":
                 gui_setup_device(attached_devices_list, adb_devices)
 
@@ -690,6 +703,7 @@ def gui():
             window['install_uninstall_btn'].Update(disabled=True)
             window['pull_images_btn'].Update(disabled=True)
             window['record_screen_btn'].Update(disabled=True)
+            window['adb_camera_tool_btn'].Update(disabled=True)
             window['setup_device_btn'].Update(disabled=True)
             window['capture_manual_btn'].Update(disabled=True)
             window['capture_auto_btn'].Update(disabled=True)

@@ -76,10 +76,16 @@ class AdbClient:
             #     self.anticipate_root = False
 
             if (int(data[0][2]) == 1):
-                status = int(data[0][:4], 2)
+                try:
+                    status = int(data[0][:4], 2)
+                except ValueError:
+                    status = int(data[0][3]) - 4
                 serial = data[0][4:]
             elif (int(data[0][6]) == 1):
-                status = int(data[0][:8], 2)
+                try:
+                    status = int(data[0][:8], 2)
+                except ValueError:
+                    status = int(data[0][7]) - 4
                 serial = data[0][8:]
             else:
                 logger.error("Status code for device could not be detected!")
@@ -140,6 +146,8 @@ class AdbClient:
                             logger.error("Tried to remove device from conn devices, but it does not seem to be listed there!")
                     except RuntimeError:
                         logger.warn('Device not ready!')
+                else:
+                    logger.error(f"Unknown device status received! -> {status}")
 
         logger.debug("ADB Watchdog exiting...")
 
@@ -201,6 +209,7 @@ class AdbClient:
                 self.devices_obj[device_serial].kill_scrcpy()
 
                 if not spurious_bool:
+                    # Optional stuff
                     self.devices_obj[device_serial].set_led_color('FFFFFF', 'RGB1', 'global_rgb')  # Poly
 
                 self.attached_devices.remove(device_serial)
