@@ -35,7 +35,6 @@ class ADBDevice(Device):
         # Object Parameters #
         self.scrcpy = []
 
-
         # Settings
         self.camera_app = None
         self.images_save_loc = None
@@ -154,17 +153,22 @@ class ADBDevice(Device):
         logger.info('Rebooting device after disabling verity!')
         self.reboot()
 
-    def open_shell(self):
+    def open_shell(self, cmd_str: str = None):
         """
         Open shell terminal of device
         :return:None
         """
         logger.info(f"Opening shell terminal of: {self.device_serial}")
+        args_list = [constants.ADB, "-s", self.device_serial, "shell"]
 
-        new_shell = Popen([constants.ADB, "-s", self.device_serial, "shell"],
-                          creationflags=CREATE_NEW_CONSOLE)
+        if cmd_str:
+            if isinstance(cmd_str, str):
+                args_list.append(cmd_str)
+            else:
+                logger.error("Got cmd that is not str")
+                logger.debug(f"cmd: '{cmd_str}' of type {type(cmd_str)}")
 
-
+        return Popen(args_list, creationflags=CREATE_NEW_CONSOLE)
 
     def exec_shell(self, cmd):
         """
