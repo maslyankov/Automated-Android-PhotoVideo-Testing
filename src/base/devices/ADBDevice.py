@@ -1,8 +1,9 @@
 import xml.etree.cElementTree as ET
 from subprocess import Popen, PIPE, CREATE_NEW_CONSOLE
+from signal import SIGINT
 from time import sleep
 from re import findall
-from os import path
+from os import path, kill
 from datetime import datetime
 from natsort import natsorted
 from pathlib import Path
@@ -170,6 +171,9 @@ class ADBDevice(Device):
 
         return Popen(args_list, creationflags=CREATE_NEW_CONSOLE)
 
+    def close_shell(self, subp: Popen):
+        kill(subp.pid, SIGINT)
+
     def exec_shell(self, cmd):
         """
         Execute a shell command on the device
@@ -181,10 +185,10 @@ class ADBDevice(Device):
             return self.d.shell(cmd)
         except AttributeError as e:
             logger.exception('You tried to reach a device that is already disconnected!')
-            quit(1)
+            self.detach_device(spurious_bool=True)
         except RuntimeError as e:
             logger.error('Device Disconnected unexpectedly! Detaching...')
-            self.detach_device(True)
+            self.detach_device(True, spurious_bool=True)
 
     def push_file(self, src, dst):
         """
@@ -677,13 +681,19 @@ class ADBDevice(Device):
         self.exec_shell(f"rm {args}{target}")
 
     def pull_files(self, files_list: list, save_dest):
+        pulled_files = list()
+
         if not path.isdir(save_dest):
             logger.error("Got a save_dir that is not a dir!")
             return
 
         for file in files_list:
             if file != '':
-                self.pull_file(file, path.join(save_dest, path.basename(file)))
+                file_dest = path.realpath(path.join(save_dest, path.basename(file)))
+                self.pull_file(file, file_dest)
+                pulled_files.append(file_dest)
+
+        return pulled_files
 
     def pull_files_recurse(self, files_list: list, save_dest):
         if not path.isdir(save_dest):
@@ -734,6 +744,24 @@ class ADBDevice(Device):
             self.pull_file(f"{file_loc}{file}", new_filename)
             pulled_files.append(new_filename)
         return pulled_files
+
+    def pull_images(self, dest, clear_folder: bool = False):
+        if not self.images_save_loc:
+            return
+
+        files = self.get_files_list(self.images_save_loc, get_full_path=True)
+        if files is None or len(files) == 0:
+            logger.info("Images source dir seems empty...")
+            return 0
+
+        pulled_images = self.pull_files(files, dest)
+
+        if clear_folder:
+            self.delete_file(self.images_save_loc)
+
+        return pulled_images
+
+
 
     def setup_device_settings(self):
         # TODO: Make this save initial settings and set them back on exit
