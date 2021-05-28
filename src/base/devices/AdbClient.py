@@ -61,8 +61,9 @@ class AdbClient:
                 break
 
         try:
-            self.watchdog_p = Popen([constants.ADB, "track-devices"], stdin=PIPE,
-                      stdout=PIPE, stderr=STDOUT)
+            self.watchdog_p = Popen(
+                [constants.ADB, "track-devices"], creationflags=constants.CREATE_NO_WINDOW,
+                stdin=PIPE, stdout=PIPE, stderr=STDOUT)
         except ConnectionResetError:
             logger.error('ADB Server connection lost.')
 
@@ -112,7 +113,7 @@ class AdbClient:
                     # counter -= 1
                 elif status == 2:  # If a device has connected
                     try:
-                        logger.debug(f"Device {data[0]} connected")
+                        logger.debug(f"Device {serial} connected")
                         self.gui_window.write_event_value(
                             self.gui_event,
                             {

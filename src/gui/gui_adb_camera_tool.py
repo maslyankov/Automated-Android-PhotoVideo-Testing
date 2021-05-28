@@ -38,12 +38,14 @@ def capture(device_obj, initial_wait_time=2, num_of_images: int = 1, capture_gap
         device_obj.exec_shell("setprop persist.vendor.camera.snapshot 1")
 
     # Stop the stream
+    wait_with_msg(2, "Waiting for saving of images...")
     logger.info("stopping camera_tool stream")
     device_obj.close_shell(cam_video_stream)
 
     # Pull images
     if pull_images and pull_dest:
         pulled_images = device_obj.pull_images(pull_dest, clear_folder=True)
+        logger.info(f"Pulled images: {pulled_images}")
 
     # Open folder and highlight first image
     try:
@@ -52,6 +54,11 @@ def capture(device_obj, initial_wait_time=2, num_of_images: int = 1, capture_gap
     except NameError:
         pass
 
+
+def persist_settings(values, curr_device):
+    if values['save_dest'] != '' and os.path.isdir(values['save_dest']):
+        curr_device.set_persist_setting("last_pull_images_save_dest", values['save_dest'])
+        curr_device.save_settings()
 
 
 def gui_adb_camera_tool(device_obj, attached_devices=None, specific_device=None):
@@ -81,6 +88,7 @@ def gui_adb_camera_tool(device_obj, attached_devices=None, specific_device=None)
             sg.T("Save dest:"),
             sg.I(key='save_dest',
                  default_text=persist_setting if persist_setting else ""),
+            sg.FolderBrowse()
         ],
         [
             sg.T("Timer (in s):"),
@@ -88,13 +96,16 @@ def gui_adb_camera_tool(device_obj, attached_devices=None, specific_device=None)
         ],
         [
             sg.T("Initial wait time (in s):"),
-            sg.Spin(initial_value=2, values=list(range(0, 10)), key='initial_wait_input'),
+            sg.Spin(initial_value=5, values=list(range(1, 10)), key='initial_wait_input'),
         ],
         [
             sg.T("Number of shots (for multi shooting):"),
             sg.Spin(initial_value=3, values=list(range(0, 20)), key='num_shots_input'),
             sg.T("Gap between shots (in secs):"),
             sg.Spin(initial_value=1, values=list(range(0, 10)), key='shots_gap_input')
+        ],
+        [
+            sg.Checkbox("Open folder after pulling files?", key="open_folder_after_bool")
         ],
         [
             sg.Button('Single\nCapture', size=(10, 2), key='single_capture_btn', disabled=False),
@@ -125,12 +136,18 @@ def gui_adb_camera_tool(device_obj, attached_devices=None, specific_device=None)
             window['dest_folder'].Update(persist_setting)
 
         if event == 'single_capture_btn':
-            capture(device_obj[specific_device], initial_wait_time=int(values['initial_wait_input']),
-                    pull_images=True, pull_dest=values['save_dest'], timer=int(values['timer_input']))
+            persist_settings(values, curr_device)
+            capture(curr_device, initial_wait_time=int(values['initial_wait_input']),
+                    pull_images=True, pull_dest=values['save_dest'], timer=int(values['timer_input']),
+                    open_in_explorer=values['open_folder_after_bool'])
 
         if event == 'multi_capture_btn':
-            capture(device_obj[specific_device], initial_wait_time=int(values['initial_wait_input']),
+            persist_settings(values, curr_device)
+            capture(curr_device, initial_wait_time=int(values['initial_wait_input']),
                     num_of_images=values['num_shots_input'], capture_gap=values['shots_gap_input'],
-                    pull_images=True, pull_dest=values['save_dest'], timer=int(values['timer_input']))
+                    pull_images=True, pull_dest=values['save_dest'], timer=int(values['timer_input']),
+                    open_in_explorer=values['open_folder_after_bool'])
+
+
 
     window.close()

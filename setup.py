@@ -13,7 +13,7 @@ if sys.platform == "win32":
 
 setup(
     name='automated_cases',
-    version='0.09-Beta',
+    version='0.18',
     packages=[''],
     url='',
     license='',

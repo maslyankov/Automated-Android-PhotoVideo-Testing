@@ -188,7 +188,7 @@ class ADBDevice(Device):
             self.detach_device(spurious_bool=True)
         except RuntimeError as e:
             logger.error('Device Disconnected unexpectedly! Detaching...')
-            self.detach_device(True, spurious_bool=True)
+            self.detach_device(spurious_bool=True)
 
     def push_file(self, src, dst):
         """
@@ -414,6 +414,10 @@ class ADBDevice(Device):
         # Clear whitespaces from filenames
         #       Turns out some devices add a trailing whitespace to each filename, we don't want that
         for i, f in enumerate(files_list):
+            if f.startswith("total"):
+                total_num_of_files = f.split()[1]
+                logger.debug(f"Total num of files {total_num_of_files}")
+                continue
             files_list[i] = f.strip()
 
         logger.debug(f"Files List After strip: {files_list}")
@@ -747,9 +751,11 @@ class ADBDevice(Device):
 
     def pull_images(self, dest, clear_folder: bool = False):
         if not self.images_save_loc:
+            logger.debug("images_save_loc empty.")
             return
 
         files = self.get_files_list(self.images_save_loc, get_full_path=True)
+        logger.debug(f"Files list: {files}")
         if files is None or len(files) == 0:
             logger.info("Images source dir seems empty...")
             return 0
