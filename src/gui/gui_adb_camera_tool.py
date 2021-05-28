@@ -136,12 +136,20 @@ def gui_adb_camera_tool(device_obj, attached_devices=None, specific_device=None)
             window['dest_folder'].Update(persist_setting)
 
         if event == 'single_capture_btn':
+            if not device_images_dir:
+                sg.popup_error("You must set images save location for device in Setup")
+                continue
+
             persist_settings(values, curr_device)
             capture(curr_device, initial_wait_time=int(values['initial_wait_input']),
                     pull_images=True, pull_dest=values['save_dest'], timer=int(values['timer_input']),
                     open_in_explorer=values['open_folder_after_bool'])
 
         if event == 'multi_capture_btn':
+            if not device_images_dir:
+                sg.popup_error("You must set images save location for device in Setup")
+                continue
+
             persist_settings(values, curr_device)
             capture(curr_device, initial_wait_time=int(values['initial_wait_input']),
                     num_of_images=values['num_shots_input'], capture_gap=values['shots_gap_input'],
